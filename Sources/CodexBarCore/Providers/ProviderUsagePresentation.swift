@@ -287,6 +287,7 @@ public struct ProviderMenuCardPresentation: Sendable {
     public let supportsInlineTokenCostDashboard: Bool
     public let primaryDescriptionPlacement: ProviderPrimaryDescriptionPlacement
     public let showsPrimaryBalanceDescription: Bool
+    public let showsSecondaryBalanceDescription: Bool
     public let hidesPrimaryResetWithoutDate: Bool
     public let hidesPrimaryResetWithoutSecondary: Bool
     public let clearsPrimaryReset: Bool
@@ -307,6 +308,7 @@ public struct ProviderMenuCardPresentation: Sendable {
         supportsInlineTokenCostDashboard: Bool = false,
         primaryDescriptionPlacement: ProviderPrimaryDescriptionPlacement = .standard,
         showsPrimaryBalanceDescription: Bool = false,
+        showsSecondaryBalanceDescription: Bool = false,
         hidesPrimaryResetWithoutDate: Bool = false,
         hidesPrimaryResetWithoutSecondary: Bool = false,
         clearsPrimaryReset: Bool = false,
@@ -327,6 +329,7 @@ public struct ProviderMenuCardPresentation: Sendable {
         self.supportsInlineTokenCostDashboard = supportsInlineTokenCostDashboard
         self.primaryDescriptionPlacement = primaryDescriptionPlacement
         self.showsPrimaryBalanceDescription = showsPrimaryBalanceDescription
+        self.showsSecondaryBalanceDescription = showsSecondaryBalanceDescription
         self.hidesPrimaryResetWithoutDate = hidesPrimaryResetWithoutDate
         self.hidesPrimaryResetWithoutSecondary = hidesPrimaryResetWithoutSecondary
         self.clearsPrimaryReset = clearsPrimaryReset

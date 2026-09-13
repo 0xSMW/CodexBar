@@ -65,6 +65,7 @@ public enum LiteLLMProviderDescriptor {
                 },
                 menuCard: ProviderMenuCardPresentation(
                     showsPrimaryBalanceDescription: true,
+                    showsSecondaryBalanceDescription: true,
                     hidesPrimaryResetWithoutDate: true)),
             fetchPlan: ProviderFetchPlan(
                 sourceModes: [.auto, .api],
