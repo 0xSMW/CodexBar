@@ -1507,12 +1507,6 @@ extension UsageMenuCardView.Model {
         {
             weeklyDetailText = detail
         }
-        if input.provider == .manus,
-           let detail = weekly.resetDescription,
-           !detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
-            weeklyDetailText = detail
-        }
         if input.provider == .crof,
            let detail = weekly.resetDescription?.trimmingCharacters(in: .whitespacesAndNewlines),
            !detail.isEmpty
