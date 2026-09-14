@@ -2855,7 +2855,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/UsageStore+QuotaWarnings.swift",
-            line: 132,
+            line: 120,
             anchor: "let extraWindows = provider == .claude",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
@@ -2863,12 +2863,20 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/UsageStore+QuotaWarnings.swift",
-            line: 159,
+            line: 147,
             anchor: "guard provider == .claude else { return }",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
             expectedReferenceFingerprint: ["claude@0"],
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
+        AllowedProviderConstruct(
+            path: "Sources/CodexBar/UsageStore+QuotaWarnings.swift",
+            line: 209,
+            anchor: "guard provider != .claude || window != .session || Self.isSessionWindow(rateWindow) else { return }",
+            expectedProviderIDs: ["claude"],
+            expectedReferenceCount: 1,
+            expectedReferenceFingerprint: ["claude@0"],
+            reason: "Claude may promote weekly usage into primary; session notifications must retain their own history."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/UsageStore+Refresh.swift",
             line: 330,

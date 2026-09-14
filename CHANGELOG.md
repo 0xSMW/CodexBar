@@ -3,6 +3,7 @@
 ## 0.60.3 — Unreleased
 
 ### Fixed
+- Claude: avoid duplicate or mislabeled session warnings when a missing five-hour quota temporarily promotes weekly usage into the primary field (related to #3450).
 - Cursor: restore Grok Bot usage for the current allowance and trial response fields, retain exhausted active trials, and avoid treating trial expiration as a recurring reset. Thanks @JackHo12! (#3629)
 - Usage & Spend: retain known daily spend beside unpriced providers with a partial-estimate marker, and count token-only requests as unpriced coverage (#3652). Thanks @urda!
 - Claude: opt short-lived CLI usage probes out of Remote Control so background refreshes do not create empty cloud/mobile sessions when Remote Control is enabled by default (#3651, related to #1301). Thanks @KazuyukiNishida!
