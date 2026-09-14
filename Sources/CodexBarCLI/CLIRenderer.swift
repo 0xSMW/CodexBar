@@ -595,22 +595,15 @@ enum CLIRenderer {
         lines: inout [String])
     {
         guard labels.showsTertiary, let tertiary = snapshot.tertiary else { return }
-        lines.append(self.rateLine(title: labels.tertiary, window: tertiary, useColor: context.useColor))
-        if ProviderDescriptorRegistry.descriptor(for: provider).pace
-            .allowsPace(dataConfidence: snapshot.dataConfidence),
-            let pace = self.paceLine(
-                provider: provider,
-                window: tertiary,
-                slot: .tertiary,
-                weeklyWorkDays: context.weeklyWorkDays,
-                useColor: context.useColor,
-                now: now)
-        {
-            lines.append(pace)
-        }
-        if let reset = self.resetLine(for: tertiary, style: context.resetStyle, now: now) {
-            lines.append(self.subtleLine(reset, useColor: context.useColor))
-        }
+        self.appendRateWindowLines(
+            provider: provider,
+            title: labels.tertiary,
+            window: tertiary,
+            paceSlot: .tertiary,
+            dataConfidence: snapshot.dataConfidence,
+            context: context,
+            now: now,
+            lines: &lines)
     }
 
     private static func appendExtraRateWindows(
