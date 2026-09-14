@@ -9,6 +9,7 @@
 - Codex: add the debug-only Workspaces project/session inspector with source, history and privacy updates, plus cancellation when its window closes (#3291). Thanks @AmrMohamad!
 
 ### Fixed
+- Abacus AI: show the monthly allowance when Credits is explicitly selected for the menu-bar percentage, keep Credits labels consistent in the editor, conditions and accessibility, and preserve billing resets and pacing.
 - Abacus AI: retain used/total compute credits in CLI text/cards beside billing resets, and stop labelling undated amounts as reset clocks.
 - Manus, MiMo, and Neuralwatt: retain quota counts in CLI text/cards, keep amounts separate from actual reset dates, and preserve Manus monthly/daily details in native menus.
 - LiteLLM: preserve personal and team budget amounts in CLI text/cards and native menus, keeping amounts separate from actual reset dates.
