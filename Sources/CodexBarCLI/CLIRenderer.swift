@@ -425,7 +425,7 @@ enum CLIRenderer {
         now: Date) -> CLICardMetric
     {
         let rateWindow = window.window
-        let detailBacked = self.usesDetailBackedWindow(provider: provider)
+        let detailBacked = ProviderDescriptorRegistry.descriptor(for: provider).metadata.usesDetailBackedWindow
         let reset = detailBacked
             ? self.resetLineForDetailBackedWindow(window: rateWindow, style: resetStyle, now: now)
             : self.resetLine(for: rateWindow, style: resetStyle, now: now)
@@ -775,7 +775,7 @@ enum CLIRenderer {
         now: Date,
         lines: inout [String])
     {
-        if self.usesDetailBackedWindow(provider: provider) {
+        if ProviderDescriptorRegistry.descriptor(for: provider).metadata.usesDetailBackedWindow {
             if let reset = self.resetLineForDetailBackedWindow(window: window, style: context.resetStyle, now: now) {
                 lines.append(self.subtleLine(reset, useColor: context.useColor))
             }
@@ -792,10 +792,6 @@ enum CLIRenderer {
 
     private static func resetLine(for window: RateWindow, style: ResetTimeDisplayStyle, now: Date) -> String? {
         UsageFormatter.resetLine(for: window, style: style, now: now)
-    }
-
-    private static func usesDetailBackedWindow(provider: UsageProvider) -> Bool {
-        ProviderDescriptorRegistry.descriptor(for: provider).metadata.usesDetailBackedWindow
     }
 
     private static func resetLineForDetailBackedWindow(
