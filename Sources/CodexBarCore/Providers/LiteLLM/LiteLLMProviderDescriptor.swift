@@ -35,6 +35,7 @@ public enum LiteLLMProviderDescriptor {
                 isPrimaryProvider: false,
                 usesAccountFallback: false,
                 debugLogUnavailableMessage: "LiteLLM debug log not yet implemented",
+                usesDetailBackedWindow: true,
                 dashboardURL: nil,
                 statusPageURL: nil),
             branding: ProviderBranding(
@@ -66,7 +67,10 @@ public enum LiteLLMProviderDescriptor {
                 menuCard: ProviderMenuCardPresentation(
                     showsPrimaryBalanceDescription: true,
                     showsSecondaryBalanceDescription: true,
-                    hidesPrimaryResetWithoutDate: true)),
+                    hidesPrimaryResetWithoutDate: true),
+                menu: ProviderMenuDescriptorPresentation(
+                    primaryDescriptionIsDetail: { _ in true },
+                    secondaryDescriptionMode: .detailWhenResetDatePresent)),
             fetchPlan: ProviderFetchPlan(
                 sourceModes: [.auto, .api],
                 pipeline: ProviderFetchPipeline(resolveStrategies: { _ in [LiteLLMAPIFetchStrategy()] })),

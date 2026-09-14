@@ -9,6 +9,7 @@
 - Codex: add the debug-only Workspaces project/session inspector with source, history and privacy updates, plus cancellation when its window closes (#3291). Thanks @AmrMohamad!
 
 ### Fixed
+- LiteLLM: preserve personal and team budget amounts in CLI text/cards and native menus, keeping amounts separate from actual reset dates.
 - LongCat: show token balances as details, keep fuel-pack balances beside their expiry, and parse expiry timestamps with fractional seconds.
 - Linux: document complete distro runtime dependencies and one verified CLI/desktop installation flow that stops before extraction on download or checksum failure (#3615, fixes #3614). Thanks @darkrei08!
 - CI: install checksum-verified Swift static SDK archives locally to avoid SwiftPM's Linux downloader teardown crash, and synchronize the late-PTY-fork cleanup fixture.

@@ -197,7 +197,7 @@ struct ProviderArchitectureGatekeeperTests {
             .deepseek, .deepinfra, .mistral, .moonshot, .poe,
         ])
         #expect(Set(descriptors.filter(\.metadata.usesDetailBackedWindow).map(\.id)) == [
-            .warp, .kilo, .mistral, .deepseek, .deepinfra, .qoder, .crof, .chutes, .longcat,
+            .warp, .kilo, .mistral, .deepseek, .deepinfra, .qoder, .crof, .chutes, .longcat, .litellm,
         ])
         #expect(Set(descriptors.filter(\.tokenCost.preservesCalendarDaysInCharts).map(\.id)) == [.codex])
         #if os(macOS)
