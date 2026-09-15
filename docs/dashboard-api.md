@@ -203,6 +203,7 @@ whenever claude-swap reports an email, independently of whether that account's u
 the dashboard identity mode: full by default, or redacted with `--identity redacted`.
 A failure limited to one account stays in that account's `error`; a failure of the whole adapter sets `accountsError`
 while leaving the ambient Claude row intact.
+The web dashboard retains local spend totals and the daily chart once per provider group, with provider diagnostics labeled separately. Account cards keep their own usage and errors; ambient account credits are not presented as shared balances.
 
 ```json
 {
