@@ -38,9 +38,20 @@ extension UsageStore {
         return eligible && self.restoreClaudeHistorySnapshotIfNeeded()
     }
 
+    nonisolated static func underlyingCodexTransportError(_ error: Error) -> Error {
+        // Provider-specific by design: Codex keeps transport identity inside its public OAuth error cases.
+        if case let .networkError(underlyingError) = error as? CodexOAuthFetchError {
+            return underlyingError
+        }
+        if case let .networkError(underlyingError) = error as? CodexTokenRefresher.RefreshError {
+            return underlyingError
+        }
+        return error
+    }
+
     nonisolated static func shouldPreservePriorSnapshot(after error: Error, hadPriorData: Bool) -> Bool {
         guard hadPriorData else { return false }
-        if error is CancellationError {
+        if self.underlyingCodexTransportError(error) is CancellationError {
             return true
         }
         if self.isPreservableNetworkTransportError(error) {

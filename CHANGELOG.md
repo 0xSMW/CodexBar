@@ -3,6 +3,7 @@
 ## 0.60.4 — Unreleased
 
 ### Fixed
+- Codex: retain usage and widget entries during localized network outages, keep their original update time, and classify wrapped transport errors correctly for startup retries and refresh hooks.
 - Codex Workspaces: preserve saved reports when a cost-cache read fails and reject another Codex home's cached sessions before updating project history.
 - Claude: keep claude-swap accounts distinguishable with stable Account N labels in stacked cards and compact rows when Hide Personal Info is enabled, including unavailable accounts, while preserving alias and identity redaction (#3495). Thanks @eggyrooch-blip!
 - Claude: avoid inflated token and cost estimates when proxy transcripts repeat cumulative usage without request IDs, preserve distinct response identities, and rebuild older Claude/Vertex cached totals (#3659). Thanks @MoridinBG!
