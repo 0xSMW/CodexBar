@@ -90,6 +90,11 @@ Source session files remain unchanged; subsequent scans reuse SQLite cursors.
 Publication is transactional: a failed synchronization or snapshot write rolls
 back and leaves the previous complete snapshot available.
 
+Before importing source rows, the indexer validates the raw cost cache against
+the selected Codex home. A failed read or retained cache from another home fails
+the refresh before changing saved project history. A successfully scanned,
+same-scope empty history remains valid and can replace earlier usage.
+
 ## Catalog completeness and last-good data
 
 Catalog access distinguishes complete, missing, locked, corrupt, and
