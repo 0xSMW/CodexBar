@@ -279,7 +279,11 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
 - Parsing:
   - Native Claude logs parse lines with `type: "assistant"` and `message.usage`.
   - Uses per-model token counts (input, cache read/create, output).
-  - Deduplicates streaming chunks by `message.id + requestId` (usage is cumulative per chunk).
+  - Deduplicates cumulative streaming chunks by `message.id + requestId`. When `requestId` is absent,
+    exact, nonblank `sessionId + message.id` identifies repeated response snapshots. Distinct explicit request
+    IDs and distinct fallback sessions remain separate. Rows without sufficient identity are counted individually.
+    Within a file, the final complete cumulative chunk wins, including later appends. Copied records retain the
+    existing preference for parent and non-sidechain records.
   - pi and OMP sessions attribute `anthropic` assistant usage to Claude and bucket it by assistant-turn timestamp, so a
     single pi-compatible session can contribute to multiple models/days.
   - Matching assistant entry IDs within the same session are counted once across roots; distinct turns are retained.
@@ -287,6 +291,7 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   - Native provider cache: `~/Library/Caches/CodexBar/cost-usage/claude-v6.json`
   - Report memo: `~/Library/Caches/CodexBar/cost-usage/claude-v6.report-memo.json` stores source stamps and the daily report across launches. It is reused only while transcript inventory, cache/pricing artifacts, requested window, and report-semantics revision still match.
   - The Claude/Vertex cache artifact retains source file identities independently of the shared Codex parser fingerprint. Replacing a transcript rebuilds its rows rather than merging an old prefix into a new suffix; genuine appends still use the saved parse offset. Older entries without identity are rebuilt once before reuse, including during the normal refresh debounce.
+  - Older Claude/Vertex native caches and report memos are rebuilt once from unchanged transcripts to apply the corrected response deduplication. Corrected reports remain eligible for memo reuse across launches.
   - pi-compatible session cache: `~/Library/Caches/CodexBar/cost-usage/pi-sessions-v8.json`
 
 ## Key files

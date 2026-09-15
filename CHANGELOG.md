@@ -3,6 +3,7 @@
 ## 0.60.4 — Unreleased
 
 ### Fixed
+- Claude: avoid inflated token and cost estimates when proxy transcripts repeat cumulative usage without request IDs, preserve distinct response identities, and rebuild older Claude/Vertex cached totals (#3659). Thanks @MoridinBG!
 - Codex Workspaces: reduce cache-read memory in the experimental debug inspector by skipping raw token snapshots while preserving exact pricing rows and consistent project totals during concurrent scans (#3661). Thanks @apple-ouyang!
 
 ## 0.60.3 — 2026-09-15
