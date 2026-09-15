@@ -178,7 +178,10 @@ The accepted multi-account design in
   pending or failed switches show the requested account's details while the active marker stays source-owned.
   Expired or otherwise unavailable accounts remain inspectable without activation; selecting the active account
   returns to its card. If the adapter reports no active account, the menu says so instead of selecting the first row.
-  Buttons wrap into two rows above three accounts. Hide Personal Info uses stable `Account N` slot labels.
+  Buttons wrap into two rows above three accounts. Hide Personal Info uses stable `Account N` slot labels across
+  segmented buttons, native account cards, compact menu rows, and accessibility text, including unavailable accounts.
+  These numbers come from validated claude-swap slots and remain stable when accounts are reordered; aliases,
+  organization names, and email addresses stay hidden.
   Stacked shows one card per account (active account first, then numeric slot). With four or more
   accounts the stacked menu switches to a compact layout (`AccountMenuLayoutPlanner`): the active account keeps its full
   card, inactive accounts become one-line rows sorted by remaining headroom (most constrained first, red/amber below

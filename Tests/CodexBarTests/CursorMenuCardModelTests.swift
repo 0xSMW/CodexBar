@@ -4,8 +4,8 @@ import Testing
 @testable import CodexBar
 
 struct CursorMenuCardModelTests {
-    @Test
-    func `chosen app session account identity is visible on the card`() throws {
+    @Test(arguments: [false, true])
+    func `chosen app session account identity respects privacy`(hidePersonalInfo: Bool) throws {
         let now = Date(timeIntervalSince1970: 0)
         let metadata = try #require(ProviderDefaults.metadata[.cursor])
         let snapshot = UsageSnapshot(
@@ -36,10 +36,10 @@ struct CursorMenuCardModelTests {
             resetTimeDisplayStyle: .countdown,
             tokenCostUsageEnabled: false,
             showOptionalCreditsAndExtraUsage: true,
-            hidePersonalInfo: false,
+            hidePersonalInfo: hidePersonalInfo,
             now: now))
 
-        #expect(model.email == "app-user")
+        #expect(model.email == (hidePersonalInfo ? "" : "app-user"))
     }
 
     @Test
