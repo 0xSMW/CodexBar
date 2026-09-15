@@ -1,11 +1,16 @@
 # Changelog
 
-## 0.60.3 — Unreleased
+## 0.60.3 — 2026-09-15
+
+### Highlights
+- **Correct Cursor pace:** keep monthly allowances and Grok Bot’s weekly reserve tied to their own reset windows, with restored paid and trial usage.
+- **More complete spending totals:** retain known spend beside unpriced sources and restore shared costs and charts beside web dashboard account groups.
+- **Quieter Claude checks:** avoid duplicate session warnings and prevent background usage probes from creating Remote Control sessions.
 
 ### Fixed
-- Web dashboard: retain shared local spend, daily charts, and provider diagnostics when claude-swap account groups are visible, while keeping account credits and errors scoped correctly (related to #3552). Thanks @xxchan!
+- Web dashboard: retain shared local spend, daily charts, and provider diagnostics when claude-swap account groups are visible, while keeping account credits and errors scoped correctly (#3655, related to #3552). Thanks @xxchan!
 - Claude: avoid duplicate or mislabeled session warnings when a missing five-hour quota temporarily promotes weekly usage into the primary field (related to #3450).
-- Cursor: keep monthly Cursor Auto pace after a billing reset, and show Grok Bot's weekly reserve on the Grok Bot extra bar.
+- Cursor: keep monthly Cursor Auto pace tied to its billing cycle and show Grok Bot’s weekly pace on its own allowance, preserving unpaced trials (#3656). Thanks @freerobby!
 - Cursor: restore Grok Bot usage for the current allowance and trial response fields, retain exhausted active trials, and avoid treating trial expiration as a recurring reset. Thanks @JackHo12! (#3629)
 - Usage & Spend: retain known daily spend beside unpriced providers with a partial-estimate marker, and count token-only requests as unpriced coverage (#3652). Thanks @urda!
 - Claude: opt short-lived CLI usage probes out of Remote Control so background refreshes do not create empty cloud/mobile sessions when Remote Control is enabled by default (#3651, related to #1301). Thanks @KazuyukiNishida!
