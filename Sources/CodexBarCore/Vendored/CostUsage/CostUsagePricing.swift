@@ -493,16 +493,8 @@ enum CostUsagePricing {
                   self.codexModelsDevProviderIDs.contains(routeID)
             else { return [] }
 
-            var providerIDs = [routeID]
-            switch routeID {
-            case "kimi-coding":
-                providerIDs.append("kimi-for-coding")
-            case "opencode-free":
-                providerIDs.append("opencode")
-            default:
-                break
-            }
-            var targets = providerIDs.map { ($0, modelID) }
+            var targets = ModelsDevPricingTargetResolver.targets(providerID: routeID, modelID: trimmed)
+                .map { ($0.providerID, $0.modelID) }
             if routeID == self.codexModelsDevProviderID {
                 let normalized = self.normalizeCodexModel(modelID)
                 if normalized != modelID {

@@ -70,6 +70,8 @@ See `docs/configuration.md` for the schema.
   - Cursor is fetched from the cookie-authenticated cursor.com dashboard API (macOS only; see `docs/cursor.md`) and honors the configured cookie source: a non-empty Manual header is required and forwarded, while Off fails explicitly instead of silently omitting Cursor.
   - `--format text|json` (default: text). `--json` includes the same cost concepts as Settings → Usage & Spend (token mix, `provenance`, coverage), but it is not the dashboard Export JSON schema. CLI places mix fields under each provider's `totals` and emits `provenance`/`coverage` on that provider object; Export JSON nests `tokenMix`, `provenance`, and `coverage` under `groups[]`.
   - OpenCodex appears as a separate `opencodex` payload only when **Include OpenCodex usage logs** is on in Settings. That payload does not invent `projects` (OpenCodex logs have no workspace path).
+    It refreshes cached models.dev prices before estimating recorded provider/model usage. OpenRouter model namespaces
+    remain scoped to OpenRouter, and missing usage or price fields remain unknown rather than zero. See [model pricing](model-pricing.md).
   - `--refresh` ignores cached scans.
   - `--breakdown` adds Claude-only daily and top-model details to text output. Both sections use the same last seven calendar days (or the shorter requested interval); when that interval has no rows, both explicitly label the latest recorded days. Incomplete attribution is marked partial. Ordinary text, other providers, and JSON output are unchanged.
   - `--provider-native-only` is experimental and excludes pi and OMP session mirrors from Claude and Codex history.

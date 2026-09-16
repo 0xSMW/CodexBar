@@ -80,6 +80,7 @@ actor CostUsageStore {
         parserHash: CodexParserHash.value)
     static let cacheGeneration = "sqlite:\(CostUsageStore.schemaVersion)"
     static let compatiblePredecessorParserHashes: Set<String> = [
+        "aa57b010b3c0bee4", // Provider-aware pricing preserves native rows and scan checkpoints.
         "aef0df6c73f8052c", // 0.60.1 rows and checkpoints survive routine rescan repairs.
         "4969a789db679c93", // 0.58.0 native rows, checkpoints, and reports survive queue reordering.
         "c4fa7db2cf54bc41", // Parser revisions reparse older native files while preserving stored rows and checkpoints.
