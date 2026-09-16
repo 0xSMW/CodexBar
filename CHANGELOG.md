@@ -3,6 +3,8 @@
 ## 0.60.4 — Unreleased
 
 ### Fixed
+- Amp: restore independent Agent and Orb usage for Tier output using exact balances, and distinguish monthly allowances from shared credits (#3668). Thanks @jdblackstar!
+- Amp: anchor Tier reserve/deficit pacing to valid billing dates and display remaining Orb time in whole a1.small-equivalent hours without rounding the underlying usage (#3668). Thanks @jdblackstar!
 - Codex: retain usage and widget entries during localized network outages, keep their original update time, and classify wrapped transport errors correctly for startup retries and refresh hooks.
 - Codex Workspaces: preserve saved reports when a cost-cache read fails and reject another Codex home's cached sessions before updating project history.
 - Claude: keep claude-swap accounts distinguishable with stable Account N labels in stacked cards and compact rows when Hide Personal Info is enabled, including unavailable accounts, while preserving alias and identity redaction (#3495). Thanks @eggyrooch-blip!
