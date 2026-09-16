@@ -415,8 +415,8 @@ provider-specific cookie validation, endpoints, login detection, and error trans
 - Details: `docs/synthetic.md`.
 
 ## OpenRouter
-- API token from `~/.codexbar/config.json` (`providers[].apiKey`) or `OPENROUTER_API_KEY` env var.
-- Reads credits and key rate-limit info from OpenRouter APIs.
+- API token from the resolved CodexBar config (`providers[].apiKey`, default `~/.config/codexbar/config.json`) or `OPENROUTER_API_KEY` env var. Legacy config paths remain supported.
+- Reads regular-key quota from `/key` and attempts regular-key credits; a Management API key is required for 30-day Activity spend and is used only for Activity. Credits always use the selected account’s regular key.
 - Shows daily, weekly, and monthly API-key spend when `/api/v1/key` returns those fields.
 - Override base URL with `OPENROUTER_API_URL` env var.
 - Status: `https://status.openrouter.ai` (link only, no auto-polling yet).
