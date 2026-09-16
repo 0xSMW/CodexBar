@@ -2,6 +2,9 @@
 
 ## 0.60.5 — Unreleased
 
+### Fixed
+- Updates: show Sparkle's update UI from Settings after an update downloads in the background, and keep staged updates reachable after dismissing the install dialog.
+
 ## 0.60.4 — 2026-09-16
 
 ### Highlights
