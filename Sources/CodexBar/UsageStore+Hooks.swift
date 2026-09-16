@@ -227,7 +227,7 @@ extension UsageStore {
     /// Coarse, non-secret category for a refresh failure. Never forwards the raw
     /// error description, which can include provider response-body previews.
     nonisolated static func refreshFailureHookStatus(_ error: Error) -> String {
-        let transportError = self.underlyingCodexTransportError(error)
+        let transportError = self.underlyingProviderTransportError(error)
         if transportError is CancellationError { return "cancelled" }
         if isPermissionPromptWaiting(error) { return "auth_required" }
         let nsError = transportError as NSError

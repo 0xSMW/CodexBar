@@ -670,13 +670,14 @@ extension UsageStore {
     }
 
     nonisolated static func errorIsCancellation(_ error: any Error) -> Bool {
-        if error is CancellationError {
+        let transportError = self.underlyingProviderTransportError(error)
+        if transportError is CancellationError {
             return true
         }
-        if let urlError = error as? URLError, urlError.code == .cancelled {
+        if let urlError = transportError as? URLError, urlError.code == .cancelled {
             return true
         }
-        let message = error.localizedDescription
+        let message = transportError.localizedDescription
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
         return message == "cancelled" || message.contains("cancellationerror")

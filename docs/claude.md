@@ -24,6 +24,9 @@ same inline dashboard pattern used by the OpenAI API provider.
 - App runtime main pipeline: OAuth API → CLI PTY → Web API.
 - CLI runtime main pipeline: Web API → CLI PTY.
 - Explicit picker modes (OAuth/Web/CLI) bypass automatic fallback.
+- Explicit OAuth retains the last successful quota measurement through recognized temporary network failures,
+  including localized DNS/offline errors. Its original timestamp remains visible; authentication rejection still
+  follows the existing invalidation and credential-owner rules.
 - A lower-level direct Claude fetcher still contains a separate `.auto` order. That inconsistency is tracked in
   [docs/refactor/claude-current-baseline.md](refactor/claude-current-baseline.md).
 
@@ -69,6 +72,7 @@ Admin API key setup:
 - For the default CLI profile, expired cached credentials can adopt a changed, fresh CLI Keychain token after file fallback. Existing direct-read consent, prompt policy, cooldown, and noninteractive-read checks still apply. Custom profiles are not recovered from the unscoped global item, and CLI credentials are never rewritten by this synchronization.
 - On Claude Code 2.1.x, `Claude Code-credentials` may contain only MCP server OAuth state (`mcpOAuth`) with no `claudeAiOauth`. CodexBar treats that as an OAuth configuration error, does not run background delegated `claude /status` refresh, and surfaces re-auth guidance. Use Web or CLI usage source, or restore a valid Claude OAuth keychain entry. See #1844.
 - Requires `user:profile` scope (CLI tokens with only `user:inference` cannot call usage).
+- Missing-scope errors require a Claude Code sign-in token with usage access. `claude setup-token` produces a token for model requests and is not a usage-scope recovery step ([Claude Code authentication](https://code.claude.com/docs/en/authentication#generate-a-long-lived-token)). Remove any configured OAuth token override before switching Claude Source to Web/CLI.
 - Endpoints:
   - `GET https://api.anthropic.com/api/oauth/usage`
   - `GET https://api.anthropic.com/api/oauth/profile` → account identity used to verify that optional Web enrichment

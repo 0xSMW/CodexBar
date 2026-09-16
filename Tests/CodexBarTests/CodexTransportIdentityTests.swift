@@ -103,15 +103,16 @@ struct CodexTransportIdentityTests {
         }
     }
 
-    @Test
-    func `arbitrary underlying NSError is not unwrapped`() {
+    @Test(arguments: [URLError.Code.notConnectedToInternet, .cancelled])
+    func `arbitrary underlying NSError is not unwrapped`(code: URLError.Code) {
         let error = NSError(domain: "synthetic-provider", code: 1, userInfo: [
             NSLocalizedDescriptionKey: "Synthetic provider failure",
-            NSUnderlyingErrorKey: Self.localizedError(code: .notConnectedToInternet),
+            NSUnderlyingErrorKey: Self.localizedError(code: code),
         ])
         #expect(!UsageStore.shouldPreservePriorSnapshot(after: error, hadPriorData: true))
         #expect(!UsageStore.isStartupConnectivityRetryableError(error))
         #expect(UsageStore.refreshFailureHookStatus(error) == "error")
+        #expect(!UsageStore.errorIsCancellation(error))
     }
 
     @Test
@@ -131,6 +132,7 @@ struct CodexTransportIdentityTests {
     }
 
     private static func expectPolicy(_ error: any Error, code: URLError.Code) {
+        #expect(UsageStore.errorIsCancellation(error) == (code == .cancelled))
         #expect(UsageStore.shouldPreservePriorSnapshot(after: error, hadPriorData: true))
         #expect(!UsageStore.shouldPreservePriorSnapshot(after: error, hadPriorData: false))
         #expect(UsageStore.isStartupConnectivityRetryableError(error) == (code != .cancelled))

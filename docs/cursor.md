@@ -36,6 +36,9 @@ mode never reads Cursor.app credentials; macOS uses its cookie ladder, while Lin
      reads the Cursor database directly and does not persist the app token.
    - When an already-cached cookie exposes a different email or subject, CodexBar logs the mismatch and keeps the
      chosen Cursor.app identity on the usage snapshot/card. It does not combine app usage with browser identity.
+   - Temporary transport failures keep the previous usage measurement and its timestamp for an unchanged account,
+     including when the network message is localized. The same policy applies to stored sessions; rejected sessions
+     still follow the normal sign-in recovery path.
 
 2) **Cached cookie header**
    - Stored after successful browser import.
