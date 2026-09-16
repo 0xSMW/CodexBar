@@ -86,7 +86,7 @@ struct CostUsageScannerClaudeCacheUpgradeTests {
         #expect(savedCache.usage.days == [dayKey: [model: [50, 100, 0, 19, 465_000, 1, 1, 0]]])
         #expect(savedCache.sourceFileIDs[path] == sourceStamp.fileID)
         #expect(savedMemo.version == CostUsageClaudeReportMemo.persistedVersion)
-        #expect(savedMemo.reportSemanticsVersion == 2)
+        #expect(savedMemo.reportSemanticsVersion == 3)
         #expect(savedMemo.reportSemanticsVersion == CostUsageClaudeReportMemo.reportSemanticsVersion)
         #expect(savedMemo.sourceInventory == initialInventory)
         #expect(savedMemo.reportKey.cacheArtifactStamp == CostUsageClaudeFileStamp.read(at: cacheURL))
@@ -104,6 +104,107 @@ struct CostUsageScannerClaudeCacheUpgradeTests {
         #expect(CostUsageClaudeFileStamp.read(at: memoURL) == savedMemoStamp)
         #expect(try Data(contentsOf: sourceURL) == sourceData)
         #expect(CostUsageClaudeFileStamp.read(at: sourceURL) == sourceStamp)
+    }
+
+    @Test
+    func `version two reports reprice GPT usage without rereading unchanged transcripts`() throws {
+        let env = try CostUsageTestEnvironment()
+        defer {
+            CostUsageScanner.evictClaudeReportMemoForTesting(provider: .claude, cacheRoot: env.cacheRoot)
+            env.cleanup()
+        }
+        let day = try env.makeLocalNoon(year: 2026, month: 9, day: 16)
+        let model = "gpt-5.6-sol"
+        #expect(try ModelsDevCache.save(
+            catalog: CostUsagePricingClaudeThresholdTests.catalog(), fetchedAt: day, cacheRoot: env.cacheRoot))
+        let source = try env.writeClaudeProjectFile(
+            relativePath: "project/gpt-session.jsonl",
+            contents: env.jsonl([[
+                "type": "assistant", "timestamp": env.isoString(for: day), "sessionId": "gpt-session",
+                "message": ["id": "gpt-response", "model": model, "usage": [
+                    "input_tokens": 72999, "cache_read_input_tokens": 199_000, "output_tokens": 100,
+                ]],
+            ]]))
+        let sourceData = try Data(contentsOf: source)
+        let sourceStamp = CostUsageClaudeFileStamp.read(at: source)
+        var options = CostUsageScanner.Options(
+            claudeProjectsRoots: [env.claudeProjectsRoot], cacheRoot: env.cacheRoot)
+        options.refreshMinIntervalSeconds = 60
+        let (fresh, _) = self.recordedLoad(provider: .claude, day: day, options: options)
+        #expect(try abs(#require(fresh.summary?.totalCostUSD) - 0.196148) < 1e-10)
+        let dayKey = try #require(fresh.data.first?.date)
+        let cacheURL = CostUsageClaudeCacheIO.cacheFileURL(provider: .claude, cacheRoot: env.cacheRoot)
+        let memoURL = CostUsageClaudeReportMemo.reportMemoFileURL(cacheFileURL: cacheURL)
+        var cache = try JSONDecoder().decode(CostUsageClaudeCache.self, from: Data(contentsOf: cacheURL))
+        let path = try #require(cache.usage.files.keys.first)
+        let row = try #require(cache.usage.files[path]?.claudeRows?.first)
+        cache.usage.files[path]?.claudeRows = [CostUsageScanner.ClaudeUsageRow(
+            dayKey: row.dayKey,
+            model: row.model,
+            sessionId: row.sessionId,
+            messageId: row.messageId,
+            requestId: row.requestId,
+            timestampUnixMs: row.timestampUnixMs,
+            isSidechain: row.isSidechain,
+            pathRole: row.pathRole,
+            input: row.input,
+            cacheRead: row.cacheRead,
+            cacheCreate: row.cacheCreate,
+            cacheCreate1h: row.cacheCreate1h,
+            output: row.output,
+            costNanos: 611_593_000,
+            costPriced: true)]
+        cache.usage.days[dayKey]?[model]?[4] = 611_593_000
+        #expect(cache.usage.version == 2)
+        try JSONEncoder().encode(cache).write(to: cacheURL)
+        let cacheStamp = try #require(CostUsageClaudeFileStamp.read(at: cacheURL))
+        var memo = try JSONDecoder().decode(PersistedReportMemo.self, from: Data(contentsOf: memoURL))
+        memo.reportKey = self.replacingCacheStamp(in: memo.reportKey, with: cacheStamp)
+        memo.report = CostUsageDailyReport(
+            data: [CostUsageDailyReport.Entry(
+                date: dayKey,
+                inputTokens: 72999,
+                outputTokens: 100,
+                cacheReadTokens: 199_000,
+                cacheCreationTokens: 0,
+                totalTokens: 272_099,
+                costUSD: 0.611593,
+                modelsUsed: [model],
+                modelBreakdowns: [CostUsageDailyReport.ModelBreakdown(
+                    modelName: model, costUSD: 0.611593, totalTokens: 272_099)])],
+            summary: CostUsageDailyReport.Summary(
+                totalInputTokens: 72999,
+                totalOutputTokens: 100,
+                cacheReadTokens: 199_000,
+                cacheCreationTokens: 0,
+                totalTokens: 272_099,
+                totalCostUSD: 0.611593))
+        try JSONEncoder().encode(memo).write(to: memoURL)
+        CostUsageScanner.evictClaudeReportMemoForTesting(provider: .claude, cacheRoot: env.cacheRoot)
+        let (control, controlWork) = self.recordedLoad(provider: .claude, day: day, options: options)
+        #expect(control.summary?.totalCostUSD == 0.611593)
+        #expect(controlWork == CostUsageScanner.ClaudeScanWorkMetrics())
+
+        memo.reportSemanticsVersion = 2
+        try JSONEncoder().encode(memo).write(to: memoURL)
+        CostUsageScanner.evictClaudeReportMemoForTesting(provider: .claude, cacheRoot: env.cacheRoot)
+        let (upgraded, work) = self.recordedLoad(provider: .claude, day: day, options: options)
+        #expect(upgraded.data == fresh.data)
+        #expect(upgraded.summary == fresh.summary)
+        #expect(work.cacheDecodes == 1)
+        #expect(work.transcriptParses == 0)
+        #expect(work.cacheEncodes == 0)
+        #expect(work.repricedRows == 1)
+        #expect(CostUsageClaudeFileStamp.read(at: cacheURL) == cacheStamp)
+        #expect(CostUsageClaudeFileStamp.read(at: source) == sourceStamp)
+        #expect(try Data(contentsOf: source) == sourceData)
+        let savedMemo = try JSONDecoder().decode(PersistedReportMemo.self, from: Data(contentsOf: memoURL))
+        #expect(savedMemo.reportSemanticsVersion == 3)
+        CostUsageScanner.evictClaudeReportMemoForTesting(provider: .claude, cacheRoot: env.cacheRoot)
+        let (restarted, restartWork) = self.recordedLoad(provider: .claude, day: day, options: options)
+        #expect(restarted.data == upgraded.data)
+        #expect(restarted.summary == upgraded.summary)
+        #expect(restartWork == CostUsageScanner.ClaudeScanWorkMetrics())
     }
 
     private struct PersistedReportMemo: Codable {
