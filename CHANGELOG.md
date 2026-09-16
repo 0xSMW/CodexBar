@@ -3,6 +3,7 @@
 ## 0.60.4 — Unreleased
 
 ### Fixed
+- DeepSeek: retain Chrome-only balances through transport failures only for the same live browser session, preserving timestamps and retry diagnostics without reusing another profile's balance (related to #3500). Thanks @jaxleezhang!
 - Claude: preserve explicit OAuth quota measurements and startup retry classification through localized network failures.
 - Claude: replace unusable `setup-token` recovery advice for missing usage scopes with sign-in and source-selection guidance (#3390). Thanks @sittinonsukhaya!
 - Cursor: retain app-session and stored-session usage and widget samples through repeated temporary network failures, keeping their original measurement time.
