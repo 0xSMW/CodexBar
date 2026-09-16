@@ -25,16 +25,19 @@ struct DashboardSnapshotPayload: Encodable {
 struct DashboardHostPayload: Encodable {
     let codexBarVersion: String?
     let refreshIntervalSeconds: Int
+    let usageBarsShowUsed: Bool
 
     private enum CodingKeys: String, CodingKey {
         case codexBarVersion
         case refreshIntervalSeconds
+        case usageBarsShowUsed
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.codexBarVersion, forKey: .codexBarVersion)
         try container.encode(self.refreshIntervalSeconds, forKey: .refreshIntervalSeconds)
+        try container.encode(self.usageBarsShowUsed, forKey: .usageBarsShowUsed)
     }
 }
 

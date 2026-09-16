@@ -9,6 +9,98 @@ struct CLIServeWebUITests {
         String(bytes: CLIServeWebUI.response().body, encoding: .utf8) ?? ""
     }
 
+    @Test(arguments: [false, true], [false, true])
+    func `window labels widths and accessibility values follow the selected fill mode`(
+        showUsed: Bool,
+        hasRemainingPercent: Bool) throws
+    {
+        let context = try self.recordingContext()
+        context.evaluateScript("""
+        state.snapshot = {host: {usageBarsShowUsed: \(showUsed)}};
+        const quota = {label: "Session", usedPercent: 25};
+        if (\(hasRemainingPercent)) quota.remainingPercent = 75;
+        const rendered = renderWindow(quota);
+        """)
+        #expect(context.exception == nil)
+        let value = showUsed ? 25 : 75
+        let suffix = showUsed ? "used" : "left"
+        #expect(context.evaluateScript("recordedText(rendered)[0]")?.toString() == "Session · \(value)% \(suffix)")
+        #expect(context.evaluateScript(
+            "recordedNodes(rendered).find(node => node.className === 'fill').style.width")?.toString() == "\(value)%")
+        #expect(context.evaluateScript(
+            "recordedNodes(rendered).find(node => node.className === 'track').attributes['aria-valuenow']")?
+            .toString() ==
+            String(value))
+    }
+
+    @Test
+    func `older browser snapshots without a fill hint use the remaining default`() throws {
+        let context = try self.recordingContext()
+        context.evaluateScript("""
+        state.snapshot = {};
+        const rendered = renderWindow({label: "Session", usedPercent: 25});
+        """)
+        #expect(context.exception == nil)
+        #expect(context.evaluateScript("recordedText(rendered)[0]")?.toString() == "Session · 75% left")
+        #expect(context.evaluateScript(
+            "recordedNodes(rendered).find(node => node.className === 'fill').style.width")?.toString() == "75%")
+    }
+
+    @Test(arguments: [false, true])
+    func `account-group windows share the host fill preference`(showUsed: Bool) throws {
+        let context = try self.recordingContext()
+        context.evaluateScript("fixture.host.usageBarsShowUsed = \(showUsed); renderSnapshot(fixture);")
+        #expect(context.exception == nil)
+        let widths = context.evaluateScript(
+            "recordedNodes(elements.providers).filter(node => node.className === 'fill')" +
+                ".map(node => node.style.width)")?
+            .toArray() as? [String]
+        #expect(widths == (showUsed ? ["20%", "40%", "70%", "10%"] : ["80%", "60%", "30%", "90%"]))
+    }
+
+    @Test
+    func `export optional synthetic fill preference proof pages`() throws {
+        guard let path = ProcessInfo.processInfo.environment["CODEXBAR_SERVE_FILL_PROOF_DIR"] else { return }
+        let output = URL(fileURLWithPath: path, isDirectory: true)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        let fixtures = try #require(Bundle.module.url(forResource: "Fixtures", withExtension: nil))
+            .appendingPathComponent("WebUI/account-group-snapshot.json")
+        var snapshot = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: fixtures)) as? [String: Any])
+        snapshot["generatedAt"] = ISO8601DateFormatter().string(from: Date())
+        var host = try #require(snapshot["host"] as? [String: Any])
+        for showUsed in [false, true] {
+            host["usageBarsShowUsed"] = showUsed
+            snapshot["host"] = host
+            let data = try JSONSerialization.data(withJSONObject: snapshot, options: [.sortedKeys])
+            let fixture = try #require(String(bytes: data, encoding: .utf8))
+                .replacingOccurrences(of: "</", with: "<\\/")
+            var html = self.html
+            if let icon = CLIServeWebUI.iconResponse(name: "ProviderIcon-claude") {
+                html = html.replacingOccurrences(
+                    of: "/icons/ProviderIcon-claude.svg",
+                    with: "data:image/svg+xml;base64," + icon.body.base64EncodedString())
+            }
+            let start = try #require(html.range(of: "<script>"))
+            let end = try #require(html.range(of: "</script>"))
+            var script = String(html[start.upperBound..<end.lowerBound])
+            let bootstrap = try #require(script.range(of: "const cached = storedSnapshot();", options: .backwards))
+            let fill = try #require(script.range(
+                of: "startProgressiveFill();", range: bootstrap.lowerBound..<script.endIndex))
+            script.replaceSubrange(bootstrap.lowerBound..<fill.upperBound, with: "renderSnapshot(\(fixture));")
+            let isolated = """
+            (() => {
+            const localStorage = {getItem: () => null, setItem() {}, removeItem() {}};
+            const fetch = () => Promise.reject(new Error("Synthetic proof has no network"));
+            const setTimeout = () => 0, setInterval = () => 0, clearTimeout = () => {};
+            \(script)
+            })();
+            """
+            html.replaceSubrange(start.upperBound..<end.lowerBound, with: isolated)
+            let name = showUsed ? "serve-used.html" : "serve-remaining.html"
+            try html.write(to: output.appendingPathComponent(name), atomically: true, encoding: .utf8)
+        }
+    }
+
     @Test(arguments: [true, false])
     func `shared costs and diagnostics survive account grouping without sharing credits`(grouped: Bool) throws {
         let context = try self.recordingContext()
