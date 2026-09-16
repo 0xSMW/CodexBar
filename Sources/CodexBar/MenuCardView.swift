@@ -982,7 +982,8 @@ extension UsageMenuCardView.Model {
             comparisonPeriodsEnabled: input.costComparisonPeriodsEnabled,
             snapshot: tokenUsageSnapshot,
             error: input.tokenError,
-            preferredCurrencyCode: input.preferredCurrencyCode)
+            preferredCurrencyCode: input.preferredCurrencyCode,
+            calendar: input.costUsageBucketCalendar)
         let subtitle = input.subtitleOverride.map { (text: $0, style: SubtitleStyle.info) }
             ?? Self.subtitle(
                 snapshot: input.snapshot,

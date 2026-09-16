@@ -85,7 +85,8 @@ struct CLIServeWebUITests {
             var script = String(html[start.upperBound..<end.lowerBound])
             let bootstrap = try #require(script.range(of: "const cached = storedSnapshot();", options: .backwards))
             let fill = try #require(script.range(
-                of: "startProgressiveFill();", range: bootstrap.lowerBound..<script.endIndex))
+                of: "startProgressiveFill();",
+                range: bootstrap.lowerBound..<script.endIndex))
             script.replaceSubrange(bootstrap.lowerBound..<fill.upperBound, with: "renderSnapshot(\(fixture));")
             let isolated = """
             (() => {
@@ -101,14 +102,19 @@ struct CLIServeWebUITests {
         }
     }
 
-    @Test(arguments: [true, false])
-    func `shared costs and diagnostics survive account grouping without sharing credits`(grouped: Bool) throws {
-        let context = try self.recordingContext()
+    @Test(arguments: [true, false], ["en-US", "de-DE"])
+    func `shared costs and diagnostics survive account grouping without sharing credits`(
+        grouped: Bool, locale: String) throws
+    {
+        let context = try self.recordingContext(locale: locale)
         context.evaluateScript("fixture.providers[0].accounts = \(grouped) ? fixture.providers[0].accounts : [];")
         context.evaluateScript("renderSnapshot(fixture);")
         #expect(context.exception == nil)
         let text = try #require(context.evaluateScript("recordedText(elements.providers)")?.toArray() as? [String])
-        for value in ["$2.00", "$5.00", "Synthetic adapter note"] {
+        let twoDollars = try #require(context.evaluateScript("dollars(2)")?.toString())
+        let fiveDollars = try #require(context.evaluateScript("dollars(5)")?.toString())
+        #expect(fiveDollars.contains(",") == (locale == "de-DE"))
+        for value in [twoDollars, fiveDollars, "Synthetic adapter note"] {
             #expect(text.filter { $0 == value }.count == 1)
         }
         #expect(text.filter { $0.contains("Synthetic provider diagnostic") }.count == 1)
@@ -134,11 +140,148 @@ struct CLIServeWebUITests {
             "recordedNodes(elements.providers).filter(x => x.tagName === 'article').length")?.toInt32() == 2)
     }
 
-    private func recordingContext() throws -> JSContext {
+    @Test(arguments: [true, false], ["en-US", "de-DE"])
+    func `partial cost summaries and chart gaps survive grouped and single cards`(
+        grouped: Bool, locale: String) throws
+    {
+        let context = try self.recordingContext(locale: locale)
+        context.evaluateScript("""
+        fixture.providers[0].accounts = \(grouped) ? fixture.providers[0].accounts : [];
+        fixture.providers[0].cost = {todayUSD:null, last30DaysUSD:5,
+          todayIncompleteRequestCount:1, last30DaysIncompleteRequestCount:2};
+        state.costHistories.claude = [
+          {date:'2026-09-14',cost:2},
+          {date:'2026-09-15',cost:3,incompleteRequestCount:1},
+          {date:'2026-09-16',cost:null,incompleteRequestCount:1}];
+        renderSnapshot(fixture);
+        """)
+        #expect(context.exception == nil)
+        let text = try #require(context.evaluateScript("recordedText(elements.providers)")?.toArray() as? [String])
+        #expect(text.contains("— · Incomplete"))
+        let fiveDollars = try #require(context.evaluateScript("dollars(5)")?.toString())
+        #expect(text.contains(fiveDollars + " · Incomplete"))
+        #expect(text.contains("2026-09-16 · — · Incomplete: 1 excluded requests"))
+        let zeroDollars = try #require(context.evaluateScript("dollars(0)")?.toString())
+        #expect(!text.contains("2026-09-16 · " + zeroDollars))
+        #expect(context.evaluateScript("""
+        recordedNodes(elements.providers).find(x => x.tagName === 'svg').attributes['aria-label']
+        """)?.toString()?.contains("incomplete usage") == true)
+        context.evaluateScript("""
+        const missingChart = renderCostChart([{date:'2026-09-16',cost:null,incompleteRequestCount:1}]);
+        const zeroChart = renderCostChart([{date:'2026-09-16',cost:0}]);
+        """)
+        #expect(context.evaluateScript("missingChart !== null && zeroChart === null")?.toBool() == true)
+    }
+
+    @Test
+    func `cost route preserves nullable daily amounts before chart rendering`() throws {
+        let rows = """
+        [{"provider":"claude","daily":[{"date":"2026-09-15","totalCost":0},
+        {"date":"2026-09-16","incompleteRequestCount":1}]}]
+        """
+        let context = try self.recordingContext(costJSON: rows)
+        context.evaluateScript("refreshCostHistory({});")
+        #expect(context.exception == nil)
+        #expect(context.evaluateScript("state.costHistories.claude[0].cost === 0")?.toBool() == true)
+        #expect(context.evaluateScript("state.costHistories.claude[1].cost === null")?.toBool() == true)
+        #expect(context.evaluateScript("state.costHistories.claude[1].incompleteRequestCount")?.toInt32() == 1)
+    }
+
+    @Test
+    func `render synthetic incomplete cost dashboard proof`() throws {
+        guard let path = ProcessInfo.processInfo.environment["CODEXBAR_CLAUDE_INCOMPLETE_PROOF_DIR"] else { return }
+        let output = URL(fileURLWithPath: path, isDirectory: true)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        for before in [true, false] {
+            let snapshot: [String: Any] = [
+                "schemaVersion": 1,
+                "generatedAt": ISO8601DateFormatter().string(from: Date()),
+                "staleAfterSeconds": 86400,
+                "host": ["refreshIntervalSeconds": 60],
+                "providers": [[
+                    "id": "claude",
+                    "name": "Claude",
+                    "enabled": true,
+                    "display": ["sortKey": 0, "accentColor": "#C58060"],
+                    "windows": [],
+                    "cost": before ? ["todayUSD": 0.3224, "last30DaysUSD": 1.4848] : [
+                        "todayUSD": NSNull(),
+                        "last30DaysUSD": 0.84,
+                        "todayIncompleteRequestCount": 1,
+                        "last30DaysIncompleteRequestCount": 2,
+                    ],
+                ]],
+            ]
+            let history: [[String: Any]] = before ? [
+                ["date": "2026-09-14", "cost": 0.4],
+                ["date": "2026-09-15", "cost": 0.7624],
+                ["date": "2026-09-16", "cost": 0.3224],
+            ] : [
+                ["date": "2026-09-14", "cost": 0.4],
+                ["date": "2026-09-15", "cost": 0.44, "incompleteRequestCount": 1],
+                ["date": "2026-09-16", "cost": NSNull(), "incompleteRequestCount": 1],
+            ]
+            func json(_ value: Any) throws -> String {
+                try #require(String(
+                    data: JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]),
+                    encoding: .utf8))
+                    .replacingOccurrences(of: "</", with: "<\\/")
+            }
+            var html = self.html
+            if let icon = CLIServeWebUI.iconResponse(name: "ProviderIcon-claude") {
+                html = html.replacingOccurrences(
+                    of: "/icons/ProviderIcon-claude.svg",
+                    with: "data:image/svg+xml;base64," + icon.body.base64EncodedString())
+            }
+            let start = try #require(html.range(of: "<script>"))
+            let end = try #require(html.range(of: "</script>"))
+            var script = String(html[start.upperBound..<end.lowerBound])
+            let bootstrap = try #require(script.range(of: "const cached = storedSnapshot();", options: .backwards))
+            let fill = try #require(script.range(
+                of: "startProgressiveFill();",
+                range: bootstrap.lowerBound..<script.endIndex))
+            try script.replaceSubrange(
+                bootstrap.lowerBound..<fill.upperBound,
+                with:
+                "state.costHistories.claude = \(json(history)); renderSnapshot(\(json(snapshot)));")
+            let isolated = """
+            (() => {
+            const localStorage = {getItem: () => null, setItem() {}, removeItem() {}};
+            const fetch = () => Promise.reject(new Error("Synthetic proof has no network"));
+            const setTimeout = () => 0, setInterval = () => 0, clearTimeout = () => {};
+            \(script)
+            })();
+            """
+            html.replaceSubrange(start.upperBound..<end.lowerBound, with: isolated)
+            try html.write(
+                to: output.appendingPathComponent(before ? "claude-before.html" : "claude-after.html"),
+                atomically: true,
+                encoding: .utf8)
+        }
+    }
+
+    private func recordingContext(costJSON: String? = nil, locale: String? = nil) throws -> JSContext {
         let context = try #require(JSContext())
+        if let locale {
+            let localeJSON = try #require(String(data: JSONEncoder().encode(locale), encoding: .utf8))
+            context.evaluateScript("""
+            const nativeNumberFormat = Intl.NumberFormat;
+            Intl.NumberFormat = function(locales, options) {
+              return new nativeNumberFormat(locales ?? \(localeJSON), options);
+            };
+            """)
+        }
         let root = try #require(Bundle.module.url(forResource: "Fixtures", withExtension: nil))
             .appendingPathComponent("WebUI")
-        try context.evaluateScript(String(contentsOf: root.appendingPathComponent("recording-dom.js"), encoding: .utf8))
+        var dom = try String(contentsOf: root.appendingPathComponent("recording-dom.js"), encoding: .utf8)
+        if let costJSON {
+            dom = dom.replacingOccurrences(
+                of: "const fetch = () => new Promise(() => {});",
+                with:
+                "const fetch = url => url === '/cost' ? Promise.resolve({ok:true, json:async()=>\(costJSON)}) "
+                    + ": new Promise(() => {});")
+        }
+        context.evaluateScript(dom)
         let start = try #require(self.html.range(of: "<script>"))
         let end = try #require(self.html.range(of: "</script>"))
         context.evaluateScript(String(self.html[start.upperBound..<end.lowerBound]))
@@ -193,8 +336,12 @@ struct CLIServeWebUITests {
         """#)
         #expect(context.exception == nil)
         #expect(context.evaluateScript("titles")?.toArray() as? [String] == [
-            "Work", "shared@example.com · Acme", "Account 1", "s***@example.com · Acme",
-            "fallback@example.com", "Account",
+            "Work",
+            "shared@example.com · Acme",
+            "Account 1",
+            "s***@example.com · Acme",
+            "fallback@example.com",
+            "Account",
         ])
     }
 

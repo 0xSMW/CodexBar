@@ -17,6 +17,8 @@ pending. For the exact current-state parity contract, see
 When an Anthropic Admin API key is configured, Claude can also show organization-level spend/messages/tokens in the
 same inline dashboard pattern used by the OpenAI API provider.
 
+Incomplete proxy records with an explicit null `stop_reason`, positive input, zero output, and no cache counters are excluded from token and cost totals until a completed record arrives. Their day and model stay visible with an **Incomplete** marker and an excluded-request count. Known usage remains a partial subtotal; an incomplete-only period stays unavailable rather than becoming zero. Older caches are rebuilt once to apply this distinction. Missing `stop_reason` alone retains compatibility with older complete logs.
+
 ## Data sources + selection order
 
 ### Default selection (debug menu disabled)

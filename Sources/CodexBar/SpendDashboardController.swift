@@ -777,6 +777,7 @@ enum SpendDashboardSource {
             encoder.append(entry.modelBreakdowns?.count)
             for breakdown in entry.modelBreakdowns ?? [] {
                 encoder.append(breakdown.modelName)
+                encoder.append(breakdown.incompleteRequestCount)
                 encoder.append(breakdown.totalTokens)
                 encoder.append(breakdown.requestCount)
                 encoder.append(breakdown.costUSD)

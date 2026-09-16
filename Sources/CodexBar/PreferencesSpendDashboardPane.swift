@@ -48,13 +48,15 @@ func spendDashboardTokenMixValue(_ value: Int?) -> String {
 func spendDashboardMetricText(
     cost: Double?,
     tokens: Int?,
-    currencyCode: String) -> String
+    currencyCode: String,
+    incompleteRequestCount: Int = 0) -> String
 {
     let parts = [
         cost.map { UsageFormatter.currencyString($0, currencyCode: currencyCode) },
         tokens.map { L("%@ tokens", UsageFormatter.tokenCountString($0)) },
     ].compactMap(\.self)
-    return parts.isEmpty ? "—" : parts.joined(separator: " · ")
+    return (parts.isEmpty ? "—" : parts.joined(separator: " · "))
+        + UsageFormatter.incompleteUsageSuffix(incompleteRequestCount)
 }
 
 func spendDashboardCoverageChipText(_ coverage: CostUsageCoverageCounts) -> String {
@@ -684,12 +686,13 @@ private struct SpendProviderPanel: View {
                         Text(row.displayName).lineLimit(1)
                         Spacer()
                         Text(
-                            row.totalCost == nil && row.totalTokens == nil
+                            row.totalCost == nil && row.totalTokens == nil && row.incompleteRequestCount == 0
                                 ? L("Spend unavailable")
                                 : spendDashboardMetricText(
                                     cost: row.totalCost,
                                     tokens: row.totalTokens,
-                                    currencyCode: self.group.currencyCode))
+                                    currencyCode: self.group.currencyCode,
+                                    incompleteRequestCount: row.incompleteRequestCount))
                             .foregroundStyle(row.totalCost == nil && row.totalTokens == nil ? .secondary : .primary)
                             .monospacedDigit()
                     }
@@ -749,7 +752,8 @@ private struct SpendModelPanel: View {
                             Text(spendDashboardMetricText(
                                 cost: row.totalCost,
                                 tokens: row.totalTokens,
-                                currencyCode: self.group.currencyCode))
+                                currencyCode: self.group.currencyCode,
+                                incompleteRequestCount: row.incompleteRequestCount))
                                 .monospacedDigit()
                         }
                         .padding(.vertical, 9)
@@ -1349,6 +1353,7 @@ struct SpendDashboardExportPayload: Encodable, Sendable {
         let currencyCode: String
         let totalTokens: Int?
         let totalCost: Double?
+        let incompleteRequestCount: Int?
         let meteredCost: Double?
         let provenance: String
         let coverage: CostUsageCoverageCounts
@@ -1363,6 +1368,7 @@ struct SpendDashboardExportPayload: Encodable, Sendable {
         let sourceKind: String
         let totalTokens: Int?
         let totalCost: Double?
+        let incompleteRequestCount: Int?
     }
 
     struct Model: Encodable, Sendable {
@@ -1370,6 +1376,7 @@ struct SpendDashboardExportPayload: Encodable, Sendable {
         let modelName: String
         let totalTokens: Int?
         let totalCost: Double?
+        let incompleteRequestCount: Int?
     }
 
     static func make(model: SpendDashboardModel, hiddenSourceIDs: [String]) -> Self {
@@ -1381,6 +1388,7 @@ struct SpendDashboardExportPayload: Encodable, Sendable {
                     currencyCode: group.currencyCode,
                     totalTokens: group.totalTokens,
                     totalCost: group.totalCost,
+                    incompleteRequestCount: group.incompleteRequestCount > 0 ? group.incompleteRequestCount : nil,
                     meteredCost: group.meteredCost,
                     provenance: group.provenance.rawValue,
                     coverage: group.coverage,
@@ -1391,14 +1399,16 @@ struct SpendDashboardExportPayload: Encodable, Sendable {
                             displayName: $0.displayName,
                             sourceKind: $0.sourceKind.rawValue,
                             totalTokens: $0.totalTokens,
-                            totalCost: $0.totalCost)
+                            totalCost: $0.totalCost,
+                            incompleteRequestCount: $0.incompleteRequestCount > 0 ? $0.incompleteRequestCount : nil)
                     },
                     models: group.models.map {
                         Model(
                             provider: $0.provider.rawValue,
                             modelName: $0.modelName,
                             totalTokens: $0.totalTokens,
-                            totalCost: $0.totalCost)
+                            totalCost: $0.totalCost,
+                            incompleteRequestCount: $0.incompleteRequestCount > 0 ? $0.incompleteRequestCount : nil)
                     })
             },
             hiddenSourceIDs: hiddenSourceIDs)

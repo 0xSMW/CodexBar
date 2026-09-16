@@ -252,6 +252,85 @@ struct CostUsageScannerClaudeProxyIdentityTests {
         #expect(rebuiltReport.summary == completedReport.summary)
     }
 
+    @Test
+    func `preliminary proxy estimates stay unknown beside recorded usage`() throws {
+        let env = try CostUsageTestEnvironment()
+        defer { env.cleanup() }
+        let day = try env.makeLocalNoon(year: 2025, month: 12, day: 21)
+        let pending = self.proxyUsageEvent(env: env, day: day, complete: false)
+        let file = try env.writeClaudeProjectFile(
+            relativePath: "project/session.jsonl", contents: env.jsonl([pending]))
+        let options = self.options(env: env)
+        let unknown = self.load(day: day, options: options)
+        #expect(unknown.summary?.totalCostUSD == nil)
+        #expect(unknown.summary?.totalTokens == nil)
+        #expect(unknown.data.first?.incompleteRequestCount == 1)
+        #expect(unknown.data.first?.modelBreakdowns?.first?.totalTokens == nil)
+
+        // Legacy records without stop_reason are still valid, including zero output.
+        let legacy = self.event(env: env, day: day, identity: Identity(message: "legacy"), input: 100, output: 0)
+        try self.append(Data(env.jsonl([legacy]).utf8), to: file)
+        let mixed = self.load(day: day, options: options)
+        #expect(mixed.summary?.totalTokens == 100)
+        #expect(try abs(#require(mixed.summary?.totalCostUSD) - 0.0003) < 0.000000001)
+        #expect(mixed.data.first?.incompleteRequestCount == 1)
+        let snapshot = CostUsageFetcher.tokenSnapshot(from: mixed, now: day)
+        #expect(snapshot.summary(forLastDays: 1).incompleteRequestCount == 1)
+
+        CostUsageScanner.evictClaudeReportMemoForTesting(provider: .claude, cacheRoot: env.cacheRoot)
+        #expect(self.load(day: day, options: options).data == mixed.data)
+    }
+
+    @Test(arguments: Placement.allCases, [false, true])
+    func `completed proxy usage wins over an early estimate in either order`(
+        placement: Placement, reverse: Bool) throws
+    {
+        let env = try CostUsageTestEnvironment()
+        defer { env.cleanup() }
+        let day = try env.makeLocalNoon(year: 2025, month: 12, day: 21)
+        let first = self.proxyUsageEvent(env: env, day: day, complete: reverse)
+        let second = self.proxyUsageEvent(env: env, day: day, complete: !reverse)
+        let catalog = try JSONDecoder().decode(ModelsDevCatalog.self, from: Data(#"""
+        {"openai":{"models":{"gpt-5.4":{"id":"gpt-5.4","cost":{"input":2.5,"output":15,"cache_read":0.25}}}}}
+        """#.utf8))
+        #expect(ModelsDevCache.save(catalog: catalog, fetchedAt: day, cacheRoot: env.cacheRoot))
+        let options = self.options(env: env)
+        switch placement {
+        case .sameFile:
+            _ = try env.writeClaudeProjectFile(
+                relativePath: "project/session.jsonl",
+                contents: env.jsonl([first, second]))
+        case .append:
+            let file = try env.writeClaudeProjectFile(
+                relativePath: "project/session.jsonl",
+                contents: env.jsonl([first]))
+            _ = self.load(day: day, options: options)
+            try self.append(Data(env.jsonl([second]).utf8), to: file)
+        case .separateFiles:
+            _ = try env.writeClaudeProjectFile(relativePath: "project/session.jsonl", contents: env.jsonl([first]))
+            _ = try env.writeClaudeProjectFile(
+                relativePath: "project/session/subagents/agent.jsonl", contents: env.jsonl([second]))
+        }
+        let report = self.load(day: day, options: options)
+        #expect(report.summary?.totalTokens == 1860)
+        #expect(report.summary?.cacheReadTokens == 1664)
+        #expect(report.data.first?.incompleteRequestCount == 0)
+        #expect(try abs(#require(report.summary?.totalCostUSD) - 0.0009685) < 0.000000001)
+    }
+
+    private func proxyUsageEvent(env: CostUsageTestEnvironment, day: Date, complete: Bool) -> [String: Any] {
+        [
+            "type": "assistant", "timestamp": env.isoString(for: day), "sessionId": "session",
+            "message": [
+                "id": "response", "model": "gpt-5.4",
+                "stop_reason": complete ? "end_turn" : NSNull(),
+                "usage": complete
+                    ? ["input_tokens": 191, "cache_read_input_tokens": 1664, "output_tokens": 5]
+                    : ["input_tokens": 1612, "output_tokens": 0],
+            ],
+        ]
+    }
+
     private func options(env: CostUsageTestEnvironment) -> CostUsageScanner.Options {
         var options = CostUsageScanner.Options(
             claudeProjectsRoots: [env.claudeProjectsRoot], cacheRoot: env.cacheRoot)
