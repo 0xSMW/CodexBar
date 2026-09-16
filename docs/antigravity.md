@@ -21,6 +21,11 @@ run `agy` once and sign in. CodexBar keeps the signed-in `agy` local HTTPS serve
 after each refresh and stops it when idle, or reuses a signed-in `agy` you already have running
 without taking ownership of that process.
 
+`agy` 1.2.2 and later reject tokenless local requests with `401 missing CSRF token` on both ports and do not
+expose the generated token (1.1.28, 1.2.0, and 1.2.1 answer the same request with `200`). When the selected
+executable reports 1.2.2 or later, CodexBar still spends its bounded warm-reuse check but does not spawn a
+managed session or wait for its readiness deadline. Unknown versions keep the managed spawn.
+
 For `agy` 1.2.2 and later, a failed legacy HTTPS fetch can fall back to
 `agy -p /usage --output-format json`. CodexBar checks that the same executable reports version 1.1.11
 or later before using print mode; [Google introduced non-interactive usage reports in 1.1.11](https://antigravity.google/changelog).
@@ -180,7 +185,8 @@ The fallback can return quota without the account email or plan fields from `Get
 
 Differences from the desktop local probe:
 
-- The CLI HTTPS endpoint does **not** require `X-Codeium-Csrf-Token`.
+- Before `agy` 1.2.2, the CLI HTTPS endpoint does **not** require `X-Codeium-Csrf-Token`; 1.2.2 and later
+  require a token that CodexBar cannot obtain.
 - Before launching `agy`, both menu-bar refreshes and one-shot CLI invocations spend at most two seconds looking for
   an already-running, same-user `agy` at the selected binary path and reuse its tokenless local HTTPS endpoint when it
   returns parseable usage for the selected account. CodexBar-owned pids are excluded from external reuse so managed
