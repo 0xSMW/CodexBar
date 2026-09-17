@@ -355,6 +355,10 @@ enum ShareStatsBuilder {
 }
 
 enum ShareStatsFormatting {
+    static func subscriptionSummary(count: Int) -> String {
+        count == 1 ? "1 subscription" : "\(count) subscriptions"
+    }
+
     static func compactCount(_ value: Int) -> String {
         let magnitude = abs(Double(value))
         let (divisor, suffix): (Double, String)
