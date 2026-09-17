@@ -5,6 +5,7 @@
 ### Fixed
 - Kimi: accept ratio-pool Code API responses, preserve absent weekly quotas, and show the reported monthly Total usage without browser authentication (#3694). Thanks @eliasburlison!
 - Cursor costs: stop immediate retry loops when fetched credentials remain unconfirmed, retain account ownership checks, and retry real account or cost-settings changes (related to #3249).
+- Cursor: show Enterprise and Business member usage from the selected team's verified budget, preserving summary fallback for unavailable or ambiguous team data (#3646). Thanks @ibalampanis!
 - Sharing: label usage snapshots with the last included reporting day and preserve the dashboard timezone in images and copied text (#3692). Thanks @Chipagosfinest!
 - Antigravity history: skip unrelated SQLite databases without withholding valid usage, while keeping foreign-only roots unavailable and unsupported schemas incomplete (#3699). Thanks @urda!
 - Antigravity: skip the futile managed-server readiness wait on CSRF-gated `agy` versions and reach supported usage reports sooner, preserving account selection and warm-session ownership (#3685, related to #3586). Thanks @Niclassslua!
