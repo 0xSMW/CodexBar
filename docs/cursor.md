@@ -140,6 +140,8 @@ API-list-price estimates are not estimates of actual Cursor charges: they do not
 
 Caching: the app holds the snapshot for an in-memory hourly TTL, keyed by the history window plus the cookie source and resolved account (manual-cookie hash or auto-mode account fingerprint), so switching accounts or pasting a new cookie invalidates it immediately.
 
+If Auto fetches usage with a cookie that the app still cannot confirm for the current account, the result stays unpublished. An unchanged account scope waits for the next normal or manual refresh instead of repeatedly forcing another request. Real account, history-window, provider, or cost-timezone changes still request a replacement; a successful fetch that confirms its own cookie can publish immediately.
+
 ## Snapshot mapping
 - Primary: plan usage percent (included plan).
 - Secondary: Cursor (Cursor models) usage percent.
