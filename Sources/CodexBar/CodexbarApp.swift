@@ -148,9 +148,26 @@ protocol UpdaterProviding: AnyObject {
     var automaticallyDownloadsUpdates: Bool { get set }
     var isAvailable: Bool { get }
     var unavailableReason: String? { get }
+    var manualUpdateCommand: ManualUpdateCommand? { get }
     var updateStatus: UpdateStatus { get }
     func checkForUpdates(_ sender: Any?)
     func installUpdate()
+}
+
+extension UpdaterProviding {
+    var manualUpdateCommand: ManualUpdateCommand? {
+        nil
+    }
+}
+
+enum ManualUpdateCommand: Sendable {
+    case homebrew
+
+    var command: String {
+        switch self {
+        case .homebrew: "brew upgrade --cask steipete/tap/codexbar"
+        }
+    }
 }
 
 /// No-op updater used for debug builds and non-bundled runs to suppress Sparkle dialogs.
@@ -159,10 +176,19 @@ final class DisabledUpdaterController: UpdaterProviding {
     var automaticallyDownloadsUpdates: Bool = false
     let isAvailable: Bool = false
     let unavailableReason: String?
+    let manualUpdateCommand: ManualUpdateCommand?
     let updateStatus = UpdateStatus()
 
-    init(unavailableReason: String? = nil) {
+    init(unavailableReason: String? = nil, manualUpdateCommand: ManualUpdateCommand? = nil) {
         self.unavailableReason = unavailableReason
+        self.manualUpdateCommand = manualUpdateCommand
+    }
+
+    static func homebrew() -> DisabledUpdaterController {
+        let command = ManualUpdateCommand.homebrew
+        return DisabledUpdaterController(
+            unavailableReason: "Updates managed by Homebrew. Run: \(command.command)",
+            manualUpdateCommand: command)
     }
 
     func checkForUpdates(_ sender: Any?) {}
@@ -318,8 +344,7 @@ private func makeUpdaterController() -> UpdaterProviding {
     }
 
     if InstallOrigin.isHomebrewCask(appBundleURL: bundleURL) {
-        return DisabledUpdaterController(
-            unavailableReason: "Updates managed by Homebrew. Run: brew upgrade --cask steipete/tap/codexbar")
+        return DisabledUpdaterController.homebrew()
     }
 
     guard isDeveloperIDSigned(bundleURL: bundleURL) else {
