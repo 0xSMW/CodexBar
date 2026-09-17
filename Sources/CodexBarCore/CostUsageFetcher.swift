@@ -617,15 +617,22 @@ public struct CostUsageFetcher: Sendable {
             var projects: [CostUsageProjectBreakdown] = []
             var sessions: [CostUsageSessionBreakdown] = []
             var staleSnapshotUpdatedAt: Date?
+            var historyCoverageIsEstablished = provider != .codex
             if provider == .codex {
                 let roots = CostUsageScanner.codexSessionsRoots(options: options.scanOptions)
                 let rootsFingerprint = CostUsageScanner.codexRootsFingerprint(options: options.scanOptions)
                 let range = CostUsageScanner.CostUsageDayRange(
                     since: since, until: now, calendar: options.scanOptions.calendar)
                 let view = Self.codexReportView(options: options.scanOptions, range: range)
-                if let previous = view.previousReport(range: range, rootsFingerprint: rootsFingerprint) {
+                historyCoverageIsEstablished = view.historyCoverageIsEstablished(
+                    range: range,
+                    rootsFingerprint: rootsFingerprint)
+                if !historyCoverageIsEstablished,
+                   let previous = view.previousReport(range: range, rootsFingerprint: rootsFingerprint)
+                {
                     staleSnapshotUpdatedAt = previous.updatedAt
                 } else {
+                    daily = view.dailyReport(range: range, cacheRoot: options.scanOptions.cacheRoot)
                     projects = view.projects(
                         range: range,
                         cacheRoot: options.scanOptions.cacheRoot)
@@ -660,8 +667,7 @@ public struct CostUsageFetcher: Sendable {
                 projects: projects,
                 sessions: sessions,
                 staleSnapshotUpdatedAt: staleSnapshotUpdatedAt,
-                historyCoverageIsEstablished: provider != .codex
-                    || Self.codexScanCatchUpStatus(options: options.scanOptions).historyCoverageIsEstablished)
+                historyCoverageIsEstablished: historyCoverageIsEstablished)
         }
     }
 
@@ -674,6 +680,9 @@ public struct CostUsageFetcher: Sendable {
         // Keep a fallback detail read on the same validated connection.
         let store = CostUsageStore(cacheRoot: options.cacheRoot)
         var view = store.syncLoadCodexReadView(calendar: options.calendar, purpose: .status).scoped(to: roots)
+        if view.hasPendingScan {
+            view = store.syncLoadCodexReadView(calendar: options.calendar, purpose: .activity).scoped(to: roots)
+        }
         if view.previousReport(range: range, rootsFingerprint: rootsFingerprint) == nil {
             view = store.syncLoadCodexReadView(calendar: options.calendar, purpose: .report).scoped(to: roots)
         }
@@ -920,9 +929,10 @@ public struct CostUsageFetcher: Sendable {
             // Final catch-up publication must not fall back to the report from before a new pending scan.
             guard !requireCompleteHistory || nativeHistoryCoverageIsEstablished else { return nil }
 
-            if let previous = cache.previousReport(
-                range: range,
-                rootsFingerprint: rootsFingerprint)
+            if !nativeHistoryCoverageIsEstablished,
+               let previous = cache.previousReport(
+                   range: range,
+                   rootsFingerprint: rootsFingerprint)
             {
                 reports.append(previous.report)
                 staleSnapshotUpdatedAt = previous.updatedAt
