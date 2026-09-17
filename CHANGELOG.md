@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.60.6 — Unreleased
+
 ## 0.60.5 — 2026-09-17
 
 ### Highlights
