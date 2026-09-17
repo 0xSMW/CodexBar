@@ -196,6 +196,7 @@ Differences from the desktop local probe:
   `argv[0]`; a bare `agy` command can match, but a conflicting executable cannot. Platforms without that identity
   retain the absolute command-path check. User/account and managed-process exclusions are unchanged.
 - An unavailable or tokenless fallback preserves an earlier attempted-source failure, including CLI sign-in guidance, API errors, timeouts, and transport errors. A newly detected tokenless source can still replace an earlier not-running result. Successful fallbacks supply usage, and more specific later errors retain their normal precedence.
+- The same error-selection policy applies when the final source stops fallback, including when local data disappears between availability checking and fetching. Per-source diagnostics still describe each original failure.
 - Readiness is endpoint-based: CodexBar retries until one of the quota endpoints parses, because fresh `agy`
   processes can bind a port before the quota service is initialized.
 - App runtime uses a bounded warm session: `agy` is kept alive briefly after a refresh, then stopped on idle. CLI runtime

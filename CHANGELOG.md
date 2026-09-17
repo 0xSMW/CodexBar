@@ -14,6 +14,7 @@
 - CLI: recognize the containing app when checking credential-cache access through installed CLI symlinks (#3690). Thanks @sreejithraman!
 - Agent sessions: preserve case-sensitive SSH usernames when deduplicating remote hosts (related to #3538 and #3545). Thanks @ECuteri!
 - Claude costs: exclude preliminary proxy estimates without final usage, retain known subtotals with incomplete markers across menus, charts, CLI, and exports, and rebuild older cached estimates (#3688). Thanks @MoridinBG!
+- Antigravity: preserve useful earlier source errors when an unavailable final source stops fallback, while keeping cancellation and later substantive errors authoritative (related to #3683). Thanks @hhh2210!
 
 ## 0.60.4 — 2026-09-16
 
