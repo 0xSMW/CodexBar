@@ -134,6 +134,9 @@ Admin API key setup:
   - `sessionKey` (value prefix `sk-ant-...`).
 - Cached cookies: Keychain cache `com.steipete.codexbar.cache` (account `cookie.claude`, source + timestamp).
   Reused before re-importing from browsers.
+- After replacing an expired cached cookie, failures from the recovered session retain their actual error type,
+  including temporary network failures, server outages, Cloudflare challenges, and cancellation. The original
+  sign-in error is retained only when browser recovery itself fails to find a usable session.
 - API calls (all include `Cookie: sessionKey=<value>`):
   - `GET https://claude.ai/api/organizations` → org UUID.
   - `GET https://claude.ai/api/organizations/{orgId}/usage` → session/weekly/opus.
