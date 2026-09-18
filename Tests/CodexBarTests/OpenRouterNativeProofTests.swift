@@ -6,7 +6,7 @@ import XCTest
 @testable import CodexBarCore
 
 @MainActor
-final class OpenRouterReasoningNativeProofTests: XCTestCase {
+final class OpenRouterNativeProofTests: XCTestCase {
     func test_reportedReasoningReachesNativeViewsAndDashboardExport() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard let path = environment["CODEXBAR_OPENROUTER_REASONING_PROOF_DIR"] else {
@@ -61,26 +61,7 @@ final class OpenRouterReasoningNativeProofTests: XCTestCase {
             now: OpenRouterReasoningTestSupport.now)
         XCTAssertTrue(cli.contains("Balance: $60.00"))
         try cli.write(to: output.appendingPathComponent("cli.txt"), atomically: true, encoding: .utf8)
-        let card = try UsageMenuCardView.Model.make(.init(
-            provider: .openrouter,
-            metadata: XCTUnwrap(ProviderDefaults.metadata[.openrouter]),
-            snapshot: snapshot,
-            credits: nil,
-            creditsError: nil,
-            dashboardError: nil,
-            tokenSnapshot: snapshot.costUsage,
-            tokenError: nil,
-            account: AccountInfo(email: nil, plan: nil),
-            isRefreshing: false,
-            lastError: nil,
-            usageBarsShowUsed: false,
-            resetTimeDisplayStyle: .countdown,
-            tokenCostUsageEnabled: true,
-            showOptionalCreditsAndExtraUsage: true,
-            hidePersonalInfo: true,
-            usesLiveSubtitle: false,
-            preferredCurrencyCode: "USD",
-            now: OpenRouterReasoningTestSupport.now))
+        let card = try Self.menuCard(snapshot)
 
         guard NSApplication.shared.delegate == nil else { return XCTFail("Use a standalone test host") }
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
@@ -104,6 +85,74 @@ final class OpenRouterReasoningNativeProofTests: XCTestCase {
                 ["label": $0.label, "value": $0.value, "secondaryValue": $0.secondaryValue ?? ""]
             },
         ], options: [.prettyPrinted, .sortedKeys]).write(to: output.appendingPathComponent("state.json"))
+    }
+
+    func test_invalidActivityDiagnosticReachesNativeCardAndCLI() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard let path = environment["CODEXBAR_OPENROUTER_DIAGNOSTIC_PROOF_DIR"] else {
+            throw XCTSkip("Set CODEXBAR_OPENROUTER_DIAGNOSTIC_PROOF_DIR for synthetic diagnostic proof")
+        }
+        let output = URL(fileURLWithPath: path, isDirectory: true)
+        let home = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+            .standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        let parent = output.deletingLastPathComponent()
+            .standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        guard environment["CODEXBAR_SUPPRESS_TEST_KEYCHAIN_ACCESS"] == "1",
+              environment[CodexCredentialFileAccess.isolationEnvironmentKey] == "1",
+              environment["CODEXBAR_TEST_SESSION_FILE_ISOLATION"] == "1",
+              environment["CODEXBAR_ALLOW_TEST_KEYCHAIN_ACCESS"] != "1",
+              home.count > parent.count, home.starts(with: parent),
+              let expected = environment["CODEXBAR_OPENROUTER_DIAGNOSTIC_EXPECT_REASON"],
+              ["Request failed", "Response was invalid"].contains(expected)
+        else { return XCTFail("Use a contained home, credential isolation, and explicit expected diagnostic") }
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        let snapshot = try await OpenRouterDiagnosticFixture.fetch(
+            engine: .quickJS,
+            endpoint: .history,
+            result: .response(200, OpenRouterDiagnosticFixture.activity(model: String(repeating: "x", count: 65))))
+        XCTAssertEqual(snapshot.primary?.usedPercent, 25)
+        XCTAssertEqual(snapshot.detailRow(label: "Remaining")?.value, "$60.00")
+        XCTAssertNil(snapshot.costUsage)
+        XCTAssertEqual(snapshot.detailRow(label: "Last 30 days")?.secondaryValue, expected)
+        let cli = CLIRenderer.renderText(
+            provider: .openrouter,
+            snapshot: snapshot,
+            credits: nil,
+            context: RenderContext(header: "OpenRouter", status: nil, useColor: false, resetStyle: .countdown),
+            now: OpenRouterReasoningTestSupport.now)
+        XCTAssertTrue(cli.contains(expected))
+        try cli.write(to: output.appendingPathComponent("cli.txt"), atomically: true, encoding: .utf8)
+        let card = try Self.menuCard(snapshot)
+        guard NSApplication.shared.delegate == nil else { return XCTFail("Use a standalone test host") }
+        for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+            let menu = AnyView(UsageMenuCardView(model: card, width: 420).padding(20).frame(width: 460))
+            try Self.pngData(for: menu, appearance: appearance)
+                .write(to: output.appendingPathComponent("menu-\(name).png"))
+        }
+        try JSONEncoder().encode(snapshot).write(to: output.appendingPathComponent("snapshot.json"))
+    }
+
+    private static func menuCard(_ snapshot: UsageSnapshot) throws -> UsageMenuCardView.Model {
+        try UsageMenuCardView.Model.make(.init(
+            provider: .openrouter,
+            metadata: XCTUnwrap(ProviderDefaults.metadata[.openrouter]),
+            snapshot: snapshot,
+            credits: nil,
+            creditsError: nil,
+            dashboardError: nil,
+            tokenSnapshot: snapshot.costUsage,
+            tokenError: nil,
+            account: AccountInfo(email: nil, plan: nil),
+            isRefreshing: false,
+            lastError: nil,
+            usageBarsShowUsed: false,
+            resetTimeDisplayStyle: .countdown,
+            tokenCostUsageEnabled: true,
+            showOptionalCreditsAndExtraUsage: true,
+            hidePersonalInfo: true,
+            usesLiveSubtitle: false,
+            preferredCurrencyCode: "USD",
+            now: OpenRouterReasoningTestSupport.now))
     }
 
     private static func pngData(for view: AnyView, appearance: NSAppearance.Name) throws -> Data {
