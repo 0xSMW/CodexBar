@@ -105,7 +105,7 @@ struct ProviderUsageItemVisibilityTests {
         ])
 
         #expect(projected.metrics.map(\.id) == ["secondary"])
-        #expect(projected.codexResetCredits != nil)
+        #expect(projected.limitResetCredits != nil)
         #expect(projected.creditsText == nil)
         #expect(projected.creditsRemaining == nil)
         #expect(projected.creditsProgressPercent == nil)
@@ -337,8 +337,8 @@ struct ProviderUsageItemVisibilityTests {
             creditsScaleText: showsCredits ? "$25" : nil,
             creditsHintText: showsCredits ? "Available balance" : nil,
             creditsHintCopyText: showsCredits ? "Available balance" : nil,
-            codexResetCredits: showsResetCredits
-                ? CodexResetCreditsPresentation(
+            limitResetCredits: showsResetCredits
+                ? LimitResetCreditsPresentation(
                     text: "1 available",
                     items: [.init(expiryText: "Expires tomorrow", compactExpiryText: "tomorrow")])
                 : nil,

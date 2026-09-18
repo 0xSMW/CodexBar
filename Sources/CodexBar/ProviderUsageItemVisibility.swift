@@ -59,7 +59,7 @@ extension UsageMenuCardView.Model {
                 title: UsageMenuCardView.popupMetricTitle(provider: self.provider, metric: metric))
         }
         // Provider-specific by design: Codex reset credits are a non-metric section with their own visibility choice.
-        if self.provider == .codex, self.codexResetCredits != nil {
+        if self.provider == .codex, self.limitResetCredits != nil {
             descriptors.append(ProviderUsageItemDescriptor(
                 id: .codexResetCredits,
                 title: L("Limit Reset Credits")))
@@ -106,7 +106,7 @@ extension UsageMenuCardView.Model {
             projected.creditsHintCopyText = nil
         }
         if hiddenItemIDs.contains(.codexResetCredits) {
-            projected.codexResetCredits = nil
+            projected.limitResetCredits = nil
         }
         return projected
     }
