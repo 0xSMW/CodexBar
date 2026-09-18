@@ -6,6 +6,7 @@
 - Azure OpenAI: select OpenAI-compatible v1 in Settings with a shared app/CLI override that preserves the default environment behavior (#3705). Thanks @UndreamerC!
 - Claude: apply the existing process-local Remote Control startup override to the non-PTY usage fallback, preserving saved settings and managed-policy precedence (related to #2251). Thanks @rossshannon!
 - DeepSeek: show reported per-model spend alongside existing usage charts, preserving billing currency and reporting period and honoring optional-usage visibility (#2938). Thanks @jky1314!
+- Codex: refresh the selected account card while its menu stays open, preserving hosted submenus and account ownership when delayed usage arrives (#3715, fixes #3709). Thanks @sandeep780049!
 - Sharing: retain recognized gateway model families in shared cards and copied statistics, preserving provider attribution and excluding raw namespaces and private model names (#3713). Thanks @Chipagosfinest!
 - Mistral: show reported included API and Vibe Code allowances alongside spend and credits, preserving Automatic spend display and independent fallback when optional data is unavailable (#3710). Thanks @JoPaMu!
 - Devin: honor the selected organization, exclude unrelated sites from browser session import, and prefer current decoded credentials over raw storage fallback data.

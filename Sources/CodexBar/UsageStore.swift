@@ -269,6 +269,7 @@ final class UsageStore {
     @ObservationIgnored var _test_providerFetchOutcomeOverride: (@MainActor (
         UsageProvider) async -> ProviderFetchOutcome)?
     #if DEBUG
+    @ObservationIgnored var _test_codexAccountScopedRefreshDidComplete: (@MainActor () -> Void)?
     @ObservationIgnored var _test_cursorCostCredentialFingerprintOverride: (() -> String?)?
     #endif
     @ObservationIgnored var _test_tokenUsageRefreshOverride: (@MainActor (UsageProvider, Bool) async -> Void)?

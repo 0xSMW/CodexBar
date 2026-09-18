@@ -77,6 +77,9 @@ Usage source picker:
   refresh is running discards the old workspace's result.
 - System Account promotion fails closed when a managed selection differs from the auth file's default workspace.
   CodexBar keeps that selection managed rather than silently promoting the default or rewriting Codex-owned auth.
+- In the segmented layout, selecting an account refreshes its card while the menu stays open. Delayed results stay
+  scoped to that selection. An open chart submenu or highlighted menu command can defer the update until the submenu
+  closes or the highlight clears.
 - Reusing OpenCode OAuth enables remote account quota, not OpenCode session token/cost ingestion. See
   [OpenCode with Codex or OpenAI](opencode.md#using-opencode-with-codex-or-openai) for the current history boundary.
 

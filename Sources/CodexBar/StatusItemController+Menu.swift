@@ -1115,11 +1115,10 @@ extension StatusItemController {
                     allowDisabled: true,
                     phaseDidChange: { [weak controller, weak menu, settings] _ in
                         guard let controller, let menu else { return }
-                        guard settings.codexVisibleAccountProjection.activeVisibleAccountID == visibleAccountID
-                        else {
-                            return
+                        // Recheck account ownership when scheduling and when the tracking-safe rebuild runs.
+                        controller.scheduleOpenRootMenuDataRebuildIfStillVisible(menu, provider: .codex) {
+                            settings.codexVisibleAccountProjection.activeVisibleAccountID == visibleAccountID
                         }
-                        controller.refreshOpenMenuIfStillVisible(menu, provider: .codex)
                     })
             }
         }
