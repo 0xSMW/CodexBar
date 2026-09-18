@@ -702,6 +702,7 @@ extension CostUsageScanner {
         state: inout CodexScanState) throws -> Bool
     {
         guard let cached = input.cached, cached.hasCurrentCodexParser else { return false }
+        guard !context.sourceRowRecoveryPathKeys.contains(Self.codexPathKey(input.fileURL)) else { return false }
         let needsSessionId = cached.sessionId == nil
         let parsedBytes = cached.parsedBytes ?? cached.size
         let targetSize = cached.codexScanTargetSize ?? cached.size
@@ -844,7 +845,13 @@ extension CostUsageScanner {
         try context.checkCancellation?()
         guard let cached = input.cached, cached.hasCurrentCodexParser,
               cached.sessionId != nil, !context.forceFullScan else { return false }
+        guard !context.sourceRowRecoveryPathKeys.contains(Self.codexPathKey(input.fileURL)) else { return false }
         guard !Self.cachedCodexFileNeedsPriorityRescan(cached, context: context) else { return false }
+        let sourcePricingForResume = Self.codexSourcePricingForScan(
+            cached: cached, metadata: input.metadata, range: context.range, recoveringSourceRows: false)
+        if cached.codexPendingSourcePricing?.isEmpty == false, sourcePricingForResume?.isEmpty != false {
+            return false
+        }
         if Self.cachedCodexRowsNeedIdentityRescan(cached) {
             return false
         }
@@ -979,11 +986,17 @@ extension CostUsageScanner {
             fileIdentity: input.metadata.path,
             state: &state)
         var pendingPricing = cached.codexPendingPricing ?? [:]
-        let classifiedUniqueRows = Self.codexRowsWithPricingMetadata(
+        var sourcePricing = sourcePricingForResume
+        if sourcePricing != nil, let observedSessionId = delta.sessionId, observedSessionId != cached.sessionId {
+            sourcePricing = [:]
+        }
+        let classifiedUniqueRows = Self.codexRowsWithRetainedPricing(
             uniqueRows,
-            priorityTurns: context.resources.priorityTurns,
-            preservingPricingFrom: { pendingPricing.removeValue(forKey: Self.codexUsageRowKey(
-                sessionId: sessionId, row: $0)) })
+            source: (
+                sourcePricing, delta.rowSourceEndOffsets, cached.codexPendingSourcePricingAnchor?.indexedBytes),
+            pendingPricing: &pendingPricing,
+            sessionId: sessionId,
+            priorityTurns: context.resources.priorityTurns)
         context.workRecorder?.record(processed: uniqueRows.count, repriced: classifiedUniqueRows.count)
 
         let migratedCached = sessionAlreadyContributed
@@ -1081,6 +1094,10 @@ extension CostUsageScanner {
             codexBufferedUnresolvedForkLines: delta.bufferedUnresolvedForkLines)
             .refreshingCodexWorkspaceUsageFingerprint()
         fileUsage.codexNextUsageRowIndex = delta.nextUsageRowIndex
+        Self.retainCodexSourcePricing(
+            &fileUsage,
+            pricing: sourcePricing,
+            anchor: cached.codexPendingSourcePricingAnchor)
         fileUsage.codexPendingPricing = pendingPricing.isEmpty
             || (fileUsage.codexScanComplete == true && !fileUsage.hasBufferedCodexForkRetryLines) ? nil : pendingPricing
         cache.files[input.metadata.path] = fileUsage
@@ -1101,66 +1118,68 @@ extension CostUsageScanner {
         maxBytesToRead: Int64? = nil) throws
     {
         try context.checkCancellation?()
+        let recoveringSourceRows = context.sourceRowRecoveryPathKeys.contains(Self.codexPathKey(input.fileURL))
+        var sourcePricing = Self.codexSourcePricingForScan(
+            cached: input.cached,
+            metadata: input.metadata,
+            range: context.range,
+            recoveringSourceRows: recoveringSourceRows)
+        let sourceAnchor = recoveringSourceRows
+            ? input.cached?.codexTokenIndexAnchor : input.cached?.codexPendingSourcePricingAnchor
+        // Legacy rows can combine events that the corrected parser splits; do not merge them back.
+        let replaceCachedRows = context.dropDeferredCodexRows || input.cached?.hasCurrentCodexParser != true
+        if replaceCachedRows { sourcePricing = nil }
+        let migratedCached = replaceCachedRows ? nil : input.cached.map {
+            sourcePricing == nil ? Self.codexFileUsageWithPricingMetadata($0, context: context) : $0
+        }
+        var usageDays = Self.fileDaysOutsideScanWindow(migratedCached?.days ?? [:], range: context.range)
+
+        let parsed = try Self.parseCodexRescan(
+            input: input,
+            context: context,
+            recoveringSourceRows: recoveringSourceRows,
+            preservingSourcePricing: sourcePricing?.isEmpty == false,
+            maxBytesToRead: maxBytesToRead)
+        if sourcePricing != nil, !FileManager.default.isReadableFile(atPath: input.metadata.path) {
+            state.deferredCachePaths.insert(input.metadata.path)
+            return
+        }
+        if sourcePricing != nil,
+           (parsed.sessionId != nil && parsed.sessionId != input.cached?.sessionId)
+           || (parsed.sessionId == nil && !parsed.rows.isEmpty)
+        {
+            sourcePricing = [:]
+        }
         if let cached = input.cached {
             self.applyFileDays(cache: &cache, fileDays: cached.days, sign: -1)
         }
-        // Legacy rows can combine events that the corrected parser splits; do not merge them back.
-        let replaceCachedRows = context.dropDeferredCodexRows || input.cached?.hasCurrentCodexParser != true
-        let migratedCached = replaceCachedRows
-            ? nil : input.cached.map { Self.codexFileUsageWithPricingMetadata($0, context: context) }
-        var usageDays = Self.fileDaysOutsideScanWindow(migratedCached?.days ?? [:], range: context.range)
-
-        let parsed = try Self.parseCodexFileCancellable(
-            fileURL: input.fileURL,
-            range: context.range,
-            scanTargetSize: input.metadata.size,
-            maxBytesToRead: maxBytesToRead,
-            shouldStopReading: context.scanBudget.map { budget in
-                { bytesRead in budget.shouldYield(additionalBytes: bytesRead) }
-            },
-            inheritedTotalsResolver: context.resources.inheritedResolver.inheritedTotals(for:atOrBefore:),
-            checkCancellation: context.checkCancellation)
         let forkBaselineDependencyKey = Self.codexForkBaselineDependencyKey(
             parentSessionId: parsed.forkedFromId,
             dependsOnParentTotals: parsed.dependsOnParentTotals,
             inheritedResolver: context.resources.inheritedResolver)
-        let cachedSessionMetadata = input.cached?.codexSession ?? CostUsageCodexSessionMetadata(
-            sessionId: input.cached?.sessionId,
-            forkedFromId: input.cached?.forkedFromId,
-            cwd: nil,
-            title: nil,
-            startedAtUnixMs: nil,
-            latestActivityUnixMs: nil)
-        let parsedCodexSession = cachedSessionMetadata.merging(parsed.codexSession)
+        let parsedCodexSession = Self.codexRescanSessionMetadata(cached: input.cached, parsed: parsed.codexSession)
         let sessionId = parsedCodexSession.sessionId ?? parsed.sessionId ?? input.cached?.sessionId
         let projectPath = parsed.projectPath ?? input.cached?.projectPath
         let canonicalProjectPath = parsed.projectPath.map {
             context.resources.projectPathResolver.canonicalProjectPath(for: $0)
         } ?? input.cached?.canonicalProjectPath ?? context.resources.projectPathResolver
             .canonicalProjectPath(for: projectPath)
-        // Trace pruning must not erase observed pricing for an unchanged request.
-        var pendingPricing: [String: CodexPricingEvidence] = if let cached = migratedCached,
-                                                                cached.codexScanFileId != nil,
-                                                                cached.codexScanFileId == input.metadata.fileId,
-                                                                cached.sessionId == sessionId
-        {
-            cached.codexPendingPricing ?? [:]
-        } else {
-            [:]
-        }
-        for row in migratedCached?.codexRows ?? [] {
-            pendingPricing[Self.codexUsageRowKey(sessionId: migratedCached?.sessionId, row: row)] =
-                CodexPricingEvidence(pricingModel: row.pricingModel, pricingMode: row.pricingMode)
-        }
-        let uniqueRows = Self.codexRowsWithPricingMetadata(
-            Self.uniqueCodexRows(
-                rows: parsed.rows,
-                sessionId: sessionId,
-                fileIdentity: input.metadata.path,
-                state: &state),
-            priorityTurns: context.resources.priorityTurns,
-            preservingPricingFrom: { pendingPricing.removeValue(forKey: Self.codexUsageRowKey(
-                sessionId: sessionId, row: $0)) })
+        var pendingPricing = Self.codexRescanPendingPricing(
+            migratedCached: migratedCached,
+            metadata: input.metadata,
+            sessionId: sessionId,
+            preserveCachedRows: sourcePricing == nil)
+        let parsedUniqueRows = Self.uniqueCodexRows(
+            rows: parsed.rows,
+            sessionId: sessionId,
+            fileIdentity: input.metadata.path,
+            state: &state)
+        let uniqueRows = Self.codexRowsWithRetainedPricing(
+            parsedUniqueRows,
+            source: (sourcePricing, parsed.rowSourceEndOffsets, sourceAnchor?.indexedBytes),
+            pendingPricing: &pendingPricing,
+            sessionId: sessionId,
+            priorityTurns: context.resources.priorityTurns)
         context.workRecorder?.record(processed: uniqueRows.count, repriced: uniqueRows.count)
         let duplicateWithoutUniqueUsage = sessionId.map { state.contributingSessionIds.contains($0) } == true
             && uniqueRows.isEmpty
@@ -1233,6 +1252,7 @@ extension CostUsageScanner {
             codexBufferedUnresolvedForkLines: parsed.bufferedUnresolvedForkLines)
             .refreshingCodexWorkspaceUsageFingerprint()
         fileUsage.codexNextUsageRowIndex = parsed.nextUsageRowIndex
+        Self.retainCodexSourcePricing(&fileUsage, pricing: sourcePricing, anchor: sourceAnchor)
         fileUsage.codexPendingPricing = pendingPricing.isEmpty
             || (fileUsage.codexScanComplete == true && !fileUsage.hasBufferedCodexForkRetryLines) ? nil : pendingPricing
         if duplicateWithoutUniqueUsage,
@@ -1397,7 +1417,7 @@ extension CostUsageScanner {
             rowsByDayModel: [:],
             unresolvedRowGroups: [],
             modeOwnershipMismatchGroups: [],
-            priorityEvidenceGroups: [],
+            requestPricingEvidenceGroups: [],
             incompletePricingEvidenceGroups: [],
             authoritativeCostEvidenceGroups: [],
             priorityTurns: priorityTurns,
@@ -1414,7 +1434,7 @@ extension CostUsageScanner {
                 range: range,
                 priorityTurns: priorityTurns)
             pricing.modeOwnershipMismatchGroups.formUnion(modeEvidence.mismatchGroups)
-            pricing.priorityEvidenceGroups.formUnion(modeEvidence.priorityGroups)
+            pricing.requestPricingEvidenceGroups.formUnion(modeEvidence.priorityGroups)
             pricing.incompletePricingEvidenceGroups.formUnion(self.codexIncompletePricingEvidenceGroups(
                 usage: usage,
                 range: range,
@@ -1423,8 +1443,14 @@ extension CostUsageScanner {
                 modelsDevCacheRoot: modelsDevCacheRoot,
                 customPricing: pricing.customPricing,
                 pricingResolver: pricing.pricingResolver))
-            for row in usage.codexRows ?? [] where (row.knownCostNanos ?? 0) != 0 {
-                pricing.authoritativeCostEvidenceGroups.insert(CodexDayModelKey(day: row.day, model: row.model))
+            for row in usage.codexRows ?? [] {
+                let group = CodexDayModelKey(day: row.day, model: row.model)
+                if row.knownCostNanos != nil {
+                    pricing.authoritativeCostEvidenceGroups.insert(group)
+                }
+                if let pricingModel = row.pricingModel, pricingModel != row.model {
+                    pricing.requestPricingEvidenceGroups.insert(group)
+                }
             }
             for row in reconciled.rows
                 where CostUsageDayRange.isInRange(
