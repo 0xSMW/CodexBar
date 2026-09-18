@@ -77,5 +77,6 @@ public enum ProviderManifest {
         NousProviderDescriptor.descriptor,
         MuseProviderDescriptor.descriptor,
         CodeRabbitProviderDescriptor.descriptor,
+        ReplicateProviderDescriptor.descriptor,
     ]
 }

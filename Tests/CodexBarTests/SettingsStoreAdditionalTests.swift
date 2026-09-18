@@ -211,6 +211,7 @@ struct SettingsStoreAdditionalTests {
             .openrouter: [.automatic, .primary],
             .nous: [.automatic, .primary],
             .coderabbit: [.automatic],
+            .replicate: [.automatic],
             .deepseek: [.automatic],
             .deepinfra: [.automatic],
             .moonshot: [.automatic],

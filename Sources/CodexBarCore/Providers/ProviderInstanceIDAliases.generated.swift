@@ -75,6 +75,7 @@ extension ProviderInstanceID {
     public static let nous = UsageProvider.nous.instanceID
     public static let muse = UsageProvider.muse.instanceID
     public static let coderabbit = UsageProvider.coderabbit.instanceID
+    public static let replicate = UsageProvider.replicate.instanceID
 }
 
 // swiftformat:enable sortDeclarations
