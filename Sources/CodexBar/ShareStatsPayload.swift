@@ -183,10 +183,20 @@ enum ShareStatsSanitizer {
         else { return nil }
 
         let normalized = value.lowercased()
+        guard !normalized.contains("://"), !normalized.contains("\\") else { return nil }
+        // Gateways add one namespace; shared output still uses fixed public family labels.
+        let components = normalized.split(separator: "/", omittingEmptySubsequences: false)
+        let model: String
+        switch components.count {
+        case 1: model = normalized
+        case 2 where !components[0].isEmpty && !components[1].isEmpty:
+            model = String(components[1])
+        default: return nil
+        }
         let regionalPrefixes = ["us.", "eu.", "apac.", "global."]
-        let familyName = regionalPrefixes.first { normalized.hasPrefix($0) }.map {
-            String(normalized.dropFirst($0.count))
-        } ?? normalized
+        let familyName = regionalPrefixes.first { model.hasPrefix($0) }.map {
+            String(model.dropFirst($0.count))
+        } ?? model
         let publicModelFamilies: [(prefixes: [String], label: String)] = [
             (["amazon.nova-", "nova-"], "Amazon Nova"),
             (["anthropic.claude-", "claude-", "claude "], "Claude"),
@@ -213,10 +223,6 @@ enum ShareStatsSanitizer {
             (["tts-"], "OpenAI TTS"),
             (["whisper-"], "Whisper"),
         ]
-        guard !normalized.contains("://"),
-              !normalized.contains("/"),
-              !normalized.contains("\\")
-        else { return nil }
         return publicModelFamilies.first { family in
             family.prefixes.contains(where: familyName.hasPrefix)
         }?.label
