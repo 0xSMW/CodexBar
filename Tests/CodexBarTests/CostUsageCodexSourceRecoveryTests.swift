@@ -881,11 +881,29 @@ extension CostUsageCodexSourceRecoveryTests {
         #expect(originalAnchor.windowStart == 0)
         try Self.contaminate(file: file, cache: canonical, day: day, env: env, pricingMode: "priority")
 
-        options.maxCodexScanBytesPerRefresh = Int64(prefixBytes + 16)
-        options.maxCodexSessionFileBytes = Int64(prefixBytes + 16)
-        _ = Self.report(day: day, options: options, elapsed: 1)
-        let interrupted = CostUsageStore(cacheRoot: env.cacheRoot).syncLoadCodexCache(calendar: .current)
-        let previous = try #require(interrupted.files[file.path])
+        let checkpointBoundary = Int64(prefixBytes + 16)
+        var checkpoint: CostUsageFileUsage?
+        var setupPass = 0
+        var consumedPrefix: Int64 = 0
+        for pass in 1..<10 {
+            // Discovery can consume a pass's budget; each retry stops before the suffix marker.
+            let remaining = checkpointBoundary - consumedPrefix
+            try #require(remaining > 0)
+            options.maxCodexScanBytesPerRefresh = remaining
+            options.maxCodexSessionFileBytes = remaining
+            _ = Self.report(day: day, options: options, elapsed: Double(pass))
+            let interrupted = CostUsageStore(cacheRoot: env.cacheRoot).syncLoadCodexCache(calendar: .current)
+            let usage = try #require(interrupted.files[file.path])
+            guard usage.codexScanComplete == false else { continue }
+            consumedPrefix = try #require(usage.parsedBytes)
+            try #require(consumedPrefix < markerOffset)
+            if usage.codexRows?.count == 1 {
+                checkpoint = usage
+                setupPass = pass
+                break
+            }
+        }
+        let previous = try #require(checkpoint)
         #expect(previous.codexScanComplete == false)
         #expect(previous.codexRows?.count == 1)
         #expect(previous.codexRows?.first?.pricingMode == "priority")
@@ -909,12 +927,12 @@ extension CostUsageCodexSourceRecoveryTests {
 
         options.maxCodexScanBytesPerRefresh = 100
         options.maxCodexSessionFileBytes = 100
-        _ = Self.report(day: day, options: options, elapsed: 2)
+        _ = Self.report(day: day, options: options, elapsed: Double(setupPass + 1))
         let resumed = CostUsageStore(cacheRoot: env.cacheRoot).syncLoadCodexCache(calendar: .current)
         #expect(resumed.files[file.path]?.codexScanComplete == false)
         #expect(try #require(resumed.files[file.path]?.codexPendingSourcePricing).isEmpty)
         var completed = false
-        for pass in 3..<40 {
+        for pass in (setupPass + 2)..<(setupPass + 40) {
             _ = Self.report(day: day, options: options, elapsed: Double(pass))
             let reopened = CostUsageStore(cacheRoot: env.cacheRoot).syncLoadCodexCache(calendar: .current)
             if reopened.codexScanCatchUpPending != true {
