@@ -9,6 +9,7 @@
 - Mistral: show reported included API and Vibe Code allowances alongside spend and credits, preserving Automatic spend display and independent fallback when optional data is unavailable (#3710). Thanks @JoPaMu!
 - Devin: honor the selected organization, exclude unrelated sites from browser session import, and prefer current decoded credentials over raw storage fallback data.
 - OpenRouter: show an uncapped pay-as-you-go summary with accurate reporting periods and optional prepaid balance, preserving capped-key quotas and avoiding duplicate detail rows (#3696). Thanks @Chipagosfinest!
+- OpenRouter: recognize management keys in the primary API-key field on the official API and show compact account Activity totals for 30 completed UTC days, preserving separate-key precedence (#3272). Thanks @akshayprabhu200!
 - OpenRouter: distinguish invalid response data from network failures in optional credits, key quota, and Activity diagnostics, preserving usable data from the other sources (#3718). Thanks @Chipagosfinest!
 - Grok: show available usage-limit reset coupons and expiry dates from the account that supplied billing, without delaying weekly usage or reusing persisted coupon inventory (#3188). Thanks @Leshabeats!
 - OpenRouter: retain spend history when reported reasoning tokens exceed completion tokens, preserving the separate counters, input-plus-output totals, quota, and balance (#3717). Thanks @Chipagosfinest!
