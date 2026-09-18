@@ -3,6 +3,7 @@
 ## 0.60.6 — Unreleased
 
 ### Fixed
+- Antigravity: add per-source outcome diagnostics to usage output, debug logs, and the diagnose export, with per-attempt strategy IDs and skipped reasons (#3683, part of #3673, related to #3146 and #3662). Thanks @hhh2210!
 - Azure OpenAI: select OpenAI-compatible v1 in Settings with a shared app/CLI override that preserves the default environment behavior (#3705). Thanks @UndreamerC!
 - Claude: apply the existing process-local Remote Control startup override to the non-PTY usage fallback, preserving saved settings and managed-policy precedence (related to #2251). Thanks @rossshannon!
 - DeepSeek: show reported per-model spend alongside existing usage charts, preserving billing currency and reporting period and honoring optional-usage visibility (#2938). Thanks @jky1314!
