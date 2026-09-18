@@ -117,7 +117,9 @@ struct MusePluginTests {
             transport: ProviderHTTPTransportHandler { request in
                 try Self.response(request, body: body, status: status)
             })
-        return try await runtime.fetchUsage(secrets: ["MUSE_DEVICE_TOKEN": "dca:fixture-token"])
+        return try await runtime.fetchUsage(
+            secrets: ["MUSE_DEVICE_TOKEN": "dca:fixture-token"],
+            now: Date(timeIntervalSince1970: 1_788_580_000))
     }
 
     private static func response(
