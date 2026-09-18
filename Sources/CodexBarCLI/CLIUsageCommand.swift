@@ -289,7 +289,9 @@ extension CodexBarCLI {
 
         let accounts: [ProviderTokenAccount]
         do {
-            accounts = try tokenContext.resolvedAccounts(for: provider)
+            accounts = try tokenContext.resolvedAccounts(
+                for: provider,
+                sourceMode: command.sourceModeOverride ?? tokenContext.preferredSourceMode(for: provider))
         } catch {
             return Self.usageOutputForAccountResolutionError(
                 provider: provider,
