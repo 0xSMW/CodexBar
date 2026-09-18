@@ -78,5 +78,6 @@ enum ProviderImplementationManifest {
         MuseProviderImplementation(),
         CodeRabbitProviderImplementation(),
         ReplicateProviderImplementation(),
+        HuggingFaceProviderImplementation(),
     ]
 }

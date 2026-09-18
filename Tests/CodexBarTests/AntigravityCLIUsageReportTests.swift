@@ -267,14 +267,22 @@ extension AntigravityCLIHTTPSFetchStrategyTests {
         }
         defer { task.cancel() }
         let deadline = Date().addingTimeInterval(3)
-        while !FileManager.default.fileExists(atPath: fixture.directory.appendingPathComponent("pid").path),
-              Date() < deadline
-        {
+        var observedPID: Int32?
+        while Date() < deadline {
+            if let text = try? String(contentsOf: fixture.directory.appendingPathComponent("pid"), encoding: .utf8),
+               let pid = Int32(text.trimmingCharacters(in: .whitespacesAndNewlines)),
+               pid > 0, kill(pid, 0) == 0
+            {
+                observedPID = pid
+                break
+            }
             try await Task.sleep(for: .milliseconds(20))
         }
+        // File creation precedes its contents; cancellation must wait for a published, running process.
         task.cancel()
         await #expect(throws: CancellationError.self) { try await task.value }
-        try Self.expectPrintProcessExited(in: fixture.directory)
+        let pid = try #require(observedPID)
+        #expect(kill(pid, 0) == -1)
     }
 
     @Test(arguments: [
