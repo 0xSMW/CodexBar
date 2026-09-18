@@ -215,7 +215,7 @@ struct ProviderCredentialCharacterizationTests {
         ]
         let cookieProviders: [UsageProvider] = [
             .claude, .cursor, .opencode, .opencodego, .factory, .minimax, .manus,
-            .augment, .ollama, .abacus, .mistral, .qoder, .stepfun,
+            .augment, .ollama, .abacus, .mistral, .qoder, .stepfun, .replicate,
         ]
 
         for (provider, key) in environmentProviders {
@@ -252,6 +252,7 @@ struct ProviderCredentialCharacterizationTests {
             .mistral: "account-token",
             .qoder: "account-token",
             .stepfun: "account-token",
+            .replicate: "account-token",
         ]
         for provider in cookieProviders {
             #expect(TokenAccountSupportCatalog.normalizedCookieHeader(

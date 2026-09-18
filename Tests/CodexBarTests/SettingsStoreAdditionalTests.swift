@@ -206,6 +206,7 @@ struct SettingsStoreAdditionalTests {
             .opencodego: standard.union([.tertiary]),
             .mistral: [.automatic, .monthlyPlan],
             .openrouter: [.automatic, .primary],
+            .replicate: [.automatic],
             .deepseek: [.automatic],
             .deepinfra: [.automatic],
             .moonshot: [.automatic],
