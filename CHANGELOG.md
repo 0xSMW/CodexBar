@@ -2,6 +2,9 @@
 
 ## 0.60.6 — Unreleased
 
+### Added
+- Nous Portal: show monthly subscription credits and purchased balances through a bundled provider plugin, reusing the Hermes login without refreshing its credentials (#3376). Thanks @asispan!
+
 ### Fixed
 - Antigravity: add per-source outcome diagnostics to usage output, debug logs, and the diagnose export, with per-attempt strategy IDs and skipped reasons (#3683, part of #3673, related to #3146 and #3662). Thanks @hhh2210!
 - Azure OpenAI: select OpenAI-compatible v1 in Settings with a shared app/CLI override that preserves the default environment behavior (#3705). Thanks @UndreamerC!
