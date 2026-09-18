@@ -75,5 +75,6 @@ public enum ProviderManifest {
         NotionProviderDescriptor.descriptor,
         IBMBobProviderDescriptor.descriptor,
         NousProviderDescriptor.descriptor,
+        MuseProviderDescriptor.descriptor,
     ]
 }

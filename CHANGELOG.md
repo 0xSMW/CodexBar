@@ -3,6 +3,7 @@
 ## 0.60.6 — Unreleased
 
 ### Added
+- Muse Code: show reported five-hour and weekly subscription quotas through a bundled provider plugin using the existing CLI login without interactive authentication (#3435). Thanks @audreyt!
 - Nous Portal: show monthly subscription credits and purchased balances through a bundled provider plugin, reusing the Hermes login without refreshing its credentials (#3376). Thanks @asispan!
 
 ### Fixed

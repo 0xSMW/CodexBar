@@ -75,5 +75,6 @@ enum ProviderImplementationManifest {
         NotionProviderImplementation(),
         IBMBobProviderImplementation(),
         NousProviderImplementation(),
+        MuseProviderImplementation(),
     ]
 }

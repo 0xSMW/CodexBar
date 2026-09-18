@@ -143,6 +143,11 @@ interface CodexBarPluginContext {
   readonly http: {
     getJSON<T = unknown>(url: string, options?: CodexBarHTTPRequestOptions): Promise<CodexBarHTTPJSONResponse<T>>;
     get(url: string, options?: CodexBarHTTPRequestOptions): Promise<CodexBarHTTPTextResponse>;
+    /** POST a JSON body and retain the response text, including non-JSON error responses. */
+    post(
+      url: string,
+      options: CodexBarHTTPRequestOptions & { body: CodexBarJSONValue },
+    ): Promise<CodexBarHTTPTextResponse>;
     postJSON<T = unknown>(
       url: string,
       options: CodexBarHTTPRequestOptions & { body: CodexBarJSONValue },
