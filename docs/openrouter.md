@@ -64,6 +64,7 @@ CodexBar keeps any valid balance and labels the API key limit as unavailable wit
 or response diagnostic.
 
 Activity history uses the separately configured Management API key and is optional. Malformed activity, including a combined input/output token total outside the safe integer range, leaves valid credits and key quota available and marks history unavailable.
+Reported reasoning counts are retained separately, including when they exceed completion counts. Token totals remain prompt plus completion; reasoning is not added a second time.
 
 ## Display
 

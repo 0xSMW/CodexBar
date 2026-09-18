@@ -192,9 +192,8 @@ defineProvider({
                 throw new TypeError(`activity.data[${index}].${field} must be a nonnegative safe integer`);
               }
             }
-            if (reasoningTokens !== null && reasoningTokens > outputTokens) {
-              throw new TypeError(`activity.data[${index}].reasoning_tokens must not exceed completion_tokens`);
-            }
+            // Activity may report more reasoning than completion tokens. Preserve both counters;
+            // token totals remain prompt plus completion.
             if (meteredCost < 0 || estimatedCost < 0 || !Number.isFinite(cost)) {
               throw new TypeError(`activity.data[${index}] spend must be finite and nonnegative`);
             }
