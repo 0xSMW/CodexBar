@@ -1299,7 +1299,6 @@ extension ProviderSettingsDescriptorTests {
             keyUsageDaily: 1.25,
             keyUsageWeekly: 7.5,
             keyUsageMonthly: 18.75,
-            rateLimit: nil,
             updatedAt: OpenRouterLimitTestSupport.now)
         let model = try OpenRouterLimitTestSupport.model(usage.toUsageSnapshot())
         let content = ProviderMetricsInlineView.ContentState(model: model, infoRows: [])
@@ -1316,7 +1315,6 @@ extension ProviderSettingsDescriptorTests {
             keyDataFetched: true,
             keyLimit: 25,
             keyUsage: 10,
-            rateLimit: nil,
             updatedAt: OpenRouterLimitTestSupport.now).toUsageSnapshot())
         #expect(!meteredModel.metrics.isEmpty)
         #expect(!ProviderMetricsInlineView.ContentState(model: meteredModel, infoRows: []).showsPlaceholder)

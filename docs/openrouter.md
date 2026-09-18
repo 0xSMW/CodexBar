@@ -1,5 +1,5 @@
 ---
-summary: "OpenRouter provider: API key credits, rate limits, and daily/weekly/monthly spend."
+summary: "OpenRouter provider: API key credits, spending caps, and daily/weekly/monthly spend."
 read_when:
   - Debugging OpenRouter API key usage or spend parsing
   - Updating OpenRouter credits or key-limit display
@@ -86,6 +86,7 @@ Without a configured limit, the detail row says “No limit configured” and no
 key enrichment retains its diagnostic and account balance. CLI text and JSON detail strings use the same limit
 label and disclosure; the JSON structure is unchanged.
 Settings still shows the returned daily, weekly, and monthly key spend when the API key has no configured limit.
+The deprecated Current Key API `rate_limit` field is ignored, including malformed values, so it cannot hide valid quota or spend details.
 
 ## CLI Usage
 

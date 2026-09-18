@@ -2,6 +2,9 @@
 
 ## 0.60.6 — Unreleased
 
+### Fixed
+- OpenRouter: ignore deprecated key rate-limit metadata, removing the misleading negative request limit and preserving valid quota and spend details when the deprecated field changes shape (#3720). Thanks @Chipagosfinest!
+
 ## 0.60.5 — 2026-09-17
 
 ### Highlights

@@ -137,7 +137,6 @@ struct ProviderPluginDetailsParityTests {
                     Self.row("Today", "$1.00"),
                     Self.row("This week", "$2.00"),
                     Self.row("This month", "$4.00"),
-                    Self.row("Rate limit", "120 requests / 10s"),
                 ],
                 chart: Self.chart("Key spend", unit: "USD", points: [
                     ("Today", 1), ("This week", 2), ("This month", 4),

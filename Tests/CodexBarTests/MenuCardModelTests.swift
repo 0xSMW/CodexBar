@@ -156,7 +156,6 @@ struct ProviderInlineDashboardModelTests {
             keyUsageDaily: 1.25,
             keyUsageWeekly: 7.5,
             keyUsageMonthly: 18.75,
-            rateLimit: OpenRouterRateLimit(requests: 100, interval: "10s"),
             updatedAt: now)
 
         let model = UsageMenuCardView.Model.make(.init(
@@ -181,8 +180,7 @@ struct ProviderInlineDashboardModelTests {
         #expect(model.inlineUsageDashboard == nil)
         #expect(model.providerDetails.first?.rows.first?.value == "$60.00")
         #expect(model.providerDetails.last?.chart?.points.map(\.label) == ["Today", "This week", "This month"])
-        #expect(model.providerDetails.flatMap(\.rows).first { $0.label == "Rate limit" }?.value ==
-            "100 requests / 10s")
+        #expect(!model.providerDetails.flatMap(\.rows).contains { $0.label == "Rate limit" })
     }
 
     @Test
@@ -1043,7 +1041,6 @@ struct MenuCardModelTests {
             usedPercent: 90.779119265,
             keyLimit: 20,
             keyUsage: 0.5,
-            rateLimit: nil,
             updatedAt: now).toUsageSnapshot()
 
         let model = UsageMenuCardView.Model.make(.init(
@@ -1090,7 +1087,6 @@ struct MenuCardModelTests {
             keyDataFetched: true,
             keyLimit: nil,
             keyUsage: nil,
-            rateLimit: nil,
             updatedAt: now).toUsageSnapshot()
 
         let model = UsageMenuCardView.Model.make(.init(
@@ -1132,7 +1128,6 @@ struct MenuCardModelTests {
             keyDataFetched: false,
             keyLimit: nil,
             keyUsage: nil,
-            rateLimit: nil,
             updatedAt: now).toUsageSnapshot()
 
         let model = UsageMenuCardView.Model.make(.init(
