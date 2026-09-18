@@ -94,6 +94,8 @@ The deprecated Current Key API `rate_limit` field is ignored, including malforme
 
 ## CLI Usage
 
+With a Management API key, successful Activity history appears in usage text and full terminal cards as a `Last 30 days (UTC)` spend/token summary. Reported spend, BYOK estimates, and mixed totals are labeled accordingly; an empty successful history shows zero. Ordinary usage JSON continues to expose quota, balance, and detail diagnostics without embedding live cost history.
+
 ```bash
 codexbar --provider openrouter
 codexbar -p or  # alias
