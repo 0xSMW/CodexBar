@@ -2,6 +2,9 @@
 
 ## 0.60.6 — Unreleased
 
+### Added
+- Hugging Face: show Inference Providers spend, included credits, and optional ZeroGPU quota through a bundled provider plugin, with isolated token-account identity caching (#3322). Thanks @giovanninibarbosa and @sambokai!
+
 ### Fixed
 - Azure OpenAI: select OpenAI-compatible v1 in Settings with a shared app/CLI override that preserves the default environment behavior (#3705). Thanks @UndreamerC!
 - Sharing: retain recognized gateway model families in shared cards and copied statistics, preserving provider attribution and excluding raw namespaces and private model names (#3713). Thanks @Chipagosfinest!
