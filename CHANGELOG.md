@@ -1,12 +1,12 @@
 # Changelog
 
-## 0.61.0 — Unreleased
+## 0.61.0 — 2026-09-18
 
 ### Highlights
 
-- **Nous Portal support:** track monthly subscription credits and purchased balances using your existing Hermes login.
+- **Five new providers:** track Nous Portal and Muse Code subscriptions, CodeRabbit reviews, Replicate spend, and Hugging Face Inference Providers charges and ZeroGPU quota.
 - **More complete allowances:** see Mistral API and Vibe Code allowances, Venice subscription credits, and Grok usage-limit reset coupons.
-- **Richer spending details:** view DeepSeek spend per model, OpenRouter account Activity, and provider history in CLI output.
+- **Richer spending details:** view DeepSeek spend per model, OpenRouter pay-as-you-go spending and account Activity, and provider history in CLI output.
 - **Clearer account switching:** Codex cards update while menus stay open, and Claude shows separate switching and refresh stages.
 - **Steadier menu-bar layout:** preserve icon positions and align provider names in crowded switchers.
 
@@ -39,6 +39,10 @@
 - Devin: honor the selected organization and import only Devin browser sessions, preferring current decoded credentials over raw-storage fallbacks (#3735).
 - Sharing: retain recognized gateway model families in shared cards and copied statistics, preserving provider attribution and excluding raw namespaces and private model names (#3713). Thanks @Chipagosfinest!
 - CLI: show provider-supplied history and totals in usage text and full terminal cards, including OpenRouter spend and Grok tokens, with correct periods, currencies, and zero values (#3737, related to #3717). Thanks @jhairabet-udr!
+
+### Development
+
+- Plugins: add `ctx.http.post` for JSON requests with text responses so providers can classify non-JSON error pages (#3435).
 
 ## 0.60.5 — 2026-09-17
 
