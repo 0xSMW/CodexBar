@@ -2,6 +2,10 @@
 
 ## 0.61.1 — Unreleased
 
+### Fixed
+
+- Codex costs: recover excess cached request rows from their original session files, retain pricing through interrupted scans, and avoid guessing request boundaries or conflicting prices (#3741, related to #3618). Thanks @BUKOWSKIREAL!
+
 ## 0.61.0 — 2026-09-18
 
 ### Highlights

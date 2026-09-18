@@ -298,6 +298,8 @@ struct CostUsageFileUsage: Codable, Equatable {
     var codexRows: [CostUsageScanner.CodexUsageRow]?
     var codexNextUsageRowIndex: Int?
     var codexPendingPricing: [String: CostUsageScanner.CodexPricingEvidence]?
+    var codexPendingSourcePricing: [CostUsageScanner.CodexSourcePricingKey: CostUsageScanner.CodexPricingEvidence]?
+    var codexPendingSourcePricingAnchor: CostUsageCodexTokenIndexAnchor?
     var codexTokenSnapshots: [CostUsageCodexTokenSnapshot]?
     var codexTokenCheckpoints: [CostUsageCodexTokenCheckpoint]?
     var codexTokenTimestampsMonotonic: Bool?

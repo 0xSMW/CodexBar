@@ -273,6 +273,13 @@ and stable account numbers distinguish rows while usable workspace labels remain
     remains transient. Scanner and writer connections keep separate ownership.
   - Saved day/model aggregates group each file's usage rows in one pass per aggregate build. Packed token totals,
     authoritative costs (including zero), and standard/priority estimation buckets retain their existing meanings.
+  - Excess cached request rows trigger bounded revalidation of readable, unchanged session files. Ordered source
+    replay determines the request sequence; matching token totals alone cannot establish a request partition.
+    Unanimous saved pricing survives partial scans and restarts. Files with authoritative monetary amounts, existing
+    unpriced markers, or conflicting saved pricing retain their rows without automatic rewriting. Recovered requests
+    without matching historical pricing remain unpriced. The repair retains the existing database and scan checkpoints.
+    Resumes retain the original target anchor alongside the parsed-prefix anchor and follow the scanner's existing
+    append-only log contract; identity changes, anchor mismatches, and unexplained same-size large-file edits invalidate pricing.
   - Fully read empty session fragments retain completion records even when another file contributes the same session.
     They contribute no usage and reparse from the start if they grow. Usage-bearing duplicates and incomplete fragments
     keep their existing accounting and retry rules. Existing 0.56.4 cost caches are adopted without rebuilding
