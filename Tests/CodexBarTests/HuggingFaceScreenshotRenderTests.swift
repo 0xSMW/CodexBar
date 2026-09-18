@@ -10,7 +10,8 @@ final class HuggingFaceScreenshotRenderTests: XCTestCase {
         let snapshot = try await HuggingFacePluginTests.fetch(engine: .quickJS)
         let model = try Self.model(snapshot)
         XCTAssertNil(model.providerCost)
-        XCTAssertTrue(model.providerDetails.flatMap(\.rows).contains { $0.label == "Spend" && $0.value == "$0.45" })
+        XCTAssertTrue(model.providerDetails.flatMap(\.rows)
+            .contains { $0.label == "Billable usage" && $0.value == "$0.45" })
     }
 
     func test_renderSyntheticBillingCards() async throws {
@@ -20,7 +21,7 @@ final class HuggingFaceScreenshotRenderTests: XCTestCase {
         let directory = URL(fileURLWithPath: path, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let after = try await HuggingFacePluginTests.fetch(
-            billing: #"{"usage":{"inferenceProviders":{"usedNanoUsd":300000000}}}"#,
+            billing: #"{"usage":{"inferenceProviders":{"usedNanoUsd":300000000,"includedNanoUsd":0}}}"#,
             engine: .quickJS,
             optionalStatus: 503)
         let full = try await HuggingFacePluginTests.fetch(engine: .quickJS)

@@ -3,7 +3,7 @@
 ## 0.60.6 — Unreleased
 
 ### Added
-- Hugging Face: show Inference Providers spend, included credits, and optional ZeroGPU quota through a bundled provider plugin, with isolated token-account identity caching (#3322). Thanks @giovanninibarbosa and @sambokai!
+- Hugging Face: show reported Inference Providers charges and optional ZeroGPU quota without mistaking report cutoffs or deductions for credit allowances through a bundled provider plugin, with isolated token-account identity caching (#3322). Thanks @giovanninibarbosa and @sambokai!
 
 ### Fixed
 - Azure OpenAI: select OpenAI-compatible v1 in Settings with a shared app/CLI override that preserves the default environment behavior (#3705). Thanks @UndreamerC!

@@ -8,16 +8,16 @@ read_when:
 
 # Hugging Face
 
-CodexBar reads monthly Inference Providers credit usage from Hugging Face's billing API and shows spend versus the
-included monthly credits as the primary gauge. Accounts with ZeroGPU access also get a secondary ZeroGPU quota window.
-When neither an included allowance nor a spending limit is reported, CodexBar retains the dollar spend without
-inventing a percentage or quota. The prepaid browser wallet is a separate billing concept and is not included here.
+CodexBar shows month-to-date Inference Providers charges and optional ZeroGPU quota. Billing details include
+billable usage, reported gross/included amounts, and a configured spending limit when available. The billing
+report does not establish a remaining-credit allowance or quota reset, so CodexBar does not invent either.
+The prepaid/general compute-credit wallet is a separate billing concept and is not included here.
 Identity (username and PRO/Free plan) comes from `whoami-v2`, cached for hours because Hugging Face rate-limits that
 endpoint far more strictly than the rest of the Hub API.
 
 The bundled `huggingface.ts` plugin owns every HTTP request and response projection. Native code reads the existing
 CLI token and serializes access to the retained script runtime. Identity caching lasts up to 12 hours and is keyed by
-the selected token, so switching accounts cannot reuse another account's identity or reset date.
+the selected token, so switching accounts cannot reuse another account's identity.
 
 ## Authentication
 
@@ -37,8 +37,8 @@ endpoints return HTTP 403, which CodexBar surfaces with a pointer to this requir
 
 ## Data shown
 
-- Inference Providers spend versus included monthly credits, with the billing period reset date.
-- The user-configured spending limit, when one is set (and it becomes the gauge when the plan includes no credits).
+- Inference charges calculated as `max(0, usedNanoUsd - includedNanoUsd)`, matching Hugging Face's billing UI.
+- Reported gross/included inference amounts and the configured spending limit, when present.
 - ZeroGPU GPU-time used/remaining and its reset, when the account has ZeroGPU quota.
 - Username and plan (PRO/Free).
 
@@ -47,4 +47,8 @@ endpoints return HTTP 403, which CodexBar surfaces with a pointer to this requir
 The billing endpoint (`/api/settings/billing/usage-v2`) is listed in Hugging Face's OpenAPI spec, but its response
 shape is not documented. CodexBar parses it defensively and reports a clear "response format changed" error if the
 shape drifts instead of showing partial data. ZeroGPU quota and `whoami-v2` are fully documented endpoints and are
-fetched best-effort — their failures never take down the credits gauge.
+fetched best-effort — their failures preserve billing data.
+
+Live verification confirmed `periodEnd` follows the requested `endDate`: it is the report cutoff, not a reset.
+The public billing frontend deducts `includedNanoUsd` to calculate the charge; this does not establish monthly
+credits remaining. PRO compute credits are shared with other products, so `isPro` does not imply an inference-only allowance.

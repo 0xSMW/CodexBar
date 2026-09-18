@@ -93,7 +93,7 @@ complete when the available scan window covers fewer days.
 | ZoomMate | Chrome cookie auto-import + cookie-to-token minting, or manual cURL capture, for the credits/status API (`web`). |
 | Warp | API token (config/env) → GraphQL request limits (`api`). |
 | ElevenLabs | API key from config/env → subscription usage API (`api`). |
-| [Hugging Face](huggingface.md) | Access token from settings/env/CLI → bundled plugin for Inference Providers billing, optional ZeroGPU quota, and token-scoped identity (`api`). |
+| [Hugging Face](huggingface.md) | Access token from settings/env/CLI → bundled plugin for Inference Providers charges, optional ZeroGPU quota, and token-scoped identity (`api`). |
 | Windsurf | Web session bundle from browser localStorage (`web`) → local SQLite cache (`local`). |
 | Ollama | API key verifies Cloud API access (`api`); browser cookies expose Cloud quota windows (`web`). |
 | Synthetic | API key from config/env → quota API (`api`). |

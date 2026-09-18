@@ -8,7 +8,7 @@ import Testing
 struct HuggingFacePluginTests {
     static let now = Date(timeIntervalSince1970: 1_755_000_000)
     static let billing = #"""
-    {"usage":{"inferenceProviders":{"usedNanoUsd":450000000,"includedNanoUsd":2000000000,
+    {"usage":{"inferenceProviders":{"usedNanoUsd":2450000000,"includedNanoUsd":2000000000,
     "limitNanoUsd":0,"numRequests":128,"periodEnd":"2025-09-01T00:00:00Z"}}}
     """#
     static let gpu = #"{"base":1500,"current":900,"resetsAt":"2025-08-31T18:00:00Z"}"#
@@ -16,16 +16,21 @@ struct HuggingFacePluginTests {
     @Test(arguments: BundledPluginTestSupport.engines)
     func `billing and optional quota project through both engines`(engine: ProviderPluginEngineKind) async throws {
         let snapshot = try await Self.fetch(engine: engine)
-        #expect(snapshot.primary?.usedPercent == 22.5)
-        #expect(snapshot.primary?.windowMinutes == 43200)
+        #expect(snapshot.primary == nil)
+        #expect(snapshot.providerCost?.resetsAt == nil)
         #expect(snapshot.secondary?.usedPercent == 40)
-        #expect(snapshot.providerCost?.used == 0.45)
-        #expect(snapshot.providerCost?.limit == 2)
+        #expect(abs((snapshot.providerCost?.used ?? -1) - 0.45) < 0.000001)
+        #expect(snapshot.providerCost?.limit == 0)
         #expect(snapshot.identity?.providerID == .huggingface)
         #expect(snapshot.identity?.accountID == "fixture-a")
         #expect(snapshot.identity?.loginMethod == "PRO")
         #expect(snapshot.identity?.accountOrganization == nil)
-        #expect(snapshot.details[0].rows.map(\.label) == ["Spend", "Included credits", "Requests"])
+        #expect(snapshot.details[0].rows.map(\.label) == [
+            "Billable usage",
+            "Gross inference usage",
+            "Included inference amount",
+            "Requests",
+        ])
         #expect(snapshot.details[1].rows.map(\.value) == ["10 min", "15 min"])
     }
 
@@ -45,12 +50,37 @@ struct HuggingFacePluginTests {
     }
 
     @Test(arguments: BundledPluginTestSupport.engines)
-    func `reported spending limit can supply the quota`(engine: ProviderPluginEngineKind) async throws {
+    func `reported spending limit remains a detail instead of a credit allowance`(
+        engine: ProviderPluginEngineKind) async throws
+    {
         let snapshot = try await Self.fetch(
-            billing: #"{"usage":{"inferenceProviders":{"usedNanoUsd":1000000000,"limitNanoUsd":4000000000}}}"#,
+            billing: #"""
+            {"usage":{"inferenceProviders":{"usedNanoUsd":1000000000,
+            "includedNanoUsd":0,"limitNanoUsd":4000000000}}}
+            """#,
             engine: engine)
-        #expect(snapshot.primary?.usedPercent == 25)
+        #expect(snapshot.primary == nil)
         #expect(snapshot.providerCost?.limit == 4)
+    }
+
+    @Test(arguments: BundledPluginTestSupport.engines)
+    func `included amount above gross usage never creates a negative charge`(
+        engine: ProviderPluginEngineKind) async throws
+    {
+        let snapshot = try await Self.fetch(
+            billing: #"{"usage":{"inferenceProviders":{"usedNanoUsd":100000000,"includedNanoUsd":2000000000}}}"#,
+            engine: engine)
+        #expect(snapshot.providerCost?.used == 0)
+        #expect(snapshot.primary == nil)
+    }
+
+    @Test(arguments: BundledPluginTestSupport.engines)
+    func `missing deduction cannot silently overstate billable usage`(engine: ProviderPluginEngineKind) async {
+        await Self.expectFailure(.parseFailure) {
+            try await Self.fetch(
+                billing: #"{"usage":{"inferenceProviders":{"usedNanoUsd":100000000}}}"#,
+                engine: engine)
+        }
     }
 
     @Test(arguments: ["true", "-1", "\"450000000\"", "1e400", "null"], BundledPluginTestSupport.engines)
@@ -97,8 +127,6 @@ struct HuggingFacePluginTests {
         #expect(first.identity?.accountID == "fixture-a")
         #expect(other.identity?.accountID == "fixture-b")
         #expect(again.identity?.accountID == "fixture-a")
-        #expect(first.primary?.resetsAt == again.primary?.resetsAt)
-        #expect(first.primary?.resetsAt != other.primary?.resetsAt)
         #expect(await calls.whoamiCount == 2)
         _ = try await runtime.fetchUsage(
             secrets: ["HF_TOKEN": "fixture-a"], now: Self.now.addingTimeInterval(13 * 60 * 60))
@@ -106,7 +134,7 @@ struct HuggingFacePluginTests {
     }
 
     @Test(arguments: BundledPluginTestSupport.engines)
-    func `fresh billing reset wins across rollover while identity stays cached`(
+    func `report cutoffs and profile dates cannot become quota resets`(
         engine: ProviderPluginEngineKind) async throws
     {
         let calls = HuggingFaceRequestLog()
@@ -131,13 +159,15 @@ struct HuggingFacePluginTests {
             secrets: ["HF_TOKEN": "fixture-a"], now: Date(timeIntervalSince1970: 1_756_684_790))
         let after = try await runtime.fetchUsage(
             secrets: ["HF_TOKEN": "fixture-a"], now: Date(timeIntervalSince1970: 1_756_684_810))
-        #expect(before.primary?.resetsAt == ISO8601DateFormatter().date(from: "2025-09-01T00:00:00Z"))
-        #expect(after.primary?.resetsAt == ISO8601DateFormatter().date(from: "2025-10-01T00:00:00Z"))
+        #expect(before.primary == nil)
+        #expect(after.primary == nil)
+        #expect(before.providerCost?.resetsAt == nil)
+        #expect(after.providerCost?.resetsAt == nil)
         #expect(await calls.whoamiCount == 1)
     }
 
     @Test(arguments: BundledPluginTestSupport.engines)
-    func `expired identity reset is not used when billing has no reset`(engine: ProviderPluginEngineKind) async throws {
+    func `profile dates do not imply an inference reset`(engine: ProviderPluginEngineKind) async throws {
         let runtime = try Self.runtime(
             engine: engine,
             billing: Self.billing.replacingOccurrences(of: ",\"periodEnd\":\"2025-09-01T00:00:00Z\"", with: ""))

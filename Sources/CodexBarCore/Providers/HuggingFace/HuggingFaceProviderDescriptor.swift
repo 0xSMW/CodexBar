@@ -19,11 +19,12 @@ public enum HuggingFaceProviderDescriptor {
     static func makeDescriptor() -> ProviderDescriptor {
         ProviderDescriptor(
             id: .huggingface,
+            menuBarMetrics: ProviderMenuBarMetricCapabilities(supported: [.automatic, .secondary]),
             credentials: self.credentials,
             metadata: ProviderMetadata(
                 id: .huggingface,
                 displayName: "Hugging Face",
-                sessionLabel: "Credits",
+                sessionLabel: "Inference",
                 weeklyLabel: "ZeroGPU",
                 opusLabel: nil,
                 supportsOpus: false,

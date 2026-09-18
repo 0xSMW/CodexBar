@@ -3,7 +3,6 @@ type HuggingFaceIdentity = {
   username?: string;
   email?: string;
   plan?: string;
-  periodEnd?: string;
 };
 
 defineProvider({
@@ -77,12 +76,12 @@ defineProvider({
     }
     const usage = object(parse(response.bodyText).usage, "missing usage");
     const inference = object(usage.inferenceProviders, "missing inferenceProviders usage");
-    const used = number(inference.usedNanoUsd, "usedNanoUsd") / 1e9;
-    const included = (optionalNumber(inference.includedNanoUsd, "includedNanoUsd") ?? 0) / 1e9;
+    const gross = number(inference.usedNanoUsd, "usedNanoUsd") / 1e9;
+    const included = number(inference.includedNanoUsd, "includedNanoUsd") / 1e9;
+    const billable = Math.max(0, gross - included);
     const limit = (optionalNumber(inference.limitNanoUsd, "limitNanoUsd") ?? 0) / 1e9;
     const requests = optionalNumber(inference.numRequests, "numRequests");
     if (requests !== undefined && !Number.isSafeInteger(requests)) return fail("numRequests");
-    let periodEnd = date(inference.periodEnd);
     let secondary: CodexBarRateWindow | undefined;
     let gpuRows: CodexBarDetailRow[] = [];
     try {
@@ -128,7 +127,6 @@ defineProvider({
               username,
               email,
               plan: typeof profile.isPro === "boolean" ? (profile.isPro ? "PRO" : "Free") : undefined,
-              periodEnd: date(profile.periodEnd)?.toISOString(),
             };
             ctx.cache.set(cacheKey, identity, 43200);
           }
@@ -137,29 +135,20 @@ defineProvider({
         void error;
       }
     }
-    if (!periodEnd) {
-      const cachedReset = date(identity?.periodEnd);
-      if (cachedReset && cachedReset.getTime() > now.getTime()) periodEnd = cachedReset;
+    // usage-v2 reports a query interval; its cutoff is not a quota reset.
+    // HF's billing UI deducts includedNanoUsd from usedNanoUsd to calculate the charge.
+    const rows: CodexBarDetailRow[] = [{ label: "Billable usage", value: ctx.format.usd(billable) }];
+    if (included > 0) {
+      rows.push({ label: "Gross inference usage", value: ctx.format.usd(gross) });
+      rows.push({ label: "Included inference amount", value: ctx.format.usd(included) });
     }
-    const gauge = included > 0 ? included : limit > 0 ? limit : undefined;
-    const rows: CodexBarDetailRow[] = [{ label: "Spend", value: ctx.format.usd(used) }];
-    if (included > 0) rows.push({ label: "Included credits", value: ctx.format.usd(included) });
     if (limit > 0) rows.push({ label: "Spending limit", value: ctx.format.usd(limit) });
     if (requests !== undefined) rows.push({ label: "Requests", value: String(requests) });
     const details: CodexBarDetailSection[] = [{ title: "Inference Providers", rows }];
     if (gpuRows.length) details.push({ title: "ZeroGPU", rows: gpuRows });
     return {
-      primary:
-        gauge !== undefined
-          ? {
-              usedPercent: ctx.pct(used, gauge),
-              windowMinutes: 43200,
-              resetsAt: periodEnd,
-              resetDescription: `${ctx.format.usd(used)} of ${ctx.format.usd(gauge)} ${included > 0 ? "credits" : "limit"} used`,
-            }
-          : undefined,
       secondary,
-      cost: { used, limit: gauge, currency: "USD", period: "This month", resetsAt: periodEnd },
+      cost: { used: billable, limit: limit > 0 ? limit : undefined, currency: "USD", period: "This month" },
       details,
       identity: identity
         ? { email: identity.email, accountID: identity.username, loginMethod: identity.plan }
