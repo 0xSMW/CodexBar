@@ -3,6 +3,60 @@
     <channel>
         <title>CodexBar</title>
         <item>
+            <title>0.61.0</title>
+            <pubDate>Fri, 18 Sep 2026 10:42:02 -0700</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
+            <sparkle:version>149</sparkle:version>
+            <sparkle:shortVersionString>0.61.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>CodexBar 0.61.0</h2>
+<h3>Highlights</h3>
+<ul>
+<li><strong>Five new providers:</strong> track Nous Portal and Muse Code subscriptions, CodeRabbit reviews, Replicate spend, and Hugging Face Inference Providers charges and ZeroGPU quota.</li>
+<li><strong>More complete allowances:</strong> see Mistral API and Vibe Code allowances, Venice subscription credits, and Grok usage-limit reset coupons.</li>
+<li><strong>Richer spending details:</strong> view DeepSeek spend per model, OpenRouter pay-as-you-go spending and account Activity, and provider history in CLI output.</li>
+<li><strong>Clearer account switching:</strong> Codex cards update while menus stay open, and Claude shows separate switching and refresh stages.</li>
+<li><strong>Steadier menu-bar layout:</strong> preserve icon positions and align provider names in crowded switchers.</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Azure OpenAI: choose OpenAI-compatible v1 from Settings for both the app and CLI, preserving the existing environment default (#3705). Thanks @UndreamerC!</li>
+<li>CodeRabbit: show review counts and billing state from one bounded CLI report, without invented quotas or mixing account data from a second command (#3383). Thanks @MonkeyMed!</li>
+<li>DeepSeek: show reported spend per model in its original billing currency and period, respecting optional-usage visibility (#2938). Thanks @jky1314!</li>
+<li>Grok: show available usage-limit reset coupons and expiry dates for the account supplying billing, independently of weekly usage (#3188). Thanks @Leshabeats!</li>
+<li>Hugging Face: show reported Inference Providers charges and optional ZeroGPU quota without mistaking report cutoffs or deductions for credit allowances through a bundled provider plugin, with isolated token-account identity caching (#3322). Thanks @giovanninibarbosa and @sambokai!</li>
+<li>Mistral: show included API and Vibe Code allowances alongside spend and credits, with independent fallback when optional data is unavailable (#3710). Thanks @JoPaMu!</li>
+<li>Muse Code: show reported five-hour and weekly subscription quotas through a bundled provider plugin using the existing CLI login without interactive authentication (#3435). Thanks @audreyt!</li>
+<li>Nous Portal: show monthly subscription credits and purchased balances through a bundled provider plugin, reusing the Hermes login without refreshing its credentials (#3376). Thanks @asispan!</li>
+<li>OpenRouter: add uncapped pay-as-you-go spending summaries with accurate periods and optional prepaid balance, preserving capped-key quotas (#3696). Thanks @Chipagosfinest!</li>
+<li>OpenRouter: recognize management keys in the primary API-key field on the official API and show account Activity totals for the last 30 completed UTC days. A separate Management API key takes precedence (#3272). Thanks @akshayprabhu200!</li>
+<li>Replicate: show monthly inference spend and optional prepaid credits through a bundled billing plugin, with native Chrome session recovery and manual-cookie support (#2869). Thanks @Egnus!</li>
+<li>Venice: add an explicit Web source for subscription credits, monthly spending, bank cap, and refill dates, with account isolation and cookie controls (#3474). Thanks @audreyt!</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Codex: refresh the selected account card while its menu stays open, preserving submenus and account ownership when delayed usage arrives (#3715, fixes #3709). Thanks @sandeep780049!</li>
+<li>Claude: clarify claude-swap account activation, show switching and refresh phases until reconciliation finishes, and retain active-account inspection when credentials need repair (#3740, related to #3736).</li>
+<li>Claude: apply the Remote Control startup override to direct CLI usage fallbacks too, preserving saved settings and managed-policy precedence (#3739, related to #2251). Thanks @rossshannon!</li>
+<li>Menu bar: preserve saved icon positions when hiding or removing status items, quitting from the menu, and recovering from display changes (#3723, related to #3355). Thanks @kratocz!</li>
+<li>Switcher: keep multiword provider names aligned with icons and labels in crowded grids, preserving their full accessibility labels (#3738). Thanks @jeffloo886!</li>
+<li>OpenRouter: retain spend history when reasoning tokens exceed completion tokens, keeping the counters separate and input-plus-output totals, quota, and balance intact (#3717). Thanks @Chipagosfinest!</li>
+<li>OpenRouter: ignore deprecated key rate-limit metadata so it cannot hide valid quota and spend details or produce a negative request limit (#3720). Thanks @Chipagosfinest!</li>
+<li>OpenRouter: distinguish invalid responses from network failures in credits, key-quota, and Activity diagnostics, retaining usable data from the other sources (#3733, fixes #3718). Thanks @Chipagosfinest!</li>
+<li>Antigravity: correct misleading OAuth-fallback wording and report per-source outcomes in CLI output, debug logs, and diagnose exports (#3683, part of #3673, related to #3146 and #3662). Thanks @hhh2210!</li>
+<li>Devin: honor the selected organization and import only Devin browser sessions, preferring current decoded credentials over raw-storage fallbacks (#3735).</li>
+<li>Sharing: retain recognized gateway model families in shared cards and copied statistics, preserving provider attribution and excluding raw namespaces and private model names (#3713). Thanks @Chipagosfinest!</li>
+<li>CLI: show provider-supplied history and totals in usage text and full terminal cards, including OpenRouter spend and Grok tokens, with correct periods, currencies, and zero values (#3737, related to #3717). Thanks @jhairabet-udr!</li>
+</ul>
+<h3>Development</h3>
+<ul>
+<li>Plugins: add <code>ctx.http.post</code> for JSON requests with text responses so providers can classify non-JSON error pages (#3435).</li>
+</ul>
+<p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.61.0/CodexBar-macos-universal-0.61.0.zip" length="72075477" type="application/octet-stream" sparkle:edSignature="QmhnULX9vCAEuu9l+y/AJOlC8PjdANgP83cndQ2LQSuF5ZSoKIjrooUsVT8zEOcObTZkxv7GA75vv57aY/I+Bw=="/>
+        </item>
+        <item>
             <title>0.60.5</title>
             <pubDate>Thu, 17 Sep 2026 14:42:19 -0700</pubDate>
             <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
@@ -85,35 +139,6 @@
 <p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.60.4/CodexBar-macos-universal-0.60.4.zip" length="70541329" type="application/octet-stream" sparkle:edSignature="rtdDmJ2f61F6TEUi8B+/LgIrJ1cu1buya2zeTPoSCwaJ+A8PxU+LEF/xb4AM54U44uWWj7UVH/2v/N2T1VQMAg=="/>
-        </item>
-        <item>
-            <title>0.60.3</title>
-            <pubDate>Tue, 15 Sep 2026 02:17:46 -0700</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
-            <sparkle:version>146</sparkle:version>
-            <sparkle:shortVersionString>0.60.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>CodexBar 0.60.3</h2>
-<h3>Highlights</h3>
-<ul>
-<li><strong>Correct Cursor pace:</strong> keep monthly allowances and Grok Bot’s weekly reserve tied to their own reset windows, with restored paid and trial usage.</li>
-<li><strong>More complete spending totals:</strong> retain known spend beside unpriced sources and restore shared costs and charts beside web dashboard account groups.</li>
-<li><strong>Quieter Claude checks:</strong> avoid duplicate session warnings and prevent background usage probes from creating Remote Control sessions.</li>
-</ul>
-<h3>Fixed</h3>
-<ul>
-<li>Web dashboard: retain shared local spend, daily charts, and provider diagnostics when claude-swap account groups are visible, while keeping account credits and errors scoped correctly (#3655, related to #3552). Thanks @xxchan!</li>
-<li>Claude: avoid duplicate or mislabeled session warnings when a missing five-hour quota temporarily promotes weekly usage into the primary field (related to #3450).</li>
-<li>Cursor: keep monthly Cursor Auto pace tied to its billing cycle and show Grok Bot’s weekly pace on its own allowance, preserving unpaced trials (#3656). Thanks @freerobby!</li>
-<li>Cursor: restore Grok Bot usage for the current allowance and trial response fields, retain exhausted active trials, and avoid treating trial expiration as a recurring reset. Thanks @JackHo12! (#3629)</li>
-<li>Usage &amp; Spend: retain known daily spend beside unpriced providers with a partial-estimate marker, and count token-only requests as unpriced coverage (#3652). Thanks @urda!</li>
-<li>Claude: opt short-lived CLI usage probes out of Remote Control so background refreshes do not create empty cloud/mobile sessions when Remote Control is enabled by default (#3651, related to #1301). Thanks @KazuyukiNishida!</li>
-<li>Updates: recognize Homebrew-managed apps in <code>/Applications</code> and show the existing Homebrew update instruction, while preserving Sparkle updates for separate app copies (#3647). Thanks @fanwenlin!</li>
-<li>Antigravity: explain why Auto skips agy reports without account identity for selected Google accounts and identify the local source alternative without changing account isolation (#3650, fixes #3649). Thanks @Borisserz!</li>
-</ul>
-<p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.60.3/CodexBar-macos-universal-0.60.3.zip" length="70337676" type="application/octet-stream" sparkle:edSignature="BTDPS2crpL1aCD9oCDEtB2J+1mLeLIHnvLnPEwazaA48zLY9IiZj5dyFQCM1UIJrWVZJnoyjd+vO7+tIm45HCw=="/>
         </item>
         <item>
             <title>0.14.0</title>
