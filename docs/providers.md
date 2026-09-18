@@ -8,7 +8,7 @@ read_when:
 
 # Providers
 
-CodexBar currently registers 71 provider IDs. Some companies expose multiple surfaces, such as Codex vs OpenAI API or
+CodexBar currently registers 72 provider IDs. Some companies expose multiple surfaces, such as Codex vs OpenAI API or
 OpenCode vs OpenCode Go, because the auth source and quota shape differ.
 
 ## Fetch strategies (current)
@@ -95,6 +95,7 @@ complete when the available scan window covers fewer days.
 | ElevenLabs | API key from config/env → subscription usage API (`api`). |
 | [Nous Portal](nous.md) | Read-only Hermes login or explicit access token → bundled plugin for monthly credits and top-up balances (`api`). |
 | [Muse Code](muse.md) | Existing CLI device-code login → bundled plugin for reported five-hour and weekly subscription quotas (`oauth`). |
+| [CodeRabbit](coderabbit.md) | One bounded local CLI usage report for review counts and billing state (`cli`); no quota or balance is inferred. |
 | Windsurf | Web session bundle from browser localStorage (`web`) → local SQLite cache (`local`). |
 | Ollama | API key verifies Cloud API access (`api`); browser cookies expose Cloud quota windows (`web`). |
 | Synthetic | API key from config/env → quota API (`api`). |

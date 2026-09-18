@@ -76,5 +76,6 @@ enum ProviderImplementationManifest {
         IBMBobProviderImplementation(),
         NousProviderImplementation(),
         MuseProviderImplementation(),
+        CodeRabbitProviderImplementation(),
     ]
 }

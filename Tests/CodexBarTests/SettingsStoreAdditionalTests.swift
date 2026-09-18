@@ -210,6 +210,7 @@ struct SettingsStoreAdditionalTests {
             .mistral: [.automatic, .primary, .monthlyPlan],
             .openrouter: [.automatic, .primary],
             .nous: [.automatic, .primary],
+            .coderabbit: [.automatic],
             .deepseek: [.automatic],
             .deepinfra: [.automatic],
             .moonshot: [.automatic],

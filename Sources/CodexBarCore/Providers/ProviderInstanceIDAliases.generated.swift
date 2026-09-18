@@ -74,6 +74,7 @@ extension ProviderInstanceID {
     public static let ibmbob = UsageProvider.ibmbob.instanceID
     public static let nous = UsageProvider.nous.instanceID
     public static let muse = UsageProvider.muse.instanceID
+    public static let coderabbit = UsageProvider.coderabbit.instanceID
 }
 
 // swiftformat:enable sortDeclarations

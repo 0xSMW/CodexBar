@@ -3,6 +3,7 @@
 ## 0.60.6 — Unreleased
 
 ### Added
+- CodeRabbit: show review counts and billing state from one bounded CLI report, without invented quotas or mixing account data from a second command (#3383). Thanks @MonkeyMed!
 - Muse Code: show reported five-hour and weekly subscription quotas through a bundled provider plugin using the existing CLI login without interactive authentication (#3435). Thanks @audreyt!
 - Nous Portal: show monthly subscription credits and purchased balances through a bundled provider plugin, reusing the Hermes login without refreshing its credentials (#3376). Thanks @asispan!
 
