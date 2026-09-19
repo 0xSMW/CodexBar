@@ -1591,3 +1591,8 @@
 "Incomplete" = "Tidak lengkap";
 "Est. subtotal (%@): %@" = "Subtotal perkiraan (%@): %@";
 "Excluded requests with missing final usage: %d" = "Permintaan yang dikecualikan karena data penggunaan akhir tidak tersedia: %d";
+
+"overview_layout_title" = "Tata letak Ikhtisar";
+"overview_layout_subtitle" = "Pilih seberapa banyak informasi yang ditampilkan Ikhtisar.";
+"overview_layout_detailed" = "Terperinci";
+"overview_layout_compact" = "Ringkas";

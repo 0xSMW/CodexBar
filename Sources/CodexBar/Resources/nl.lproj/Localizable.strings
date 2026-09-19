@@ -1587,3 +1587,8 @@
 "Incomplete" = "Onvolledig";
 "Est. subtotal (%@): %@" = "Geschat subtotaal (%@): %@";
 "Excluded requests with missing final usage: %d" = "Uitgesloten verzoeken zonder definitieve gebruiksgegevens: %d";
+
+"overview_layout_title" = "Overzichtsindeling";
+"overview_layout_subtitle" = "Kies hoeveel informatie het overzicht toont.";
+"overview_layout_detailed" = "Gedetailleerd";
+"overview_layout_compact" = "Compact";

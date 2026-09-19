@@ -1592,3 +1592,8 @@
 "Incomplete" = "ไม่ครบถ้วน";
 "Est. subtotal (%@): %@" = "ยอดรวมย่อยโดยประมาณ (%@): %@";
 "Excluded requests with missing final usage: %d" = "คำขอที่ไม่นับรวมเนื่องจากไม่มีข้อมูลการใช้งานขั้นสุดท้าย: %d";
+
+"overview_layout_title" = "เค้าโครงภาพรวม";
+"overview_layout_subtitle" = "เลือกปริมาณข้อมูลที่จะแสดงในภาพรวม";
+"overview_layout_detailed" = "แบบละเอียด";
+"overview_layout_compact" = "กะทัดรัด";

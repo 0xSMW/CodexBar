@@ -1592,3 +1592,8 @@
 "Incomplete" = "ناقص";
 "Est. subtotal (%@): %@" = "جمع جزئی تخمینی (%@): %@";
 "Excluded requests with missing final usage: %d" = "درخواست‌های حذف‌شده به دلیل نبود داده‌های مصرف نهایی: %d";
+
+"overview_layout_title" = "چیدمان نمای کلی";
+"overview_layout_subtitle" = "میزان اطلاعات نمایش‌داده‌شده در نمای کلی را انتخاب کنید.";
+"overview_layout_detailed" = "با جزئیات";
+"overview_layout_compact" = "فشرده";

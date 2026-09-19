@@ -1619,3 +1619,8 @@
 "Incomplete" = "不完整";
 "Est. subtotal (%@): %@" = "估算小計（%@）：%@";
 "Excluded requests with missing final usage: %d" = "因缺少最終用量而排除的請求：%d";
+
+"overview_layout_title" = "概覽版面";
+"overview_layout_subtitle" = "選擇「概覽」顯示的資訊量。";
+"overview_layout_detailed" = "詳細";
+"overview_layout_compact" = "精簡";

@@ -1590,3 +1590,8 @@
 "Incomplete" = "Eksik";
 "Est. subtotal (%@): %@" = "Tahmini ara toplam (%@): %@";
 "Excluded requests with missing final usage: %d" = "Nihai kullanım verileri eksik olduğu için hariç tutulan istekler: %d";
+
+"overview_layout_title" = "Genel Bakış düzeni";
+"overview_layout_subtitle" = "Genel Bakış’ın ne kadar bilgi göstereceğini seçin.";
+"overview_layout_detailed" = "Ayrıntılı";
+"overview_layout_compact" = "Kompakt";

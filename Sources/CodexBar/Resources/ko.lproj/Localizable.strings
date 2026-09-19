@@ -1557,3 +1557,8 @@
 "Incomplete" = "불완전";
 "Est. subtotal (%@): %@" = "예상 소계 (%@): %@";
 "Excluded requests with missing final usage: %d" = "최종 사용량이 없어 제외된 요청: %d";
+
+"overview_layout_title" = "개요 레이아웃";
+"overview_layout_subtitle" = "개요에 표시할 정보의 양을 선택합니다.";
+"overview_layout_detailed" = "자세히";
+"overview_layout_compact" = "간결";

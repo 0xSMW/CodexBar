@@ -1591,3 +1591,8 @@
 "Incomplete" = "Niekompletne";
 "Est. subtotal (%@): %@" = "Szacowana suma częściowa (%@): %@";
 "Excluded requests with missing final usage: %d" = "Wykluczone żądania bez końcowych danych o użyciu: %d";
+
+"overview_layout_title" = "Układ Przeglądu";
+"overview_layout_subtitle" = "Wybierz, ile informacji ma wyświetlać Przegląd.";
+"overview_layout_detailed" = "Szczegółowy";
+"overview_layout_compact" = "Kompaktowy";

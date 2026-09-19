@@ -1588,3 +1588,8 @@
 "Incomplete" = "Incompleto";
 "Est. subtotal (%@): %@" = "Subtotal estimado (%@): %@";
 "Excluded requests with missing final usage: %d" = "Solicitações excluídas sem dados finais de uso: %d";
+
+"overview_layout_title" = "Layout da Visão geral";
+"overview_layout_subtitle" = "Escolha quanta informação a Visão geral mostra.";
+"overview_layout_detailed" = "Detalhado";
+"overview_layout_compact" = "Compacto";

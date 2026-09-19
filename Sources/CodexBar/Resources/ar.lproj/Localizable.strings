@@ -1592,3 +1592,8 @@
 "Incomplete" = "غير مكتمل";
 "Est. subtotal (%@): %@" = "الإجمالي الفرعي التقديري (%@): %@";
 "Excluded requests with missing final usage: %d" = "الطلبات المستبعدة لعدم توفر بيانات الاستخدام النهائية: %d";
+
+"overview_layout_title" = "تخطيط النظرة العامة";
+"overview_layout_subtitle" = "اختر مقدار المعلومات التي تعرضها النظرة العامة.";
+"overview_layout_detailed" = "مفصل";
+"overview_layout_compact" = "مضغوط";

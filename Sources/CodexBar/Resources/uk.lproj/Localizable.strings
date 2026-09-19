@@ -1588,3 +1588,8 @@
 "Incomplete" = "Неповні дані";
 "Est. subtotal (%@): %@" = "Орієнтовний підсумок (%@): %@";
 "Excluded requests with missing final usage: %d" = "Виключені запити без остаточних даних про використання: %d";
+
+"overview_layout_title" = "Компонування огляду";
+"overview_layout_subtitle" = "Виберіть, скільки інформації показувати в огляді.";
+"overview_layout_detailed" = "Докладно";
+"overview_layout_compact" = "Компактний";

@@ -1589,3 +1589,8 @@
 "Incomplete" = "Неполные данные";
 "Est. subtotal (%@): %@" = "Оценка подытога (%@): %@";
 "Excluded requests with missing final usage: %d" = "Исключённые запросы без итоговых данных об использовании: %d";
+
+"overview_layout_title" = "Макет обзора";
+"overview_layout_subtitle" = "Выберите, сколько информации показывать в обзоре.";
+"overview_layout_detailed" = "Подробный";
+"overview_layout_compact" = "Компактный";
