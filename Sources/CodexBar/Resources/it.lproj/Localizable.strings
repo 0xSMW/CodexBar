@@ -1596,3 +1596,7 @@
 "overview_layout_subtitle" = "Scegli quante informazioni mostrare in Panoramica.";
 "overview_layout_detailed" = "Dettagliato";
 "overview_layout_compact" = "Compatto";
+
+"section_widgets" = "Widget";
+"account_widgets_title" = "Mantieni aggiornati gli account per i widget";
+"account_widgets_description" = "Scegli un account in ogni widget Account Usage. Aggiorna fino a sei account per fornitore.";

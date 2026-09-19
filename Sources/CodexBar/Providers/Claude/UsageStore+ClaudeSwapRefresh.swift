@@ -72,6 +72,9 @@ extension UsageStore {
         self.claudeSwapDetectedVersion = nil
         if hadState {
             self.claudeSwapRevision &+= 1
+            if self.settings.accountWidgetsEnabled {
+                self.persistWidgetSnapshot(reason: "claude-swap-accounts")
+            }
         }
     }
 
@@ -107,6 +110,9 @@ extension UsageStore {
             self.claudeSwapLastRefreshAt = Date()
             self.claudeSwapLastError = nil
             self.claudeSwapRevision &+= 1
+            if self.settings.accountWidgetsEnabled {
+                self.persistWidgetSnapshot(reason: "claude-swap-accounts")
+            }
         } catch is CancellationError {
             return
         } catch {

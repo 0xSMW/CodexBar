@@ -1597,3 +1597,7 @@
 "overview_layout_subtitle" = "اختر مقدار المعلومات التي تعرضها النظرة العامة.";
 "overview_layout_detailed" = "مفصل";
 "overview_layout_compact" = "مضغوط";
+
+"section_widgets" = "الأدوات";
+"account_widgets_title" = "تحديث الحسابات للأدوات";
+"account_widgets_description" = "اختر حسابًا في كل أداة Account Usage. يتم تحديث ما يصل إلى ستة حسابات لكل مزوّد.";

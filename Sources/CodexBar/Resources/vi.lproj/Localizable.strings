@@ -1594,3 +1594,7 @@
 "overview_layout_subtitle" = "Chọn lượng thông tin hiển thị trong Tổng quan.";
 "overview_layout_detailed" = "Chi tiết";
 "overview_layout_compact" = "Gọn";
+
+"section_widgets" = "Tiện ích";
+"account_widgets_title" = "Cập nhật tài khoản cho tiện ích";
+"account_widgets_description" = "Chọn một tài khoản trong mỗi tiện ích Account Usage. Làm mới tối đa sáu tài khoản cho mỗi nhà cung cấp.";

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Widgets: pin saved accounts in a dedicated Account Usage widget, with opt-in refresh for up to six accounts per provider, privacy-aware labels, and verified ownership that survives credential rotation (#3585). Thanks @rokas-tarasevicius!
 - Widgets: make the binding quota easier to read, retain full provider names and secondary allowances, and share responsive tiles across Usage and Switcher widgets (#3137). Thanks @iamenahs!
 - Hooks: run opt-in `usage_updated` commands after successful current app refreshes and CLI watcher polls, with shared quota metadata, private account throttling, and explicit first-attempt behavior (#3512). Thanks @guillem-gelabert!
 - Overview: choose Detailed or Compact in Menu settings, with labeled usage bars, the existing provider navigation, and useful details for providers without quota bars (#2616). Thanks @Zihao-Qi!

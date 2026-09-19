@@ -1597,3 +1597,7 @@
 "overview_layout_subtitle" = "میزان اطلاعات نمایش‌داده‌شده در نمای کلی را انتخاب کنید.";
 "overview_layout_detailed" = "با جزئیات";
 "overview_layout_compact" = "فشرده";
+
+"section_widgets" = "ویجت‌ها";
+"account_widgets_title" = "حساب‌ها را برای ویجت‌ها به‌روز نگه دارید";
+"account_widgets_description" = "در هر ویجت Account Usage یک حساب انتخاب کنید. حداکثر شش حساب برای هر ارائه‌دهنده به‌روز می‌شود.";

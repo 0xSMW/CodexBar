@@ -1597,3 +1597,7 @@
 "overview_layout_subtitle" = "เลือกปริมาณข้อมูลที่จะแสดงในภาพรวม";
 "overview_layout_detailed" = "แบบละเอียด";
 "overview_layout_compact" = "กะทัดรัด";
+
+"section_widgets" = "วิดเจ็ต";
+"account_widgets_title" = "อัปเดตบัญชีสำหรับวิดเจ็ต";
+"account_widgets_description" = "เลือกบัญชีในวิดเจ็ต Account Usage แต่ละรายการ อัปเดตได้สูงสุดหกบัญชีต่อผู้ให้บริการ";

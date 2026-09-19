@@ -1595,3 +1595,7 @@
 "overview_layout_subtitle" = "Genel Bakış’ın ne kadar bilgi göstereceğini seçin.";
 "overview_layout_detailed" = "Ayrıntılı";
 "overview_layout_compact" = "Kompakt";
+
+"section_widgets" = "Araç takımları";
+"account_widgets_title" = "Araç takımları için hesapları güncel tut";
+"account_widgets_description" = "Her Account Usage araç takımında bir hesap seçin. Sağlayıcı başına en fazla altı hesabı yeniler.";

@@ -1592,3 +1592,7 @@
 "overview_layout_subtitle" = "Escolle canta información mostra o Resumo.";
 "overview_layout_detailed" = "Detallado";
 "overview_layout_compact" = "Compacto";
+
+"section_widgets" = "Widgets";
+"account_widgets_title" = "Manter as contas actualizadas para os widgets";
+"account_widgets_description" = "Escolle unha conta en cada widget Account Usage. Actualiza ata seis contas por provedor.";

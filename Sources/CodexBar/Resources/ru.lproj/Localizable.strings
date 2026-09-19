@@ -1594,3 +1594,7 @@
 "overview_layout_subtitle" = "Выберите, сколько информации показывать в обзоре.";
 "overview_layout_detailed" = "Подробный";
 "overview_layout_compact" = "Компактный";
+
+"section_widgets" = "Виджеты";
+"account_widgets_title" = "Обновлять данные аккаунтов для виджетов";
+"account_widgets_description" = "Выберите аккаунт в каждом виджете Account Usage. Обновляет до шести аккаунтов для каждого провайдера.";

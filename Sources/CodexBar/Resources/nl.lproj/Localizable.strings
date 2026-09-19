@@ -1592,3 +1592,7 @@
 "overview_layout_subtitle" = "Kies hoeveel informatie het overzicht toont.";
 "overview_layout_detailed" = "Gedetailleerd";
 "overview_layout_compact" = "Compact";
+
+"section_widgets" = "Widgets";
+"account_widgets_title" = "Accounts voor widgets actueel houden";
+"account_widgets_description" = "Kies een account in elke Account Usage-widget. Werkt maximaal zes accounts per aanbieder bij.";

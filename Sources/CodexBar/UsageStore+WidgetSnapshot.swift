@@ -196,6 +196,7 @@ extension UsageStore {
         }
         return WidgetSnapshot(
             entries: entries,
+            accounts: self.makeWidgetAccountEntries(now: now),
             enabledProviders: enabledProviders,
             usageBarsShowUsed: self.settings.usageBarsShowUsed,
             generatedAt: now)
@@ -436,7 +437,7 @@ extension UsageStore {
             .rateWindowLabels(metadata: metadata, snapshot: snapshot).primary
     }
 
-    private func widgetUsageRows(
+    func widgetUsageRows(
         provider: UsageProvider,
         snapshot: UsageSnapshot,
         now: Date) -> [WidgetSnapshot.WidgetUsageRowSnapshot]

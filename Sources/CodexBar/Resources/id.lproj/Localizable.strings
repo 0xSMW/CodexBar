@@ -1596,3 +1596,7 @@
 "overview_layout_subtitle" = "Pilih seberapa banyak informasi yang ditampilkan Ikhtisar.";
 "overview_layout_detailed" = "Terperinci";
 "overview_layout_compact" = "Ringkas";
+
+"section_widgets" = "Widget";
+"account_widgets_title" = "Perbarui akun untuk widget";
+"account_widgets_description" = "Pilih akun di setiap widget Account Usage. Memperbarui hingga enam akun per penyedia.";

@@ -1592,3 +1592,7 @@
 "overview_layout_subtitle" = "Välj hur mycket information som visas i översikten.";
 "overview_layout_detailed" = "Detaljerad";
 "overview_layout_compact" = "Kompakt";
+
+"section_widgets" = "Widgetar";
+"account_widgets_title" = "Håll konton uppdaterade för widgetar";
+"account_widgets_description" = "Välj ett konto i varje Account Usage-widget. Uppdaterar upp till sex konton per leverantör.";

@@ -1596,3 +1596,7 @@
 "overview_layout_subtitle" = "Wybierz, ile informacji ma wyświetlać Przegląd.";
 "overview_layout_detailed" = "Szczegółowy";
 "overview_layout_compact" = "Kompaktowy";
+
+"section_widgets" = "Widżety";
+"account_widgets_title" = "Aktualizuj konta dla widżetów";
+"account_widgets_description" = "Wybierz konto w każdym widżecie Account Usage. Odświeża do sześciu kont na dostawcę.";
