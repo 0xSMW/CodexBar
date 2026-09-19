@@ -2,6 +2,10 @@
 
 ## 0.62.1 — Unreleased
 
+### Fixed
+
+- Kimi: retain nonzero weekly and five-hour counts when a mixed legacy response includes conflicting zero ratios for the same quota windows (#3755, fixes #3754). Thanks @mudrii!
+
 ## 0.62.0 — 2026-09-19
 
 ### Highlights
