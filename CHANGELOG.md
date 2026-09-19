@@ -4,6 +4,7 @@
 
 ### Added
 
+- Overview: share the displayed Usage & Spend summary through the local snapshot preview, with hidden sources excluded and truthful clipboard feedback (#3677). Thanks @Chipagosfinest!
 - Terminal actions: select stable Warp as the default terminal, with app-targeted launches, private temporary configs, restart-safe cleanup, and Terminal fallback (#3664, #3283). Thanks @salmonumbrella and @liorp!
 - Provider cards: hide individual detail sections from Visible usage items, preserving choices across language changes and restarts (#3638). Thanks @elijah7x!
 
