@@ -223,6 +223,22 @@ struct GrokMenuCardModelTests {
     }
 
     @Test
+    func `removing coupon sections preserves later visibility identities`() throws {
+        let model = try Self.model(
+            now: Date(),
+            window: RateWindow(usedPercent: 25, windowMinutes: 10080, resetsAt: nil, resetDescription: nil),
+            details: [
+                ProviderDetailSection(title: "Coupons", rows: [.init(label: "Limit Reset Credits", value: "1")]),
+                ProviderDetailSection(title: "Plan details", rows: [.init(label: "Tier", value: "Example")]),
+            ])
+
+        #expect(model.providerDetailRawTitles == ["Plan details"])
+        #expect(model.usageItemDescriptors.last?.id == .detailSection("Plan details"))
+        #expect(model.applyingUsageItemVisibility(hiddenItemIDs: [.detailSection("Plan details")])
+            .providerDetails.isEmpty)
+    }
+
+    @Test
     func `expired live coupons do not fall back to cached coupon details`() throws {
         let now = Date(timeIntervalSince1970: 1_787_647_576)
         let details = try [
