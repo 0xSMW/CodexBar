@@ -280,6 +280,9 @@ the local result and returns a nonzero exit code. See [CLI host reporting](cli.m
     External writes invalidate cached data; database replacement or incompatible metadata reopens the reader through
     existing validation on its next access. Every read still reconciles file identities, and detailed report history
     remains transient. Scanner and writer connections keep separate ownership.
+  - Workspaces cache reads decode stored usage rows as SQLite yields them, avoiding a second retained copy of the
+    history as encoded payloads. Metadata and rows share one read transaction; filesystem reconciliation runs after
+    it closes. Row order, pricing, malformed-row fallback, and incomplete coverage keep their existing behavior.
   - Saved day/model aggregates group each file's usage rows in one pass per aggregate build. Packed token totals,
     authoritative costs (including zero), and standard/priority estimation buckets retain their existing meanings.
   - Excess cached request rows trigger bounded revalidation of readable, unchanged session files. Ordered source
