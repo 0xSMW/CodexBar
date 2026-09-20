@@ -4,6 +4,7 @@
 
 ### Added
 
+- Dashboard: include provider-reported 30-day USD spend when no local cost row exists, preserving OpenRouter's completed UTC history without inventing a local Today total (#3748). Thanks @Chipagosfinest!
 - Widgets: select DeepSeek and OpenRouter, see their balances, and keep live update ages visible in small widgets (#3743). Thanks @brzvsk!
 
 ### Improved
