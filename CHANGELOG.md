@@ -1,10 +1,16 @@
 # Changelog
 
-## 0.62.1 — Unreleased
+## 0.63.0 — 2026-09-20
+
+### Highlights
+
+- **Pi and OMP history:** track local tokens and estimated costs across the app, CLI, and widgets without double-counting Claude or Codex usage.
+- **More complete spending displays:** add DeepSeek and OpenRouter widget balances and provider-reported spending in the web dashboard.
+- **More reliable refreshes:** correct paginated Codex costs, recover transient credential-access failures, and prevent crashes from oversized provider values.
 
 ### Added
 
-- Pi: add standalone local Pi/OMP token and estimated-cost history across the app, CLI, Overview, Usage & Spend, and widgets, with scoped cache recovery and source accounting that prevents duplicate Claude/Codex totals (#3246). Thanks @Yuxin-Qiao!
+- Pi: track local Pi/OMP tokens and estimated costs in the app, CLI, Overview, Usage & Spend, and widgets, preserving incomplete history and preventing duplicate Claude/Codex totals (#3246). Thanks @Yuxin-Qiao!
 - Dashboard: include provider-reported 30-day USD spend when no local cost row exists, preserving OpenRouter's completed UTC history without inventing a local Today total (#3748). Thanks @Chipagosfinest!
 - Widgets: select DeepSeek and OpenRouter, see their balances, and keep live update ages visible in small widgets (#3743). Thanks @brzvsk!
 
@@ -14,22 +20,24 @@
 
 ### Fixed
 
-- Plugins: reject obsolete refresh results after configuration, enablement, or runtime changes, and preserve activity ownership across replacement refreshes.
-- Providers: prevent LongCat and Kilo crashes on oversized token or credit counts, retain usable Amp data when durations overflow, and safely format unrepresentable provider timestamps.
-- Providers: prevent crashes on oversized Kimi, Chutes, MiniMax, and Perplexity usage values or durations while preserving usable quota data.
-- Kilo: discard obsolete organization refreshes after credentials or selections change, including external CLI sign-ins, preventing old results from replacing the catalog or pruning current selections.
+- Plugins: reject obsolete refresh results after configuration, enablement, or runtime changes, and keep activity indicators correct across replacement refreshes (#3773).
+- Providers: prevent crashes from oversized LongCat, Kilo, Kimi, Chutes, MiniMax, and Perplexity usage values or durations, retain usable Amp quota data, and safely handle unrepresentable timestamps (#3758, #3764).
+- Kilo: discard obsolete organization refreshes after credentials or selections change, including external CLI sign-ins, preventing old results from replacing the catalog or pruning current selections (#3778).
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!
 - Keychain: retry transient no-UI preflight failures within a bounded budget, recovering already-authorized reads without relaxing prompt or denial policies (#3630). Thanks @ysyyork!
 - Codex costs: count only a paginated session's new usage, repairing inflated cached totals while preserving validated historical pricing across appends and interrupted scans (#3753). Thanks @anon5376!
-- Codex: keep replacement credits and history refreshes tracked when cancelled predecessors finish, preserving coalescing and cancellation.
-- Workspaces: reduce peak memory when reading large Codex histories by decoding stored rows without retaining their encoded copies.
+- Codex: keep credits and history refreshes reliable when a cancelled request finishes after its replacement (#3775).
 - Kimi: retain nonzero weekly and five-hour counts when a mixed legacy response includes conflicting zero ratios for the same quota windows (#3755, fixes #3754). Thanks @mudrii!
 - StepFun: label credit balances as Credit even without a reset timestamp, omit invented reset dates, and preserve Coding Plan window labels (#3771, fixes #3768). Thanks @BUKOWSKIREAL!
-- Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations.
-- Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone.
-- Configuration: keep following the current config file when atomic replacements race watcher registration or occur inside a change callback.
-- Augment: cancel all keepalive work when disabled, reject retired recovery and notification work after restart, and omit cookie values from keepalive diagnostics.
-- Claude: prevent credential diagnostics from crashing on oversized expiry timestamps while preserving authentication and refresh behavior.
+- Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations (#3760).
+- Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone (#3760).
+- Configuration: continue detecting config-file changes after editors or sync tools replace the file (#3763).
+- Augment: cancel all keepalive work when disabled, reject retired recovery and notification work after restart, and omit cookie values from keepalive diagnostics (#3779).
+- Claude: prevent credential diagnostics from crashing on oversized expiry timestamps while preserving authentication and refresh behavior (#3767).
+
+### Development
+
+- Debug Workspaces: reduce peak memory when reading large Codex histories without changing totals or pricing (#3761).
 
 ## 0.62.0 — 2026-09-19
 
