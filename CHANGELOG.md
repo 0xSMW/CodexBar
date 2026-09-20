@@ -21,6 +21,7 @@
 - Codex: keep replacement credits and history refreshes tracked when cancelled predecessors finish, preserving coalescing and cancellation.
 - Workspaces: reduce peak memory when reading large Codex histories by decoding stored rows without retaining their encoded copies.
 - Kimi: retain nonzero weekly and five-hour counts when a mixed legacy response includes conflicting zero ratios for the same quota windows (#3755, fixes #3754). Thanks @mudrii!
+- StepFun: label credit balances as Credit even without a reset timestamp, omit invented reset dates, and preserve Coding Plan window labels (#3771, fixes #3768). Thanks @BUKOWSKIREAL!
 - Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations.
 - Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone.
 - Configuration: keep following the current config file when atomic replacements race watcher registration or occur inside a change callback.
