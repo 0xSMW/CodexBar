@@ -20,6 +20,7 @@
 - Kimi: retain nonzero weekly and five-hour counts when a mixed legacy response includes conflicting zero ratios for the same quota windows (#3755, fixes #3754). Thanks @mudrii!
 - Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations.
 - Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone.
+- Configuration: keep following the current config file when atomic replacements race watcher registration or occur inside a change callback.
 
 ## 0.62.0 — 2026-09-19
 
