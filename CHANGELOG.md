@@ -16,6 +16,7 @@
 - Plugins: reject obsolete refresh results after configuration, enablement, or runtime changes, and preserve activity ownership across replacement refreshes.
 - Providers: prevent LongCat and Kilo crashes on oversized token or credit counts, retain usable Amp data when durations overflow, and safely format unrepresentable provider timestamps.
 - Providers: prevent crashes on oversized Kimi, Chutes, MiniMax, and Perplexity usage values or durations while preserving usable quota data.
+- Kilo: discard obsolete organization refreshes after credentials or selections change, including external CLI sign-ins, preventing old results from replacing the catalog or pruning current selections.
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!
 - Keychain: retry transient no-UI preflight failures within a bounded budget, recovering already-authorized reads without relaxing prompt or denial policies (#3630). Thanks @ysyyork!
 - Codex costs: count only a paginated session's new usage, repairing inflated cached totals while preserving validated historical pricing across appends and interrupted scans (#3753). Thanks @anon5376!
