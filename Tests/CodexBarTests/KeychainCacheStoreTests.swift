@@ -295,7 +295,8 @@ struct KeychainCacheStoreTests {
             }
         }
 
-        #expect(preflightCount.value == 2)
+        // Each load receives its own three-attempt preflight budget.
+        #expect(preflightCount.value == 6)
         for result in results {
             switch result {
             case .temporarilyUnavailable:
