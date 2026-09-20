@@ -69,6 +69,7 @@ Admin API key setup:
 
 ## OAuth API (preferred)
 - OAuth refresh form-encodes credential values, preserving literal plus signs and other reserved characters.
+- Expiry values outside the diagnostic integer range are reported as `out_of_range` without changing credential expiry or refresh decisions.
 - Credentials:
   - CodexBar OAuth cache when available.
   - File fallback: `~/.claude/.credentials.json`.

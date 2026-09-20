@@ -23,6 +23,7 @@
 - Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations.
 - Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone.
 - Configuration: keep following the current config file when atomic replacements race watcher registration or occur inside a change callback.
+- Claude: prevent credential diagnostics from crashing on oversized expiry timestamps while preserving authentication and refresh behavior.
 
 ## 0.62.0 — 2026-09-19
 
