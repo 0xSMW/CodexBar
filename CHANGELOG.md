@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Providers: prevent LongCat and Kilo crashes on oversized token or credit counts, retain usable Amp data when durations overflow, and safely format unrepresentable provider timestamps.
 - Providers: prevent crashes on oversized Kimi, Chutes, MiniMax, and Perplexity usage values or durations while preserving usable quota data.
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!
 - Keychain: retry transient no-UI preflight failures within a bounded budget, recovering already-authorized reads without relaxing prompt or denial policies (#3630). Thanks @ysyyork!

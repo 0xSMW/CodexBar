@@ -30,6 +30,7 @@ Kilo supports API and CLI-backed auth. Source mode can be `auto`, `api`, or `cli
 ## CLI output notes
 - Kilo text output splits identity into `Plan:` and `Activity:` lines.
 - Auto-mode failures include ordered fallback-attempt details in text mode.
+- Large finite credit balances remain displayable; an overflowed credit total omits that usage window.
 
 ## Troubleshooting
 - Missing API token: set `KILO_API_KEY` or provider `apiKey`.
