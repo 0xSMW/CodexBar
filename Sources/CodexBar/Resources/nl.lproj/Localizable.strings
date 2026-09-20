@@ -951,6 +951,8 @@
 "Overage" = "Overschot";
 "Activity" = "Activiteit";
 "Copied" = "Gekopieerd";
+"Managed by Homebrew" = "Beheerd door Homebrew";
+"Copy update command" = "Updatecommando kopiëren";
 "Copy error" = "Kopieerfout";
 "Copy path" = "Kopieer pad";
 "Extra usage spent" = "Extra gebruik besteed";

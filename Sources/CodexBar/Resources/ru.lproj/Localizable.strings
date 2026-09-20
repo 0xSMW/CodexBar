@@ -953,6 +953,8 @@
 "Overage" = "Перерасход";
 "Activity" = "Активность";
 "Copied" = "Скопировано";
+"Managed by Homebrew" = "Управляется через Homebrew";
+"Copy update command" = "Скопировать команду обновления";
 "Copy error" = "Ошибка копирования";
 "Copy path" = "Копировать путь";
 "Extra usage spent" = "Потрачено доп. использования";

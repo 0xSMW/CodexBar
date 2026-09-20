@@ -6,6 +6,10 @@
 
 - Widgets: select DeepSeek and OpenRouter, see their balances, and keep live update ages visible in small widgets (#3743). Thanks @brzvsk!
 
+### Improved
+
+- Settings: simplify Homebrew update instructions in About with a selectable command row, an integrated copy control, and brief copy confirmation (#3759).
+
 ### Fixed
 
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!

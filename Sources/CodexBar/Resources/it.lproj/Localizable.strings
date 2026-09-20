@@ -960,6 +960,8 @@
 "Overage" = "Eccedenza";
 "Activity" = "Attività";
 "Copied" = "Copiato";
+"Managed by Homebrew" = "Gestito da Homebrew";
+"Copy update command" = "Copia comando di aggiornamento";
 "Copy error" = "Errore di copia";
 "Copy path" = "Copia percorso";
 "Extra usage spent" = "Uso extra speso";

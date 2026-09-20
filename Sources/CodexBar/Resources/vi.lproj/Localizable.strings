@@ -947,6 +947,8 @@
 "Overage" = "Vượt mức";
 "Activity" = "Hoạt động";
 "Copied" = "Đã sao chép";
+"Managed by Homebrew" = "Được quản lý bằng Homebrew";
+"Copy update command" = "Sao chép lệnh cập nhật";
 "Copy error" = "Lỗi sao chép";
 "Copy path" = "Sao chép đường dẫn";
 "Extra usage spent" = "Thêm Mức sử dụng đã chi tiêu";

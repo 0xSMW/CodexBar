@@ -941,6 +941,8 @@
 "Overage" = "Overage";
 "Activity" = "Activity";
 "Copied" = "Copied";
+"Managed by Homebrew" = "Managed by Homebrew";
+"Copy update command" = "Copy update command";
 "Copy error" = "Copy error";
 "Copy path" = "Copy path";
 "Extra usage spent" = "Extra usage spent";

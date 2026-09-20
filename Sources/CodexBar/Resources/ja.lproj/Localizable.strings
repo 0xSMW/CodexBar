@@ -948,6 +948,8 @@
 "Overage" = "超過分";
 "Activity" = "アクティビティ";
 "Copied" = "コピーしました";
+"Managed by Homebrew" = "Homebrew で管理されています";
+"Copy update command" = "更新コマンドをコピー";
 "Copy error" = "エラーをコピー";
 "Copy path" = "パスをコピー";
 "Extra usage spent" = "追加使用分の支出";

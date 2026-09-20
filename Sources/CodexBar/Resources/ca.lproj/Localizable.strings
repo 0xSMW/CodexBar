@@ -815,6 +815,8 @@
 "Overage" = "Excedent";
 "Activity" = "Activitat";
 "Copied" = "Copiat";
+"Managed by Homebrew" = "Gestionat per Homebrew";
+"Copy update command" = "Copia l’ordre d’actualització";
 "Copy error" = "Error en copiar";
 "Copy path" = "Copia el camí";
 "Extra usage spent" = "Despesa d'ús addicional";

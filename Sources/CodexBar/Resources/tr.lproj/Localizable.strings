@@ -954,6 +954,8 @@
 "Overage" = "Aşım";
 "Activity" = "Etkinlik";
 "Copied" = "Kopyalandı";
+"Managed by Homebrew" = "Homebrew tarafından yönetiliyor";
+"Copy update command" = "Güncelleme komutunu kopyala";
 "Copy error" = "Kopyalama hatası";
 "Copy path" = "Yolu kopyala";
 "Extra usage spent" = "Harcanan ek kullanım";

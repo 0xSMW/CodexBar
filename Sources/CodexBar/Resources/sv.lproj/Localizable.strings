@@ -1115,6 +1115,8 @@
 "Usage history (%d days)" = "Användningshistorik (%d dagar)";
 "Cache read" = "Cacheläsning";
 "Copied" = "Kopierat";
+"Managed by Homebrew" = "Hanteras av Homebrew";
+"Copy update command" = "Kopiera uppdateringskommando";
 "Disable %@ dashboard cookie usage." = "Inaktivera cookie-användning för %@-översikten.";
 "30d requests" = "30 d förfrågningar";
 "Adding Account…" = "Lägger till konto…";

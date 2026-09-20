@@ -920,6 +920,8 @@
 "Overage" = "초과분";
 "Activity" = "활동";
 "Copied" = "복사됨";
+"Managed by Homebrew" = "Homebrew로 관리됨";
+"Copy update command" = "업데이트 명령 복사";
 "Copy error" = "오류 복사";
 "Copy path" = "경로 복사";
 "Extra usage spent" = "추가 사용 지출액";

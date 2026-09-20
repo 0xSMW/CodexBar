@@ -14,8 +14,7 @@ read_when:
 - Usage & Spend heatmap tooltips prefer the space above the hovered cell and stay within the grid, falling below when needed. On narrow grids they compact vertically and may overlap cells; keyboard selection remains available in the daily grid.
 - Both the application menu and status menu open About in the Settings window. An existing Settings window is reused
   and switches to the About pane.
-- Homebrew-managed installs show a Copy button in About for the bare upgrade command. The update instructions
-  also support native text selection; copying does not run an update.
+- Homebrew-managed installs show a compact Updates section in About, with a selectable monospaced upgrade command and a trailing copy control. The control confirms successful copies briefly; copying does not run an update.
 
 ## Menu bar
 - Overview offers Share Usage Snapshot when its Usage & Spend summary has shareable data. The local preview uses the same spend sources, hidden-source choices, calendar, and currency as that summary; Copy Image exports PNG and TIFF without uploading anything.

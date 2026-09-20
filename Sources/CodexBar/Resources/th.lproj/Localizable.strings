@@ -958,6 +958,8 @@
 "Overage" = "ส่วนเกิน";
 "Activity" = "กิจกรรม";
 "Copied" = "คัดลอกแล้ว";
+"Managed by Homebrew" = "จัดการโดย Homebrew";
+"Copy update command" = "คัดลอกคำสั่งอัปเดต";
 "Copy error" = "ข้อผิดพลาดในการคัดลอก";
 "Copy path" = "คัดลอกเส้นทาง";
 "Extra usage spent" = "การใช้จ่ายเพิ่มเติม";

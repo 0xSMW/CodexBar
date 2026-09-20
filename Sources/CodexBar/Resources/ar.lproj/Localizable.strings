@@ -958,6 +958,8 @@
 "Overage" = "التجاوز";
 "Activity" = "النشاط";
 "Copied" = "تم النسخ";
+"Managed by Homebrew" = "تتم إدارته بواسطة Homebrew";
+"Copy update command" = "نسخ أمر التحديث";
 "Copy error" = "خطأ في النسخ.";
 "Copy path" = "مسار النسخ";
 "Extra usage spent" = "الاستخدام الإضافي المخصص";

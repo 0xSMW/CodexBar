@@ -960,6 +960,8 @@
 "Overage" = "Kelebihan";
 "Activity" = "Aktivitas";
 "Copied" = "Disalin";
+"Managed by Homebrew" = "Dikelola oleh Homebrew";
+"Copy update command" = "Salin perintah pembaruan";
 "Copy error" = "Salin error";
 "Copy path" = "Salin path";
 "Extra usage spent" = "Penggunaan ekstra dibelanjakan";

@@ -920,6 +920,8 @@
 "Overage" = "超额";
 "Activity" = "活动";
 "Copied" = "已复制";
+"Managed by Homebrew" = "由 Homebrew 管理";
+"Copy update command" = "复制更新命令";
 "Copy error" = "复制错误";
 "Copy path" = "复制路径";
 "Extra usage spent" = "额外用量支出";

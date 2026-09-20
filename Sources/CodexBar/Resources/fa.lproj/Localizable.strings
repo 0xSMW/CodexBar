@@ -958,6 +958,8 @@
 "Overage" = "اضافه هزینه";
 "Activity" = "فعالیت ها";
 "Copied" = "کپی شده";
+"Managed by Homebrew" = "مدیریت‌شده توسط Homebrew";
+"Copy update command" = "کپی فرمان به‌روزرسانی";
 "Copy error" = "خطای کپی";
 "Copy path" = "مسیر کپی";
 "Extra usage spent" = "استفاده اضافی صرف شده";
