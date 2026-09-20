@@ -24,6 +24,7 @@
 - Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations.
 - Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone.
 - Configuration: keep following the current config file when atomic replacements race watcher registration or occur inside a change callback.
+- Augment: cancel all keepalive work when disabled, reject retired recovery and notification work after restart, and omit cookie values from keepalive diagnostics.
 - Claude: prevent credential diagnostics from crashing on oversized expiry timestamps while preserving authentication and refresh behavior.
 
 ## 0.62.0 — 2026-09-19
