@@ -111,7 +111,7 @@ identifiers, signing team, and app group:
 ## Provider picker support
 The configurable provider widgets currently expose:
 Codex, Claude, Gemini, Alibaba, Alibaba Token Plan, Qwen Cloud, Antigravity, Cursor, z.ai / GLM,
-Copilot, Devin, MiniMax, Kilo, OpenCode, OpenCode Go, Mistral, Kimi Code, DeepSeek, and OpenRouter.
+Copilot, Devin, MiniMax, Kilo, OpenCode, OpenCode Go, Mistral, Kimi Code, DeepSeek, OpenRouter, and Pi.
 
 DeepSeek shows its credit balance without a quota bar because it reports no quota denominator.
 OpenRouter shows its remaining credits alongside a configured API-key limit, or as the headline when

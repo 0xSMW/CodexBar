@@ -259,8 +259,10 @@ the local result and returns a nonzero exit code. See [CLI host reporting](cli.m
     when pi-compatible usage joins the aggregate because the native-only rows would not reconcile with the merged total.
 - Cache:
   - Native session store: `~/Library/Caches/CodexBar/cost-usage/cost-usage.sqlite`
-  - pi-compatible session cache: `~/Library/Caches/CodexBar/cost-usage/pi-sessions-v8.json`
+  - pi-compatible session cache: `~/Library/Caches/CodexBar/cost-usage/pi-sessions-v9.json`
     is replaced atomically on macOS and Linux, retaining complete cached scan state across refreshes.
+    Version 8 rebuilds once from transcripts to establish source scope and completeness. Enabling the standalone
+    [Pi provider](pi.md) keeps Codex history native-only in combined views and completed catch-up publication.
   - Catch-up status reads progress metadata without loading historical usage JSON or replay bodies. Cached token
     activity reads scoped daily aggregates without decoding individual usage events, retaining account, time zone,
     coverage, and incomplete-scan checks. Cached reports

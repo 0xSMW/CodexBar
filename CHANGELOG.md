@@ -4,6 +4,7 @@
 
 ### Added
 
+- Pi: add standalone local Pi/OMP token and estimated-cost history across the app, CLI, Overview, Usage & Spend, and widgets, with scoped cache recovery and source accounting that prevents duplicate Claude/Codex totals (#3246). Thanks @Yuxin-Qiao!
 - Dashboard: include provider-reported 30-day USD spend when no local cost row exists, preserving OpenRouter's completed UTC history without inventing a local Today total (#3748). Thanks @Chipagosfinest!
 - Widgets: select DeepSeek and OpenRouter, see their balances, and keep live update ages visible in small widgets (#3743). Thanks @brzvsk!
 

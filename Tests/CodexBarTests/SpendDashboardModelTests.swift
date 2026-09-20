@@ -82,7 +82,7 @@ struct SpendDashboardModelTests {
             .openrouter,
             .xai,
             // Antigravity and Muse provide local token history without monetary values.
-            .antigravity, .muse,
+            .antigravity, .muse, .pi,
         ])
     }
 
