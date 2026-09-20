@@ -1,6 +1,39 @@
 import Foundation
 
 extension CostUsageScanner {
+    static func loadDailyReportCancellable(
+        provider: UsageProvider,
+        since: Date,
+        until: Date,
+        now: Date = Date(),
+        options: Options = Options(),
+        reportContext: CostUsageReportContext?,
+        checkCancellation: CancellationCheck?) throws -> CostUsageDailyReport
+    {
+        // Provider-specific by design: Claude/Vertex retain window-specific rows in generated JSON caches.
+        guard let reportContext, provider == .claude || provider == .vertexai else {
+            return try self.loadDailyReportCancellable(
+                provider: provider,
+                since: since,
+                until: until,
+                now: now,
+                options: options,
+                checkCancellation: checkCancellation)
+        }
+        try checkCancellation?()
+        var filtered = options
+        if provider == .vertexai, filtered.claudeLogProviderFilter == .all {
+            filtered.claudeLogProviderFilter = .vertexAIOnly
+        }
+        return try self.loadClaudeDaily(
+            provider: provider,
+            range: CostUsageDayRange(since: since, until: until, calendar: options.calendar),
+            now: now,
+            options: filtered,
+            reportContext: reportContext,
+            checkCancellation: checkCancellation)
+    }
+
     // MARK: - Claude
 
     private struct ClaudeTokens {
@@ -659,13 +692,18 @@ extension CostUsageScanner {
         range: CostUsageDayRange,
         now: Date,
         options: Options,
+        reportContext: CostUsageReportContext? = nil,
         checkCancellation: CancellationCheck?) throws -> CostUsageDailyReport
     {
         let roots = self.defaultClaudeProjectsRoots(options: options)
         let inventory = try Self.inventoryClaudeRoots(roots, checkCancellation: checkCancellation)
         try checkCancellation?()
 
-        let cacheURL = CostUsageClaudeCacheIO.cacheFileURL(provider: provider, cacheRoot: options.cacheRoot)
+        let cacheContext = reportContext ?? .regular
+        let cacheURL = CostUsageClaudeCacheIO.cacheFileURL(
+            provider: provider,
+            cacheRoot: options.cacheRoot,
+            reportContext: cacheContext)
         let canonicalCachePath = cacheURL.standardizedFileURL.resolvingSymlinksInPath().path
         let cacheArtifactStamp = CostUsageClaudeFileStamp.read(at: cacheURL)
         let pricingURL = ModelsDevCache.cacheFileURL(cacheRoot: options.cacheRoot)
@@ -682,6 +720,7 @@ extension CostUsageScanner {
 
         if !options.forceRescan,
            let priorMemo,
+           reportContext == nil || priorMemo.hasWindowScopedRows,
            priorMemo.sourceInventory == sourceInventory,
            priorMemo.reportKey == reportKey
         {
@@ -692,11 +731,15 @@ extension CostUsageScanner {
         var artifact = CostUsageClaudeCacheIO.load(
             provider: provider,
             cacheRoot: options.cacheRoot,
+            reportContext: cacheContext,
             calendar: range.calendar)
         var cache = artifact.usage
         let nowMs = Int64(now.timeIntervalSince1970 * 1000)
         let refreshMs = Int64(max(0, options.refreshMinIntervalSeconds) * 1000)
         let windowExpanded = Self.requestedWindowExpandsCache(range: range, cache: cache)
+        // Matching bounds alone cannot prove that legacy partial scans retained each file's narrow-window winner.
+        let hasWindowScopedBaseline = priorMemo?.certifiesWindow(reportKey: reportKey, cache: cache) == true
+        let needsWindowScopedRebuild = reportContext != nil && !hasWindowScopedBaseline
         let sourceInventoryChanged = priorMemo.map { $0.sourceInventory != sourceInventory } ?? false
         let cacheArtifactChanged = priorMemo.map {
             $0.reportKey.cacheArtifactStamp != cacheArtifactStamp
@@ -708,6 +751,7 @@ extension CostUsageScanner {
         let shouldRefresh = options.forceRescan
             || sourceIdentitiesChanged
             || windowExpanded
+            || needsWindowScopedRebuild
             || sourceInventoryChanged
             || cacheArtifactChanged
             || scanConfigurationChanged
@@ -720,7 +764,10 @@ extension CostUsageScanner {
             && !sourceInventoryChanged
             && !cacheArtifactChanged
             && !scanConfigurationChanged
-        let shouldMutateCache = shouldRefresh && (!hasStableProcessBaseline || options.forceRescan || windowExpanded)
+        let shouldMutateCache = shouldRefresh && (
+            !hasStableProcessBaseline || options.forceRescan || windowExpanded || needsWindowScopedRebuild)
+        let forceFullScan = options
+            .forceRescan || windowExpanded || scanConfigurationChanged || needsWindowScopedRebuild
         let pricingResolver = CostUsagePricing.ClaudeResolver(now: now, cacheRoot: options.cacheRoot)
 
         if shouldMutateCache {
@@ -741,7 +788,7 @@ extension CostUsageScanner {
                 sourceFileIDs: artifact.sourceFileIDs,
                 range: range,
                 providerFilter: providerFilter,
-                forceFullScan: options.forceRescan || windowExpanded || scanConfigurationChanged,
+                forceFullScan: forceFullScan,
                 changedPaths: changedPaths,
                 pricingResolver: pricingResolver,
                 checkCancellation: checkCancellation)
@@ -779,6 +826,7 @@ extension CostUsageScanner {
                 provider: provider,
                 cache: artifact,
                 cacheRoot: options.cacheRoot,
+                reportContext: cacheContext,
                 calendar: range.calendar,
                 checkCancellation: checkCancellation)
         } else {
@@ -804,7 +852,8 @@ extension CostUsageScanner {
                 canonicalCachePath: canonicalCachePath,
                 sourceInventory: sourceInventory,
                 reportKey: finalReportKey,
-                report: report)
+                report: report,
+                hasWindowScopedRows: hasWindowScopedBaseline || (shouldMutateCache && forceFullScan))
         }
         return report
     }

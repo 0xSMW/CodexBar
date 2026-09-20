@@ -2,6 +2,10 @@
 
 ## 0.63.1 — Unreleased
 
+### Fixed
+
+- Claude/Vertex costs: isolate menu and Usage & Spend scan caches, avoiding repeated full rescans and preserving window-specific duplicate totals after upgrades (#3769). Thanks @postoso!
+
 ## 0.63.0 — 2026-09-20
 
 ### Highlights
