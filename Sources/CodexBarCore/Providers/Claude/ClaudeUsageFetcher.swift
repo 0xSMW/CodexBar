@@ -1504,7 +1504,8 @@ extension ClaudeUsageFetcher {
         }
 
         let emailMatches = primaryEmail != nil && primaryEmail == webEmail
-        let organizationMatches = primaryOrganization != nil && primaryOrganization == webOrganization
+        let oauthOrganization = Self.normalizedAccountField(oauthProfile?.organizationUuid)
+        let organizationMatches = oauthOrganization != nil && oauthOrganization == webOrganization
         return emailMatches || organizationMatches
     }
 

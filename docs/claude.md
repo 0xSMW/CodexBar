@@ -64,6 +64,8 @@ Admin API key setup:
 ### Debug selection (debug menu enabled)
 - The Debug pane can force OAuth / Web / CLI.
 - Web extras are internal-only (not exposed in the Providers pane).
+- CLI Web enrichment requires matching nonempty account emails; an organization display name alone cannot authorize
+  merging another session's optional usage or spend. OAuth enrichment retains verified organization-UUID matching.
 
 ## OAuth API (preferred)
 - OAuth refresh form-encodes credential values, preserving literal plus signs and other reserved characters.
