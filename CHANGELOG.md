@@ -18,6 +18,7 @@
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!
 - Keychain: retry transient no-UI preflight failures within a bounded budget, recovering already-authorized reads without relaxing prompt or denial policies (#3630). Thanks @ysyyork!
 - Codex costs: count only a paginated session's new usage, repairing inflated cached totals while preserving validated historical pricing across appends and interrupted scans (#3753). Thanks @anon5376!
+- Codex: keep replacement credits and history refreshes tracked when cancelled predecessors finish, preserving coalescing and cancellation.
 - Workspaces: reduce peak memory when reading large Codex histories by decoding stored rows without retaining their encoded copies.
 - Kimi: retain nonzero weekly and five-hour counts when a mixed legacy response includes conflicting zero ratios for the same quota windows (#3755, fixes #3754). Thanks @mudrii!
 - Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations.

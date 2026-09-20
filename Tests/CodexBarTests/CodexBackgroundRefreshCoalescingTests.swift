@@ -1193,7 +1193,7 @@ extension CodexBackgroundRefreshCoalescingTests {
         }
     }
 
-    private func cancelCreditsWork(
+    func cancelCreditsWork(
         store: UsageStore,
         blocker: BlockingCreditsLoader,
         tasks: [Task<Void, Never>]) async
@@ -1229,7 +1229,7 @@ extension CodexBackgroundRefreshCoalescingTests {
     }
 
     func makeSettingsStore(suite: String) throws -> SettingsStore {
-        let settings = testSettingsStore(suiteName: suite)
+        let settings = testSettingsStore(suiteName: suite, userDefaults: InMemoryUserDefaults())
         let codexMetadata = try #require(ProviderDescriptorRegistry.metadata[.codex])
         settings.setProviderEnabled(provider: .codex, metadata: codexMetadata, enabled: true)
         settings.providerDetectionCompleted = true
