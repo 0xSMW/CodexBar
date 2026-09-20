@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Plugins: reject obsolete refresh results after configuration, enablement, or runtime changes, and preserve activity ownership across replacement refreshes.
 - Providers: prevent LongCat and Kilo crashes on oversized token or credit counts, retain usable Amp data when durations overflow, and safely format unrepresentable provider timestamps.
 - Providers: prevent crashes on oversized Kimi, Chutes, MiniMax, and Perplexity usage values or durations while preserving usable quota data.
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!

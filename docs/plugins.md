@@ -16,6 +16,10 @@ Plugins are local files only. CodexBar has no plugin catalog, does not download 
 resolve imports. A plugin cannot use Node, browser globals, subprocesses, local files, databases, OAuth, WebViews, or
 arbitrary native APIs. The maximum source size is 1 MiB.
 
+App refreshes are scoped to the installed plugin runtime and its fetch settings. Disabling, removing, reloading, or
+reconfiguring a plugin prevents an older refresh from publishing usage or errors. A replacement refresh waits for retired
+work to finish and reads the current configuration when its fetch starts. Display-only preferences do not invalidate usage.
+
 ## Minimal plugin
 
 ```js
