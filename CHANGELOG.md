@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Providers: prevent crashes on oversized Kimi, Chutes, MiniMax, and Perplexity usage values or durations while preserving usable quota data.
 - Menu bar: assign each status item's stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!
 - Keychain: retry transient no-UI preflight failures within a bounded budget, recovering already-authorized reads without relaxing prompt or denial policies (#3630). Thanks @ysyyork!
 - Codex costs: count only a paginated session's new usage, repairing inflated cached totals while preserving validated historical pricing across appends and interrupted scans (#3753). Thanks @anon5376!

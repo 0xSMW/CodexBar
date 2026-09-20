@@ -55,6 +55,7 @@ enrichment cannot replace it. Legacy rate-limit counts remain available when no 
 For mixed legacy responses with a reliable weekly count and no monthly ratio pool, a zero 5-hour or
 weekly ratio falls back to a populated count for the same duration and reset time (within two seconds).
 Nonzero ratios and monthly-pool responses keep their precedence; mismatched reset periods never borrow counts.
+Numeric legacy fields outside the integer range decode safely; unusable request counts do not create quota windows.
 
 ### Method 2: Kimi Code CLI
 
