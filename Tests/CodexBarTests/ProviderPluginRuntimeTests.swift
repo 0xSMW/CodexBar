@@ -288,11 +288,8 @@ struct ProviderPluginRuntimeTests {
         do {
             _ = try await runtime.fetchUsage(secrets: ["TEST_KEY": "secret-value"])
             Issue.record("Expected the request deadline to reject the plugin fetch")
-        } catch let error as ProviderPluginError {
-            guard case .script = error else {
-                Issue.record("Expected a request deadline failure, received \(error)")
-                return
-            }
+        } catch let error as URLError {
+            #expect(error.code == .timedOut)
             await cancellation.waitUntilCancelled()
         } catch {
             Issue.record("Unexpected error: \(error)")

@@ -44,10 +44,10 @@ it in Settings. A configured slug remains useful for selecting among multiple ac
 ## Plugin conversion status
 
 The native fetcher remains authoritative. A valid response with no rated line items for a listed account
-intentionally produces a successful snapshot with no rate window, cost, detail, or identity; the plugin snapshot
-contract still rejects that entirely empty shape. Account discovery also persists the selected slug to config and
+intentionally produces a successful snapshot with no rate window, cost, detail, or identity; plugins can now declare
+that state with `empty: true`. Account discovery also persists the selected slug to config and
 returns a dynamic source label plus a save-failure diagnostic. The script strategy has no result-metadata or
-config-persistence bridge for those behaviors, so identity-only snapshot support does not complete this conversion.
+config-persistence bridge for those behaviors, so explicit empty-snapshot support alone does not complete this conversion.
 
 ## Key files
 

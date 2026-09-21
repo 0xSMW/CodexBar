@@ -54,15 +54,20 @@ enum ProviderPluginSnapshotMapper {
         let subscriptionRenewsAt = try self.optionalDate(value, property: "subscriptionRenewsAt")
         let subscriptionExpiresAt = try self.optionalDate(value, property: "subscriptionExpiresAt")
         let dataConfidence = try self.dataConfidence(value)
+        let empty = value.property("empty")
+        if let empty, !empty.isUndefined, !empty.isBoolean {
+            throw ProviderPluginError.invalidSnapshot("empty must be a boolean")
+        }
 
-        guard primary != nil || secondary != nil || tertiary != nil || !(extraRateWindows?.isEmpty ?? true)
+        guard empty?.boolValue() == true
+            || primary != nil || secondary != nil || tertiary != nil || !(extraRateWindows?.isEmpty ?? true)
             || providerCost != nil
             || costUsage != nil
             || !details.isEmpty
             || self.hasMeaningfulIdentity(identity)
         else {
             throw ProviderPluginError.invalidSnapshot(
-                "snapshot must contain at least one rate window, cost, detail section, or identity field")
+                "snapshot must contain a rate window, cost, detail section, or identity field, or declare empty: true")
         }
 
         return UsageSnapshot(

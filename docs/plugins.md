@@ -145,6 +145,9 @@ so portable third-party plugins must use the host helpers below instead of ECMA-
 - `ctx.env.timeZone` is the host's current IANA time-zone identifier; zero-offset GMT aliases are normalized to `UTC`.
 - `ctx.format.number(value, options?)`, `usd(value)`, and `monthDay(date)` provide deterministic formatting on both
   engines. Number options support `minimumFractionDigits` and `maximumFractionDigits`.
+- `ctx.format.currency(value, currencyCode)` uses the same native `UsageFormatter` as the app, with `en_US` currency
+  symbols and decimal half-even rounding. For USD, `49.585` becomes `$49.58`, `-0.0` becomes `-$0.00`, and `1e-7`
+  becomes `$0.00`; CNY uses `CN¥`. No JavaScript `Intl` implementation is required.
 - `ctx.jwt.decode(token)` decodes (but does not authenticate) a JWT JSON payload.
 - `ctx.pct(used, limit)` returns a finite percentage clamped to 0–100; non-positive limits map to 100.
 - `ctx.isDetailLabel(value)` checks the native provider-detail label rules, including whitespace and Unicode character limits; it performs no I/O and returns false for non-strings.
@@ -211,8 +214,10 @@ and a three-letter uppercase currency. Dates are JavaScript `Date` values or ISO
 always scoped to the manifest's instance ID. Data confidence defaults to `unknown`. Details allow at most 8 sections, 24 rows per section, 120 chart points,
 and 120 characters per detail string. Wrong types and limit violations fail the whole fetch instead of truncating it.
 An identity-only snapshot is useful for balance-only or zero-usage provider states and renders its available account,
-organization, plan/login-method, and account-ID fields in the menu and CLI. An empty object, an empty `identity` object,
-or metadata such as confidence and subscription dates without displayable usage or identity remains invalid.
+organization, plan/login-method, and account-ID fields in the menu and CLI. A verified response with no displayable data
+may return `{empty: true}` with optional identity. This creates no artificial rate window; every supplied field is still
+validated. An empty object, an empty `identity` object, or metadata such as confidence and subscription dates without
+displayable usage or identity remains invalid unless `empty: true` is explicitly declared.
 
 ## TypeScript
 
