@@ -58,6 +58,12 @@ Admin API key setup:
   - `Only on user action` (default): interactive prompts are reserved for user-initiated repair flows.
   - `Always allow prompts`: allows interactive prompts in both user and background flows.
 - This setting only affects Claude OAuth Keychain prompting behavior; it does not switch your Claude usage source.
+- The policy also applies to the experimental `/usr/bin/security` reader and delegated OAuth refresh through
+  `claude`: background operations that can prompt require `Always allow prompts`.
+- CodexBar's `Always allow prompts` permits future prompts; macOS's **Always Allow** grants access to the current
+  Keychain item. Claude Code can recreate `Claude Code-credentials` and reset that grant. An ACL entry still named
+  CodexBar does not prove that its stored code-signing requirement matches the running binary. `Only on user action`
+  reduces background interruptions but may require a manual Refresh to recover OAuth access.
 - If Preferences → Advanced → Disable Keychain access is enabled, this policy remains visible but inactive until
   Keychain access is re-enabled.
 
@@ -74,6 +80,9 @@ Admin API key setup:
   - CodexBar OAuth cache when available.
   - File fallback: `~/.claude/.credentials.json`.
   - Claude CLI Keychain bootstrap/repair fallback: `Claude Code-credentials`.
+- When a CodexBar-owned OAuth cache item's ACL rejects the current build, fresh credentials from an allowed source
+  can replace that cache item using no-UI deletion and creation. A locked or inconclusive Keychain is preserved;
+  failed ACL repairs back off for five minutes. This never deletes or recreates Claude Code's credential item.
 - For the default CLI profile, expired cached or file credentials can adopt a fresh CLI Keychain token after file fallback, even when its fingerprint was already observed during an earlier repair. Existing direct-read consent, prompt policy, cooldown, one-minute freshness-check throttle, and noninteractive-read checks still apply. Custom profiles are not recovered from the unscoped global item, and CLI credentials are never rewritten by this synchronization. Background recovery still requires the Always allow prompts policy; the default Only on user action policy requires an explicit Refresh.
 - On Claude Code 2.1.x, `Claude Code-credentials` may contain only MCP server OAuth state (`mcpOAuth`) with no `claudeAiOauth`. CodexBar treats that as an OAuth configuration error, does not run background delegated `claude /status` refresh, and surfaces re-auth guidance. Use Web or CLI usage source, or restore a valid Claude OAuth keychain entry. See #1844.
 - Requires `user:profile` scope (CLI tokens with only `user:inference` cannot call usage).
