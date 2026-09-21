@@ -238,6 +238,8 @@ terminated JSON. Snapshot schema version 1 includes compact provider windows,
 summary, update time, busy/stale/error state, and spending availability. It excludes account identity, CLI paths, and credential configuration.
 It includes display values and reset text for adapters. Adapters should check `schemaVersion`, tolerate
 unknown fields, and treat a missing backend as unavailable.
+Measured provider-scoped windows follow the standard windows and require a stable, nonempty identifier.
+Their exported `key` values are opaque and remain stable for the lifetime of the backend process.
 
 ## Validation and removal
 
