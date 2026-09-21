@@ -304,5 +304,6 @@ subsequent in-place edits continue to be detected. App-originated writes retain 
 ## Notes
 - Fields not relevant to a provider are ignored.
 - Omitted providers are appended with defaults during normalization.
+- Unknown or retired provider entries (including Crof after its shutdown) are ignored with an `Ignoring unknown provider in config` warning (visible in the CLI with `--log-level warning`). Reading does not rewrite the file; the next settings save removes those entries and keeps supported provider settings.
 - Keep the file private; it contains secrets.
 - Validate the file with `codexbar config validate` (JSON output available with `--format json`).

@@ -262,7 +262,6 @@ public enum ProviderPrimaryDescriptionPlacement: Sendable {
     case reset
     case detail
     case detailLeft
-    case detailBySecondaryPresence
 }
 
 public enum ProviderPrimaryDetailKind: Sendable {
@@ -306,7 +305,6 @@ public struct ProviderMenuCardPresentation: Sendable {
     public let showsPrimaryBalanceDescription: Bool
     public let showsSecondaryBalanceDescription: Bool
     public let hidesPrimaryResetWithoutDate: Bool
-    public let hidesPrimaryResetWithoutSecondary: Bool
     public let clearsPrimaryReset: Bool
     public let primaryDetailKind: ProviderPrimaryDetailKind
     public let usesAbacusPace: Bool
@@ -330,7 +328,6 @@ public struct ProviderMenuCardPresentation: Sendable {
         showsPrimaryBalanceDescription: Bool = false,
         showsSecondaryBalanceDescription: Bool = false,
         hidesPrimaryResetWithoutDate: Bool = false,
-        hidesPrimaryResetWithoutSecondary: Bool = false,
         clearsPrimaryReset: Bool = false,
         movePrimaryDetailToStatus: @escaping SnapshotPredicate = { _ in false },
         extraRateWindowUsesResetDescriptionAsDetail: @escaping ExtraRateWindowPredicate = { _ in false },
@@ -355,7 +352,6 @@ public struct ProviderMenuCardPresentation: Sendable {
         self.showsPrimaryBalanceDescription = showsPrimaryBalanceDescription
         self.showsSecondaryBalanceDescription = showsSecondaryBalanceDescription
         self.hidesPrimaryResetWithoutDate = hidesPrimaryResetWithoutDate
-        self.hidesPrimaryResetWithoutSecondary = hidesPrimaryResetWithoutSecondary
         self.clearsPrimaryReset = clearsPrimaryReset
         self.movePrimaryDetailToStatus = movePrimaryDetailToStatus
         self.extraRateWindowUsesResetDescriptionAsDetail = extraRateWindowUsesResetDescriptionAsDetail
@@ -401,20 +397,17 @@ public struct ProviderMenuDescriptorPresentation: Sendable {
     public typealias SnapshotPredicate = @Sendable (_ snapshot: UsageSnapshot) -> Bool
 
     private let primaryDescriptionIsDetail: SnapshotPredicate
-    public let duplicatesPrimaryDetailWhenResetDatePresent: Bool
     public let showsPrimaryWeeklyPace: Bool
     public let secondaryDescriptionMode: ProviderSecondaryDescriptionMode
     public let tertiaryDescriptionOverridesReset: Bool
 
     public init(
         primaryDescriptionIsDetail: @escaping SnapshotPredicate = { _ in false },
-        duplicatesPrimaryDetailWhenResetDatePresent: Bool = false,
         showsPrimaryWeeklyPace: Bool = false,
         secondaryDescriptionMode: ProviderSecondaryDescriptionMode = .standard,
         tertiaryDescriptionOverridesReset: Bool = false)
     {
         self.primaryDescriptionIsDetail = primaryDescriptionIsDetail
-        self.duplicatesPrimaryDetailWhenResetDatePresent = duplicatesPrimaryDetailWhenResetDatePresent
         self.showsPrimaryWeeklyPace = showsPrimaryWeeklyPace
         self.secondaryDescriptionMode = secondaryDescriptionMode
         self.tertiaryDescriptionOverridesReset = tertiaryDescriptionOverridesReset
