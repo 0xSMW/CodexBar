@@ -21,6 +21,7 @@
 - Devin: distinguish unreadable Chrome session storage from missing sessions and rejected tokens, and document exactly how to find and paste manual credentials (#3660, #3781). Thanks @dzienisz!
 - Linux installation: preserve managed configuration symlinks and UTF-8 glyphs across reinstalls, and recover dangling Omarchy adapter links (#3784). Thanks @jsonMartin!
 - Keychain: rebuild CodexBar-owned caches from fresh credentials after an app update invalidates their ACL, with bounded retries; honor Claude's user-action-only prompt policy for the experimental security reader (#3249, #3798).
+- Sharing: preserve complete providers' model breakdowns when another source in the same currency is unpriced or incomplete, and label omitted history as partial on cards and copied text (#3714, #3747). Thanks @Chipagosfinest!
 - Linux packaging: include executable contents when the selected binary is a symlink, keeping archives self-contained (#3784).
 - OpenCode Go: restore migrated Console quota windows and prepaid Zen balances, preserve independent legacy sessions, and keep missing reset times unknown instead of reporting expired credentials or immediate resets (#3796, fixes #3783). Thanks @kays0x and @NOIPJohnny!
 - Kimi: honor Manual cookie source even when the token is empty or invalid, preventing automatic Desktop or browser credential discovery (#3536, #3537). Thanks @OttoPrua!
