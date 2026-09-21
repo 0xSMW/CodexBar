@@ -14,6 +14,12 @@ read_when:
 
 **One-time setup for managing your CodexBar fork with multiple upstreams**
 
+For local Developer ID packaging, set `CODEXBAR_SIGNING=identity` and `APP_IDENTITY` to your installed identity's
+full name or certificate SHA-1 hash. The packaging script derives the Team ID and rejects conflicting
+`APP_TEAM_ID` overrides; it does not embed upstream CloudKit resources for another team. The release signing
+script uses the same `APP_IDENTITY`. See [identity signing requirements](DEVELOPMENT.md#local-development-build)
+and [release setup](RELEASING.md) before distributing a fork.
+
 ---
 
 ## 🎯 Quick Setup

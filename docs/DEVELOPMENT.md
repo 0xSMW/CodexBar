@@ -509,11 +509,27 @@ swiftlint --strict
 # Creates: CodexBar.app with ad-hoc signing by default
 ```
 
+For an identity-signed package, set `CODEXBAR_SIGNING=identity` and `APP_IDENTITY` to an installed Developer ID Application signing
+identity's full name, unique name substring, or SHA-1 certificate hash. Packaging resolves it through
+`security find-identity -p codesigning -v`, derives the Team ID from the selected identity, and signs with that
+certificate's hash. A missing or ambiguous match, a certificate other than Developer ID Application with a ten-character Team ID, or a conflicting
+`APP_TEAM_ID` fails before entitlements are generated. Self-signed and Apple Development/Distribution certificates are not supported by this
+path; use ad-hoc packaging or a Developer ID Application identity. Developer ID names carry a Team ID, whereas
+development certificate names can carry a personal ID. Explicit identity selections are also validated in LLDB builds.
+
+App and widget entitlements use the resolved team. Only upstream-team identity-signed release builds embed the
+upstream provisioning profile and CloudKit entitlements; other teams package without those upstream resources.
+Widget build failures and timestamp/signature failures still fail packaging. The sandboxed launch smoke check is
+retained; the existing `CODEXBAR_SKIP_LAUNCH_SMOKE=1` override explicitly reports that it skipped validation.
+
 ### Release Build (Notarized)
 ```bash
 ./Scripts/sign-and-notarize.sh
 # Creates: CodexBar-<version>.zip and CodexBar-<version>.dSYM.zip
 ```
+
+`sign-and-notarize.sh` honors `APP_IDENTITY` and passes the same selection to packaging; it defaults to the upstream
+Developer ID. Timestamping and hardened runtime remain required for all identity-signed releases.
 
 See `docs/RELEASING.md` for full release process.
 
