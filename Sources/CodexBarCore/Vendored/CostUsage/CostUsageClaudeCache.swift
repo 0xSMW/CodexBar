@@ -79,7 +79,7 @@ final class CostUsageClaudeReportMemo: @unchecked Sendable {
     static let shared = CostUsageClaudeReportMemo()
     static let persistedVersion = 1
     /// Bump when bundled pricing, model aliases, or daily-report aggregation changes without new artifact stamps.
-    static let reportSemanticsVersion = 5
+    static let reportSemanticsVersion = 6
 
     private struct StoredEntry {
         let entry: Entry

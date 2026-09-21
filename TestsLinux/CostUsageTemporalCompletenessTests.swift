@@ -294,6 +294,8 @@ struct CostUsageTemporalCompletenessTests {
             cache.files = ["/synthetic/claude.jsonl": CostUsageScanner.makeFileUsage(
                 mtimeUnixMs: millis, size: 1, days: cache.days, parsedBytes: 1, claudeRows: [row])]
             report = CostUsageScanner.buildClaudeReportFromCache(cache: cache, range: range)
+            #expect(report.summary?.totalInputTokens == Int.max)
+            #expect(report.summary?.totalOutputTokens == 1)
         }
         #expect(report.data.first?.totalTokens == nil)
         #expect(report.summary?.totalTokens == nil)

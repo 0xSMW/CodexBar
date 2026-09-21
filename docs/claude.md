@@ -295,6 +295,7 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
 - Parsing:
   - Native Claude logs parse lines with `type: "assistant"` and `message.usage`.
   - Uses per-model token counts (input, cache read/create, output).
+  - Oversized local token or cost values cannot crash history scanning. An overflowing token total stays unavailable while independent counts and finite dollar estimates remain visible; raw rows are retained for later repricing.
   - Deduplicates cumulative streaming chunks by `message.id + requestId`. When `requestId` is absent,
     exact, nonblank `sessionId + message.id` identifies repeated response snapshots. Distinct explicit request
     IDs and distinct fallback sessions remain separate. Rows without sufficient identity are counted individually.
