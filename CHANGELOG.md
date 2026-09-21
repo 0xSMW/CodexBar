@@ -23,6 +23,7 @@
 ### Fixed
 
 - Widgets: retain eligible last-known measurements at their original age when a failed refresh leaves every provider entry empty, while respecting provider and account invalidation (#3500). Thanks @jaxleezhang!
+- Menu bar: assign stable item names before normal sizing and clear saved positions beyond the widest attached display on creation, including visibility recovery (#3355, #3201).
 - Grok: send a nonempty billing request while preserving legacy monthly usage and leaving unknown percentages unchanged (#3336). Thanks @CharlieLZ!
 - Claude: recover expired default-profile OAuth credentials from an already-observed live Keychain token, preserving existing consent, prompt policy, and cooldown checks (#3390).
 - Codex costs: exclude inherited fork totals when the first owned counters differ from the copied baseline or the parent history is unavailable, and reparse older cached files (#3524). Thanks @vnnkl!
