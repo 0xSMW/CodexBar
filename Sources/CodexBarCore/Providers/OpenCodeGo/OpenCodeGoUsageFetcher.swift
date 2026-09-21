@@ -81,43 +81,6 @@ public struct OpenCodeGoUsageFetcher: Sendable {
         let session: URLSession
     }
 
-    private static let percentKeys = [
-        "usagePercent",
-        "usedPercent",
-        "percentUsed",
-        "percent",
-        "usage_percent",
-        "used_percent",
-        "utilization",
-        "utilizationPercent",
-        "utilization_percent",
-        "usage",
-    ]
-    private static let resetInKeys = [
-        "resetInSec",
-        "resetInSeconds",
-        "resetSeconds",
-        "reset_sec",
-        "reset_in_sec",
-        "resetsInSec",
-        "resetsInSeconds",
-        "resetIn",
-        "resetSec",
-    ]
-    private static let resetAtKeys = [
-        "resetAt",
-        "resetsAt",
-        "reset_at",
-        "resets_at",
-        "nextReset",
-        "next_reset",
-        "renewAt",
-        "renew_at",
-    ]
-    private static let renewAtKeys = [
-        "renewAt",
-        "renew_at",
-    ]
     private static let redirectGuardDelegate = RedirectGuardDelegate()
     private static let redirectGuardSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
@@ -240,7 +203,7 @@ public struct OpenCodeGoUsageFetcher: Sendable {
                 throw OpenCodeGoUsageError.invalidCredentials
             }
             let body = String(data: response.data, encoding: .utf8) ?? ""
-            if let message = self.extractServerErrorMessage(from: body) {
+            if let message = OpenCodeWebParsing.extractServerErrorMessage(from: body) {
                 throw OpenCodeGoUsageError.apiError("HTTP \(response.statusCode): \(message)")
             }
             throw OpenCodeGoUsageError.apiError("HTTP \(response.statusCode)")
@@ -531,7 +494,7 @@ extension OpenCodeGoUsageFetcher {
             if httpResponse.statusCode == 401 {
                 throw OpenCodeGoUsageError.invalidCredentials
             }
-            if let message = self.extractServerErrorMessage(from: bodyText) {
+            if let message = OpenCodeWebParsing.extractServerErrorMessage(from: bodyText) {
                 throw OpenCodeGoUsageError.apiError("HTTP \(httpResponse.statusCode): \(message)")
             }
             throw OpenCodeGoUsageError.apiError("HTTP \(httpResponse.statusCode)")
@@ -579,7 +542,7 @@ extension OpenCodeGoUsageFetcher {
             return nil
         }
 
-        let renewsAt = self.dateValue(from: access["endsAt"])
+        let renewsAt = OpenCodeWebParsing.dateValue(from: access["endsAt"])
         var monthly = meters["month"] as? [String: Any]
         if monthly?["resetsAt"] == nil || monthly?["resetsAt"] is NSNull, let endsAt = access["endsAt"] {
             monthly?["resetsAt"] = endsAt
@@ -594,7 +557,9 @@ extension OpenCodeGoUsageFetcher {
         else { return nil }
 
         func resetInterval(_ meter: [String: Any]?) -> Int? {
-            self.dateValue(from: meter?["resetsAt"]).flatMap { OpenCodeWebParsing.resetInterval(from: $0, now: now) }
+            OpenCodeWebParsing.dateValue(from: meter?["resetsAt"]).flatMap { OpenCodeWebParsing.resetInterval(
+                from: $0,
+                now: now) }
         }
         return OpenCodeGoUsageSnapshot(
             hasWeeklyUsage: snapshot.hasWeeklyUsage,
@@ -617,8 +582,12 @@ extension OpenCodeGoUsageFetcher {
         else {
             throw OpenCodeGoUsageError.parseFailed("Missing usage fields.")
         }
-        let renewsAt = self.dateValue(from: OpenCodeWebParsing.value(from: usage, keys: self.renewAtKeys))
-            ?? self.dateValue(from: OpenCodeWebParsing.value(from: dict, keys: self.renewAtKeys))
+        let renewsAt = OpenCodeWebParsing.dateValue(from: OpenCodeWebParsing.value(
+            from: usage,
+            keys: OpenCodeWebParsing.renewAtKeys))
+            ?? OpenCodeWebParsing.dateValue(from: OpenCodeWebParsing.value(
+                from: dict,
+                keys: OpenCodeWebParsing.renewAtKeys))
         guard let snapshot = self.buildSnapshot(
             rolling: rolling,
             weekly: usage["weekly"] as? [String: Any],
@@ -687,7 +656,9 @@ extension OpenCodeGoUsageFetcher {
             return snapshot
         }
 
-        let renewsAt = self.dateValue(from: OpenCodeWebParsing.value(from: dict, keys: self.renewAtKeys))
+        let renewsAt = OpenCodeWebParsing.dateValue(from: OpenCodeWebParsing.value(
+            from: dict,
+            keys: OpenCodeWebParsing.renewAtKeys))
         if let snapshot = self.parseUsageDictionary(dict, now: now, inheritedRenewsAt: renewsAt) {
             return snapshot
         }
@@ -709,8 +680,9 @@ extension OpenCodeGoUsageFetcher {
         now: Date,
         inheritedRenewsAt: Date?) -> OpenCodeGoUsageSnapshot?
     {
-        let renewsAt = self
-            .dateValue(from: OpenCodeWebParsing.value(from: dict, keys: self.renewAtKeys)) ?? inheritedRenewsAt
+        let renewsAt = OpenCodeWebParsing
+            .dateValue(from: OpenCodeWebParsing.value(from: dict, keys: OpenCodeWebParsing.renewAtKeys)) ??
+            inheritedRenewsAt
         if let usage = dict["usage"] as? [String: Any],
            let snapshot = self.parseUsageDictionary(usage, now: now, inheritedRenewsAt: renewsAt)
         {
@@ -737,8 +709,9 @@ extension OpenCodeGoUsageFetcher {
         inheritedRenewsAt: Date?) -> OpenCodeGoUsageSnapshot?
     {
         if depth > 3 { return nil }
-        let renewsAt = self
-            .dateValue(from: OpenCodeWebParsing.value(from: dict, keys: self.renewAtKeys)) ?? inheritedRenewsAt
+        let renewsAt = OpenCodeWebParsing
+            .dateValue(from: OpenCodeWebParsing.value(from: dict, keys: OpenCodeWebParsing.renewAtKeys)) ??
+            inheritedRenewsAt
         var rolling: [String: Any]?
         var weekly: [String: Any]?
         var monthly: [String: Any]?
@@ -821,9 +794,9 @@ extension OpenCodeGoUsageFetcher {
 
         guard let rolling else { return nil }
 
-        let renewsAt = self.dateValue(from: OpenCodeWebParsing.value(
+        let renewsAt = OpenCodeWebParsing.dateValue(from: OpenCodeWebParsing.value(
             from: object as? [String: Any] ?? [:],
-            keys: self.renewAtKeys))
+            keys: OpenCodeWebParsing.renewAtKeys))
             ?? inheritedRenewsAt
         return OpenCodeGoUsageSnapshot(
             hasWeeklyUsage: weekly != nil,
@@ -895,34 +868,15 @@ extension OpenCodeGoUsageFetcher {
         now: Date,
         directPercentEncoding: DirectPercentEncoding = .fractionOrPercent) -> (percent: Double, resetInSec: Int)?
     {
-        var percent: Double?
-
-        for key in self.percentKeys {
-            if let value = self.doubleValue(from: dict[key]) {
-                percent = value
-                break
-            }
-        }
+        var percent = OpenCodeWebParsing.doubleValue(from: dict, keys: OpenCodeWebParsing.percentKeys)
         // Dashboard JSON may use fractions. API fields and computed used/limit percentages already use 0...100.
         let percentIsDirect = percent != nil
 
         if percent == nil {
             let usedKeys = ["used", "usage", "consumed", "count", "usedTokens", "usedMicroCents"]
             let limitKeys = ["limit", "total", "quota", "max", "cap", "tokenLimit", "limitMicroCents"]
-            var used: Double?
-            for key in usedKeys {
-                if let value = self.doubleValue(from: dict[key]) {
-                    used = value
-                    break
-                }
-            }
-            var limit: Double?
-            for key in limitKeys {
-                if let value = self.doubleValue(from: dict[key]) {
-                    limit = value
-                    break
-                }
-            }
+            let used = OpenCodeWebParsing.doubleValue(from: dict, keys: usedKeys)
+            let limit = OpenCodeWebParsing.doubleValue(from: dict, keys: limitKeys)
             if let used, let limit, limit > 0 {
                 percent = (used / limit) * 100
             }
@@ -934,17 +888,11 @@ extension OpenCodeGoUsageFetcher {
         }
         resolvedPercent = max(0, min(100, resolvedPercent))
 
-        var resetInSec: Int?
-        for key in self.resetInKeys {
-            if let value = self.intValue(from: dict[key]) {
-                resetInSec = value
-                break
-            }
-        }
+        var resetInSec = OpenCodeWebParsing.intValue(from: dict, keys: OpenCodeWebParsing.resetInKeys)
 
         if resetInSec == nil {
-            for key in self.resetAtKeys {
-                if let resetAt = self.dateValue(from: dict[key]),
+            for key in OpenCodeWebParsing.resetAtKeys {
+                if let resetAt = OpenCodeWebParsing.dateValue(from: dict[key]),
                    let interval = OpenCodeWebParsing.resetInterval(from: resetAt, now: now)
                 {
                     resetInSec = interval
@@ -998,7 +946,7 @@ extension OpenCodeGoUsageFetcher {
             if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
                 throw OpenCodeGoUsageError.invalidCredentials
             }
-            if let message = self.extractServerErrorMessage(from: bodyText) {
+            if let message = OpenCodeWebParsing.extractServerErrorMessage(from: bodyText) {
                 throw OpenCodeGoUsageError.apiError("HTTP \(httpResponse.statusCode): \(message)")
             }
             throw OpenCodeGoUsageError.apiError("HTTP \(httpResponse.statusCode)")
@@ -1034,7 +982,7 @@ extension OpenCodeGoUsageFetcher {
             if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
                 throw OpenCodeGoUsageError.invalidCredentials
             }
-            if let message = self.extractServerErrorMessage(from: bodyText) {
+            if let message = OpenCodeWebParsing.extractServerErrorMessage(from: bodyText) {
                 throw OpenCodeGoUsageError.apiError("HTTP \(httpResponse.statusCode): \(message)")
             }
             throw OpenCodeGoUsageError.apiError("HTTP \(httpResponse.statusCode)")
@@ -1060,85 +1008,6 @@ extension OpenCodeGoUsageFetcher {
     }
 
     static func looksSignedOut(text: String) -> Bool {
-        let lower = text.lowercased()
-        return lower.contains("login") ||
-            lower.contains("sign in") ||
-            lower.contains("auth/authorize") ||
-            lower.contains("not associated with an account") ||
-            lower.contains("actor of type \"public\"")
-    }
-
-    private static func extractServerErrorMessage(from text: String) -> String? {
-        guard let data = text.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data, options: [])
-        else {
-            if let match = text.range(of: #"(?i)<title>([^<]+)</title>"#, options: .regularExpression) {
-                return String(text[match].dropFirst(7).dropLast(8)).trimmingCharacters(in: .whitespacesAndNewlines)
-            }
-            return nil
-        }
-
-        guard let dict = object as? [String: Any] else { return nil }
-        if let message = dict["message"] as? String, !message.isEmpty {
-            return message
-        }
-        if let error = dict["error"] as? String, !error.isEmpty {
-            return error
-        }
-        if let detail = dict["detail"] as? String, !detail.isEmpty {
-            return detail
-        }
-        return nil
-    }
-
-    private static func doubleValue(from value: Any?) -> Double? {
-        let number: Double? = switch value {
-        case let number as Double:
-            number
-        case let number as NSNumber:
-            number.doubleValue
-        case let string as String:
-            Double(string.trimmingCharacters(in: .whitespacesAndNewlines))
-        default:
-            nil
-        }
-        guard let number, number.isFinite else { return nil }
-        return number
-    }
-
-    private static func intValue(from value: Any?) -> Int? {
-        switch value {
-        case let number as Int:
-            number
-        case let number as NSNumber:
-            number.intValue
-        case let string as String:
-            Int(string.trimmingCharacters(in: .whitespacesAndNewlines))
-        default:
-            nil
-        }
-    }
-
-    private static func dateValue(from value: Any?) -> Date? {
-        guard let value else { return nil }
-        if let number = self.doubleValue(from: value) {
-            if number > 1_000_000_000_000 {
-                return Date(timeIntervalSince1970: number / 1000)
-            }
-            if number > 1_000_000_000 {
-                return Date(timeIntervalSince1970: number)
-            }
-        }
-        if let string = value as? String {
-            if let number = Double(string.trimmingCharacters(in: .whitespacesAndNewlines)) {
-                return self.dateValue(from: number)
-            }
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let parsed = formatter.date(from: string) {
-                return parsed
-            }
-        }
-        return nil
+        OpenCodeWebParsing.looksSignedOut(text: text)
     }
 }
