@@ -119,6 +119,12 @@ auto-updater or distro repository package yet. Ordinary CI artifacts are
 previews, not releases. See [validation and removal](#validation-and-removal)
 for uninstall paths.
 
+Managed configuration symlinks are preserved: the installer updates their targets
+for preferences, launcher entries, autostart, and the Omarchy layout. JSON remains
+UTF-8, including existing glyphs. Installed binaries and icons replace links at
+their destination; existing Omarchy adapter links, including dangling links, are
+archived before the new adapter is installed.
+
 ## Build and install
 
 Requires Linux, C++17, make, qmake6, and Qt 6.4 or newer: Base, Declarative/Quick,
@@ -154,6 +160,7 @@ To create an archive from a local build, run
 the app, installer, icon, adapter, license, and instructions. It needs compatible
 system Qt/glibc libraries and a separately installed CodexBar CLI; it is not an
 AppImage or a distro-native package. Build on the oldest distro you intend to support.
+The executable is resolved before packaging, so `--binary` may point to a symlink.
 
 Qt supports Wayland and X11. The tray uses Qt's desktop integration (StatusNotifier
 or X11 tray host). GNOME may require a tray extension; the launcher and windows
