@@ -9,6 +9,7 @@ read_when:
 
 ## Settings
 - General → Preferred Currency supports Turkish lira (`TRY`, `₺`) alongside the existing currencies, using the shared daily exchange rates and offline fallback for cost estimates.
+- General shows the app version and build beside Quit; About keeps its Version row even for Homebrew or unsigned builds.
 - Provider accent colors use a hex field and a color picker that also previews the selected color; Reset restores the provider default.
 - General → Default terminal supports installed Terminal, iTerm, Ghostty, and stable Warp. Terminal is the default and fallback. Warp launches target its app directly and use owner-only temporary tab configs, removed after one minute; interrupted-launch leftovers are cleaned on the next app start.
 - Provider → Visible usage items includes titled provider detail sections. Choices persist across language changes and apply to provider cards and Overview. Untitled details remain visible; cost-summary sections stay controlled by their existing display setting.
@@ -19,6 +20,7 @@ read_when:
 - Homebrew-managed installs show a compact Updates section in About, with a selectable monospaced upgrade command and a trailing copy control. The control confirms successful copies briefly; copying does not run an update.
 
 ## Menu bar
+- About CodexBar includes the running version. When the updater is available, the menu offers Check for Updates… or the existing staged-update action.
 - Overview offers Share Usage Snapshot when its Usage & Spend summary has shareable data. The local preview uses the same spend sources, hidden-source choices, calendar, and currency as that summary; Copy Image exports PNG and TIFF without uploading anything.
 - LSUIElement app: no Dock icon; status item uses custom NSImage.
 - Cached status menus and previously opened submenus follow macOS appearance changes before reopening, preserving the effective Light/Dark and accessibility appearance.

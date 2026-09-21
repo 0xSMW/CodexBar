@@ -24,6 +24,7 @@
 ### Improved
 
 - Documentation: link every registered provider from the README and provider index, add ClinePass and OpenCode Go guides, and distinguish historical fork notes from current setup instructions.
+- Updates: add manual checks to the status menu, show the running version in About and General, and retain the About version row when updates are unavailable (#3695). Thanks @Chipagosfinest!
 - Status: rotate group disclosure chevrons smoothly while keeping menu height changes immediate (#3745). Thanks @elijahfriedman!
 - Settings: remove the redundant provider accent swatch; the color picker continues to show the selected color (#3721). Thanks @elijahfriedman!
 - Usage & Spend: group sources and models by provider, consolidate detail and daily/hourly chart selectors, and add a clear selected-day control while preserving incomplete-history warnings, local-history labels, calendar boundaries, privacy, and exports (#3353). Thanks @Yuxin-Qiao!
