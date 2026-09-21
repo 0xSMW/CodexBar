@@ -12,6 +12,7 @@
 
 ### Added
 
+- Hugging Face: show prepaid Credits from an eligible browser session only when its user ID matches the API token account; keep API-only refreshes free of cookie access (#3399). Thanks @sambokai!
 - Helmcode: track Cloud and NaN Builders model quotas, rolling reset windows, and Cloud prepaid balances through a bundled provider plugin (#3422). Thanks @luisgonzaleznf!
 - Currency: add Turkish lira (TRY) to the preferred-currency picker and cost conversions, with live exchange rates and an offline fallback (#3624). Thanks @aguvener!
 - Menu bar: show two providers in a stacked merged icon, using each provider's first layout line, with automatic or explicit row choices and consistent refreshes when either provider changes (#3628, #3596). Thanks @ysyyork!
