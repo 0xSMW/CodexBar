@@ -676,7 +676,11 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
         }
         host.setObject(nextDailyReset, forKeyedSubscript: "nextDailyReset" as NSString)
 
-        let http = self.makeHTTPBlock(settings: settings, secrets: secrets, redactionValues: redactionValues)
+        let http = self.makeHTTPBlock(
+            settings: settings,
+            secrets: secrets,
+            redactionValues: redactionValues,
+            beforeAttempt: contextOptions.beforeHTTPAttempt)
         host.setObject(http, forKeyedSubscript: "http" as NSString)
 
         let cookieAvailability: @convention(block) (String) -> String = { [weak self] rawDomain in
@@ -758,7 +762,8 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
     private func makeHTTPBlock(
         settings: [String: String],
         secrets: [String: String],
-        redactionValues: ProviderPluginRedactionValues) -> HTTPBlock
+        redactionValues: ProviderPluginRedactionValues,
+        beforeAttempt: (@Sendable () async throws -> Void)?) -> HTTPBlock
     {
         { [weak self] rawURL, options, method, wantsJSON, resolve, reject in
             self?.startHTTPRequest(
@@ -768,6 +773,7 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
                 settings: settings,
                 secrets: secrets,
                 redactionValues: redactionValues,
+                beforeAttempt: beforeAttempt,
                 callbacks: ProviderPluginHTTPRequestCallbacks(
                     wantsJSON: wantsJSON,
                     resolve: ProviderPluginJSValueBox(resolve),
@@ -784,6 +790,7 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
         settings: [String: String],
         secrets: [String: String],
         redactionValues: ProviderPluginRedactionValues,
+        beforeAttempt: (@Sendable () async throws -> Void)?,
         callbacks: ProviderPluginHTTPRequestCallbacks)
     {
         let request: URLRequest
@@ -822,7 +829,7 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
             defer { _ = worker.requestLock.withLock { worker.requests.removeValue(forKey: requestID) } }
             do {
                 let response = try await ProviderPluginHTTPResponse.response(
-                    for: request, transport: transport, retryPolicy: retryPolicy)
+                    for: request, transport: transport, retryPolicy: retryPolicy, beforeAttempt: beforeAttempt)
                 guard response.data.count <= responseSizeLimit else {
                     throw ProviderPluginError.http("response exceeded the \(responseSizeLimit)-byte limit")
                 }

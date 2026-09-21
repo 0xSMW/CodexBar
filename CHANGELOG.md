@@ -23,6 +23,8 @@
 
 ### Fixed
 
+- Plugins: start HTTP attempt deadlines when transport tasks begin, preserving OpenRouter balance when optional key requests time out under scheduler load (#3836).
+
 - Widgets: retain eligible last-known measurements at their original age when a failed refresh leaves every provider entry empty, while respecting provider and account invalidation (#3500). Thanks @jaxleezhang!
 - Menu bar: assign stable item names before normal sizing and clear saved positions beyond the widest attached display on creation, including visibility recovery (#3355, #3201).
 - Kimi: select China or International regions for usage, cookies, and dashboard links, while preventing unscoped CLI credentials from crossing hosts (#3752). Thanks @LPFchan!
