@@ -1617,3 +1617,8 @@
 "section_widgets" = "ウィジェット";
 "account_widgets_title" = "ウィジェット用にアカウントを更新する";
 "account_widgets_description" = "各 Account Usage ウィジェットでアカウントを選択します。プロバイダーごとに最大6つのアカウントを更新します。";
+
+/* Antigravity local cost estimates */
+"antigravity_cost_estimate_hint" = "ローカル使用量 × 公開API価格 · Antigravity の請求やクレジットではありません";
+"antigravity_quota_window_note" = "ウィンドウの費用は全モデルを含みます · 表示中のウィンドウは最も制限の厳しいファミリーです";
+"antigravity_no_priced_token_history" = "価格付きの Antigravity トークン履歴がありません。";

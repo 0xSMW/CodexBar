@@ -1621,3 +1621,8 @@
 "section_widgets" = "الأدوات";
 "account_widgets_title" = "تحديث الحسابات للأدوات";
 "account_widgets_description" = "اختر حسابًا في كل أداة Account Usage. يتم تحديث ما يصل إلى ستة حسابات لكل مزوّد.";
+
+/* Antigravity local cost estimates */
+"antigravity_cost_estimate_hint" = "الاستخدام المحلي × أسعار واجهة البرمجة العامة · ليست رسوم أو أرصدة Antigravity";
+"antigravity_quota_window_note" = "تكلفة النافذة تشمل كل النماذج · النافذة المعروضة هي الفئة الأكثر تقييدًا";
+"antigravity_no_priced_token_history" = "لا يتوفر سجل رموز Antigravity مُسعّر.";

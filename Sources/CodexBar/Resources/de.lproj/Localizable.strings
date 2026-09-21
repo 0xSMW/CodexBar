@@ -1617,3 +1617,8 @@
 "section_widgets" = "Widgets";
 "account_widgets_title" = "Konten für Widgets aktuell halten";
 "account_widgets_description" = "Wähle in jedem Account Usage-Widget ein Konto aus. Aktualisiert bis zu sechs Konten pro Anbieter.";
+
+/* Antigravity local cost estimates */
+"antigravity_cost_estimate_hint" = "Lokale Nutzung × öffentliche API-Preise · keine Antigravity-Abrechnung oder Credits";
+"antigravity_quota_window_note" = "Fensterkosten umfassen alle Modelle · gezeigtes Fenster ist die am stärksten begrenzte Familie";
+"antigravity_no_priced_token_history" = "Keine bepreiste Antigravity-Token-Historie verfügbar.";

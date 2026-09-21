@@ -1616,3 +1616,8 @@
 "section_widgets" = "Widgetar";
 "account_widgets_title" = "Håll konton uppdaterade för widgetar";
 "account_widgets_description" = "Välj ett konto i varje Account Usage-widget. Uppdaterar upp till sex konton per leverantör.";
+
+/* Antigravity local cost estimates */
+"antigravity_cost_estimate_hint" = "Lokal användning × publika API-priser · inte Antigravity-avgifter eller krediter";
+"antigravity_quota_window_note" = "Fönsterkostnaden omfattar alla modeller · fönstret som visas är den mest begränsade familjen";
+"antigravity_no_priced_token_history" = "Ingen prissatt Antigravity-tokenhistorik tillgänglig.";

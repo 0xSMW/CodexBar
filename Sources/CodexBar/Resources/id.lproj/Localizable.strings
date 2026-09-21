@@ -1620,3 +1620,8 @@
 "section_widgets" = "Widget";
 "account_widgets_title" = "Perbarui akun untuk widget";
 "account_widgets_description" = "Pilih akun di setiap widget Account Usage. Memperbarui hingga enam akun per penyedia.";
+
+/* Antigravity local cost estimates */
+"antigravity_cost_estimate_hint" = "Penggunaan lokal × harga API publik · bukan tagihan atau kredit Antigravity";
+"antigravity_quota_window_note" = "Biaya jendela mencakup semua model · jendela yang ditampilkan adalah keluarga paling terbatas";
+"antigravity_no_priced_token_history" = "Tidak ada riwayat token Antigravity berharga yang tersedia.";
