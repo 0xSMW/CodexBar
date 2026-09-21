@@ -41,7 +41,9 @@ read_when:
   per provider. Manual edits select the Custom preset.
 - Time tokens offer Session and Weekly variants of Resets in and Reset at, including in conditional branches.
   The original unqualified reset tokens continue to follow the automatic window. A selected window that is
-  unavailable displays a dash rather than substituting another window. Saved layouts use V3 keys alongside a
+  unavailable displays a dash rather than substituting another window. Cursor also exposes **Grok Bot %**
+  while its named allowance is available; a missing allowance hides that token. Saved layouts use V4 keys
+  alongside a V3 projection that drops named-extra tokens but keeps explicit reset selections, and a
   v0.56.8-readable V2 projection, which omits the new tokens and conditional rules that use them while preserving
   existing conditional placements, direct lane selections, and other providers' overrides. Re-upgrading restores
   the full layout unless an older release changed its saved projection. The oldest-format projection is also retained.
@@ -58,6 +60,7 @@ read_when:
 | --- | --- | --- |
 | Identity | Icon, Provider name, Account | Provider-scoped branding and identity |
 | Usage | Session %, Weekly %, Scoped weekly %, Auto %, Usage bar | Window percentage or a compact three-glyph usage bar |
+| Usage | Grok Bot % (Cursor) | Named allowance percentage; hidden when the allowance is absent |
 | Usage | Session pace, Weekly pace, Auto pace | Signed pace delta for that window |
 | Time | Resets in, Reset at (automatic, Session, Weekly), Runs out | Selected-window relative reset, absolute reset, or pace estimate |
 | Money | Balance, Cost today, Cost 30d | OpenRouter credit balance, or local cost estimate for the selected period |
