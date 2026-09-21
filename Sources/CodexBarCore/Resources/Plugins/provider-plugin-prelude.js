@@ -2,12 +2,18 @@
 (function applyProviderPluginPrelude(ctx, host) {
   "use strict";
 
+  const httpRejection = (reject) => (failure) => reject(Object.assign(new Error(failure.message), failure));
+
   ctx.http = Object.freeze({
     getJSON(url, opts) {
-      return new Promise((resolve, reject) => host.http(String(url), opts || {}, "GET", true, resolve, reject));
+      return new Promise((resolve, reject) =>
+        host.http(String(url), opts || {}, "GET", true, resolve, httpRejection(reject)),
+      );
     },
     get(url, opts) {
-      return new Promise((resolve, reject) => host.http(String(url), opts || {}, "GET", false, resolve, reject));
+      return new Promise((resolve, reject) =>
+        host.http(String(url), opts || {}, "GET", false, resolve, httpRejection(reject)),
+      );
     },
     post(url, opts) {
       return jsonPost(url, opts, false);
@@ -33,10 +39,13 @@
     const hostOptions = { bodyJSON };
     if (opts.headers !== undefined) hostOptions.headers = opts.headers;
     if (opts.timeoutSeconds !== undefined) hostOptions.timeoutSeconds = opts.timeoutSeconds;
+    if (opts.retryPolicy !== undefined) hostOptions.retryPolicy = opts.retryPolicy;
     if (opts.openRouterManagementAuth !== undefined) {
       hostOptions.openRouterManagementAuth = opts.openRouterManagementAuth;
     }
-    return new Promise((resolve, reject) => host.http(String(url), hostOptions, "POST", wantsJSON, resolve, reject));
+    return new Promise((resolve, reject) =>
+      host.http(String(url), hostOptions, "POST", wantsJSON, resolve, httpRejection(reject)),
+    );
   }
 
   ctx.settings = Object.freeze({
