@@ -673,6 +673,28 @@ struct UsageFormatterTests {
     }
 
     @Test
+    func `offline currency conversion preserves fallbacks and normalized identity`() {
+        let exchange = CurrencyExchange(defaults: InMemoryUserDefaults())
+        #expect(exchange.rate(for: "TRY") == 48.5)
+        #expect(exchange.convert(usdAmount: 10, to: " try ") == 485)
+        #expect(exchange.convert(usdAmount: 10, to: " usd ") == 10)
+        #expect(exchange.convert(usdAmount: 10, to: "  ") == 10)
+        #expect(exchange.convert(usdAmount: 10, to: "XYZ") == nil)
+    }
+
+    @Test
+    func `cached currency rates override only supplied fallbacks and keep the USD pivot`() {
+        let defaults = InMemoryUserDefaults()
+        defaults.set(["TRY": 60.0, "USD": 42.0], forKey: "CodexBar.CurrencyExchangeRates")
+        let exchange = CurrencyExchange(defaults: defaults)
+        #expect(exchange.rate(for: " try ") == 60)
+        #expect(exchange.rate(for: "EUR") == 0.92)
+        #expect(exchange.convert(usdAmount: 10, to: "TRY") == 600)
+        #expect(exchange.convert(amount: 600, from: "TRY", to: "USD") == 10)
+        #expect(exchange.convert(usdAmount: 10, to: "USD") == 10)
+    }
+
+    @Test
     func `usage formatter localization keys exist in en and zh Hans with matching placeholders`() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
