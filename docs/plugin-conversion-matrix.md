@@ -28,13 +28,13 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 13 |
+| `cut-over` | 14 |
 | `converted` | 5 |
-| `convertible-now` | 6 |
+| `convertible-now` | 4 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 15 |
 | `needs-pty/webview/native` | 8 |
-| `needs-host-extension` | 2 |
+| `needs-host-extension` | 3 |
 | **Total** | **68** |
 
 ## Matrix
@@ -95,11 +95,11 @@ weakening the plugin network policy.
 | grok | `needs-pty/webview/native` | No | Persistent stdio JSON-RPC, auth/session files, cookies, logs, and binary gRPC-web are strongly native. |
 | groq | `needs-cookie-import` | No | Skipped: Stytch session exchange and console history remain a multi-step auth flow. |
 | llmproxy | `cut-over` | Yes | Cut over on both engines: configured HTTPS/private-network HTTP, quota-group variants, aggregate totals, provider summaries, and classified failures; the native fetch twin is deleted. |
-| litellm | `convertible-now` | No | Settings origins now preserve native private-network HTTP behavior, and zero-spend identity-only snapshots are valid. |
+| litellm | `cut-over` | Yes | Cut over on both engines: configured HTTPS/private-network HTTP, key-bound user/team lookups, budgets, spend-only and identity-only snapshots; the native fetch twin is deleted. |
 | deepgram | `cut-over` | Yes | Cut over on JavaScriptCore: project discovery, aggregation, configured origins, numeric validation, and classified auth/permission/rate/network/API/parse failures match native behavior; the native fetch core is Linux-only. |
 | poe | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET balance/history pagination with daily points and model/type summaries; the native fetch twins are deleted. |
 | chutes | `convertible-now` | No | Tolerant no-usage payloads can return an API identity without inventing quota data. |
-| neuralwatt | `convertible-now` | No | Classified transient failures can request the same single delayed retry and capped `Retry-After` behavior as native. |
+| neuralwatt | `needs-host-extension` | No | HTTP status retries and capped `Retry-After` are supported, but the bridge erases transport error codes and cancellation; native selective URL-error retries cannot be preserved yet. |
 | clawrouter | `cut-over` | Yes | Cut over on JavaScriptCore: validated configured origins, classified failures, exact confidence, budget/ledger details, and provider charts match native behavior; the native fetch core is Linux-only. |
 | longcat | `needs-cookie-import` | No | Skipped: browser-cookie retry needs domain/path-aware cookie selection across multiple imported sessions; the generic broker currently returns one flattened header. |
 | sub2api | `cut-over` | Yes | Cut over on JavaScriptCore: configured HTTPS/loopback origins, a hard 15-second request deadline, strict parsing, exact confidence, and classified failures match native behavior; the native fetch core is Linux-only. |

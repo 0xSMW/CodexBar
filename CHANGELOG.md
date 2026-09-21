@@ -30,6 +30,7 @@
 
 ### Improved
 
+- LiteLLM: run budget fetching through the bundled plugin while preserving private-network proxies, key-bound identities, team budgets, and spend-only accounts.
 - LLM Proxy: run quota fetching through the bundled plugin while preserving self-hosted origins, aggregate usage, and provider summaries.
 - Documentation: link every registered provider from the README and provider index, add ClinePass and OpenCode Go guides, and distinguish historical fork notes from current setup instructions.
 - Updates: add manual checks to the status menu, show the running version in About and General, and retain the About version row when updates are unavailable (#3695). Thanks @Chipagosfinest!
