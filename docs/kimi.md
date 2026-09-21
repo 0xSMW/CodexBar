@@ -107,6 +107,9 @@ For advanced users or when automatic import fails:
 6. Copy the `kimi-auth` cookie value (JWT token)
 7. Paste it into the "Auth Token" field in CodexBar
 
+Manual mode never imports Desktop or browser credentials, including when the token field is empty or invalid.
+An explicit cookie environment variable can still supply the web token.
+
 ### Cookie Environment Variable
 
 Alternatively, set the `KIMI_AUTH_TOKEN` environment variable:
