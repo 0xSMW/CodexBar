@@ -7,7 +7,7 @@ read_when:
 
 # Provider plugin conversion matrix
 
-This matrix evaluates all 68 providers in the current capability audit against the prototype documented in
+This matrix evaluates all 69 providers in the current capability audit against the prototype documented in
 [`plugin-prototype.md`](plugin-prototype.md). Each provider has one primary blocker.
 
 `convertible-now` means the canonical first-party flow fits the current HTTP, origin-policy, authentication, and generic
@@ -28,14 +28,14 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 14 |
+| `cut-over` | 15 |
 | `converted` | 5 |
 | `convertible-now` | 4 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 15 |
 | `needs-pty/webview/native` | 8 |
 | `needs-host-extension` | 3 |
-| **Total** | **68** |
+| **Total** | **69** |
 
 ## Matrix
 
@@ -99,6 +99,7 @@ weakening the plugin network policy.
 | deepgram | `cut-over` | Yes | Cut over on JavaScriptCore: project discovery, aggregation, configured origins, numeric validation, and classified auth/permission/rate/network/API/parse failures match native behavior; the native fetch core is Linux-only. |
 | poe | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET balance/history pagination with daily points and model/type summaries; the native fetch twins are deleted. |
 | chutes | `convertible-now` | No | Tolerant no-usage payloads can return an API identity without inventing quota data. |
+| helmcode | `cut-over` | Yes | Both tenant HTTP flows and quota projection live in the bundled TypeScript plugin, using domain-scoped cookies and policy-only availability. Swift supplies registration, settings, and dashboard routing. No native fetcher or cURL-capture fallback. |
 | neuralwatt | `needs-host-extension` | No | HTTP status retries and capped `Retry-After` are supported, but the bridge erases transport error codes and cancellation; native selective URL-error retries cannot be preserved yet. |
 | clawrouter | `cut-over` | Yes | Cut over on JavaScriptCore: validated configured origins, classified failures, exact confidence, budget/ledger details, and provider charts match native behavior; the native fetch core is Linux-only. |
 | longcat | `needs-cookie-import` | No | Skipped: browser-cookie retry needs domain/path-aware cookie selection across multiple imported sessions; the generic broker currently returns one flattened header. |

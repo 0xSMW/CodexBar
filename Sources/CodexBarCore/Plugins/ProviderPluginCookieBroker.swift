@@ -70,8 +70,10 @@ final class ProviderPluginCookieBroker: @unchecked Sendable {
             guard let header = CookieHeaderNormalizer.normalize(imported.header) else {
                 throw ProviderPluginError.secretAccess("no browser session cookies were found")
             }
+            // KeychainCacheStore serializes dates as whole-second ISO-8601 values.
+            let storedAt = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded(.down))
             let issued = CookieHeaderCache.Entry(
-                cookieHeader: header, storedAt: Date(), sourceLabel: imported.source)
+                cookieHeader: header, storedAt: storedAt, sourceLabel: imported.source)
             self.observed[domain] = issued
             CookieHeaderCache.store(
                 provider: self.provider,
