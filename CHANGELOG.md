@@ -2,6 +2,14 @@
 
 ## 0.63.1 — Unreleased
 
+### Highlights
+
+- **Three new providers:** track Helmcode quotas and prepaid balances, v0 billing and rate limits, and TypeSafe spending and credits.
+- **Two providers in one icon:** stack your chosen providers in a single menu-bar icon, with automatic or explicit row choices.
+- **Clearer Usage & Spend:** browse sources and models by provider, use simpler chart controls, and follow Antigravity's local cost estimates.
+- **More reliable cost history:** correct inherited Codex fork totals, reduce repeated history scans, and prevent crashes from oversized history.
+- **Smoother provider recovery:** restore OpenCode Console quotas and prepaid balances, improve Claude account switching, and make credential recovery more reliable after app updates.
+
 ### Added
 
 - Helmcode: track Cloud and NaN Builders model quotas, rolling reset windows, and Cloud prepaid balances through a bundled provider plugin (#3422). Thanks @luisgonzaleznf!
