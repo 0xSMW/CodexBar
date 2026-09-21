@@ -7,6 +7,7 @@ import FoundationNetworking
 #endif
 
 public final class ProviderPluginRuntime: @unchecked Sendable {
+    public typealias CookieInvalidator = @Sendable (String) -> Void
     public typealias CookieResolver = @Sendable (UsageProvider, String) async throws -> String
     public typealias InstanceCookieResolver = @Sendable (ProviderInstanceID, String) async throws -> String
 
@@ -155,6 +156,7 @@ public final class ProviderPluginRuntime: @unchecked Sendable {
         secrets: [String: String] = [:],
         now: Date = Date(),
         timeZone: TimeZone = .current,
+        cookieInvalidator: CookieInvalidator? = nil,
         cookieResolver: CookieResolver? = nil,
         instanceCookieResolver: InstanceCookieResolver? = nil) async throws -> UsageSnapshot
     {
@@ -170,6 +172,8 @@ public final class ProviderPluginRuntime: @unchecked Sendable {
             throw ProviderPluginError.secretAccess("required secret '\(auth.secret)' is unavailable")
         }
 
+        var contextOptions = self.contextOptions
+        contextOptions.cookieInvalidator = cookieInvalidator
         let worker = try self.currentWorker()
         let gate = ProviderPluginCompletionGate<UsageSnapshot>()
         return try await withCheckedThrowingContinuation { continuation in
@@ -179,7 +183,7 @@ public final class ProviderPluginRuntime: @unchecked Sendable {
                 secrets: sanitizedSecrets,
                 now: now,
                 timeZone: timeZone,
-                contextOptions: self.contextOptions,
+                contextOptions: contextOptions,
                 cookieResolver: cookieResolver,
                 instanceCookieResolver: instanceCookieResolver)
             { result in
@@ -653,6 +657,17 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
         let http = self.makeHTTPBlock(settings: settings, secrets: secrets, redactionValues: redactionValues)
         host.setObject(http, forKeyedSubscript: "http" as NSString)
 
+        let rejectCookie: @convention(block) (String) -> Void = { [weak self] rawDomain in
+            guard let self else { return }
+            do {
+                let domain = try self.manifest.cookieDomain(rawDomain)
+                contextOptions.cookieInvalidator?(domain)
+            } catch {
+                self.context.exception = JSValue(newErrorFromMessage: error.localizedDescription, in: self.context)
+            }
+        }
+        host.setObject(rejectCookie, forKeyedSubscript: "rejectCookie" as NSString)
+
         let cookieHeader = self.makeCookieBlock(
             resolver: cookieResolver,
             instanceResolver: instanceCookieResolver,
@@ -800,9 +815,7 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
     {
         { [weak self] rawDomain, resolve, reject in
             guard let self else { return }
-            let domain = rawDomain.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard self.manifest.capabilities.contains(.browserCookies),
-                  self.manifest.cookieDomains.contains(domain)
+            guard let domain = try? self.manifest.cookieDomain(rawDomain)
             else {
                 self.reject(
                     ProviderPluginJSValueBox(reject),

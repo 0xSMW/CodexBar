@@ -266,3 +266,14 @@ enabled. Refresh and Cmd-R refresh the selected plugin; each card’s refresh bu
 refreshes update visible plugin cards, and repeated requests for the same plugin share its in-flight refresh.
 Overview continues to summarize built-in providers. This setting changes placement only: it grants no additional host
 capabilities and does not change network approval.
+
+## Browser session cache
+
+Bundled plugins that declare multiple cookie domains use separate Keychain-backed cache scopes for each requested
+domain. Single-domain plugins retain their existing provider cache. Automatic imports query only the requested domain;
+the default browser is Chrome, with existing provider browser-order overrides preserved. Manual headers bypass the
+cache and browser import, and Off fails before either is accessed.
+
+Call `ctx.browser.rejectCookie(domain)` after the server rejects a session. The host checks the declared domain and
+evicts only the cached entry observed by that fetch (each domain is pinned for the fetch lifetime); a newer session and other domains remain intact. Manual headers
+are never erased. User plugins have no persistent cookie cache, so rejection is a validated no-op for them.

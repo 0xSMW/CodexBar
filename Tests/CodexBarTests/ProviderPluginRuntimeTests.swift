@@ -7,6 +7,28 @@ import Testing
 
 struct ProviderPluginRuntimeTests {
     @Test(arguments: Self.labelValidationEngines)
+    func `cookie rejection validates the declared domain on both engines`(
+        engine: ProviderPluginEngineKind) async throws
+    {
+        let runtime = try ProviderPluginRuntime(source: Self.plugin(
+            capabilities: #"capabilities: ["browser-cookies"], cookieDomains: ["example.test", "second.test"],"#,
+            fetchBody: """
+            ctx.browser.rejectCookie(" EXAMPLE.TEST ");
+            try {
+              ctx.browser.rejectCookie("undeclared.test");
+              throw new Error("undeclared rejection was accepted");
+            } catch (error) {
+              if (!String(error).includes("cookie domain is not declared")) throw error;
+            }
+            return { primary: { usedPercent: 1 } };
+            """), engine: engine)
+        _ = try await runtime.fetchUsage(
+            secrets: ["TEST_KEY": "fixture"], cookieInvalidator: { domain in
+                #expect(domain == "example.test")
+            })
+    }
+
+    @Test(arguments: Self.labelValidationEngines)
     func `detail label checks reject nonstrings without coercion`(engine: ProviderPluginEngineKind) async throws {
         let runtime = try ProviderPluginRuntime(source: Self.plugin(fetchBody: """
         const values = [undefined, null, true, 42, [], {}, { toString() { throw new Error("coerced"); } }];

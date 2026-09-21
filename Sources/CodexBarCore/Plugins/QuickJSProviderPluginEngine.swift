@@ -9,6 +9,7 @@ private enum QuickJSHostFunction: Int32 {
     case defineProvider
     case settingGet
     case http
+    case rejectCookie
     case cookieHeader
     case cacheGet
     case cacheSet
@@ -168,6 +169,7 @@ final class QuickJSProviderPluginEngine: ProviderPluginEngine, @unchecked Sendab
     }
 
     private struct FetchState {
+        let contextOptions: ProviderPluginContextOptions
         let settings: [String: String]
         let secrets: [String: String]
         let cookieResolver: ProviderPluginRuntime.CookieResolver?
@@ -401,6 +403,7 @@ final class QuickJSProviderPluginEngine: ProviderPluginEngine, @unchecked Sendab
         }
         let redactionValues = QuickJSRedactionValues(secrets.values)
         self.fetchState = FetchState(
+            contextOptions: contextOptions,
             settings: settings,
             secrets: secrets,
             cookieResolver: cookieResolver,
@@ -469,6 +472,7 @@ final class QuickJSProviderPluginEngine: ProviderPluginEngine, @unchecked Sendab
             (QuickJSHostFunction.settingGet, "settingGet", 2),
             (.http, "http", 6),
             (.cookieHeader, "cookieHeader", 3),
+            (.rejectCookie, "rejectCookie", 1),
             (.cacheGet, "cacheGet", 1),
             (.cacheSet, "cacheSet", 3),
             (.log, "log", 1),
@@ -506,6 +510,10 @@ final class QuickJSProviderPluginEngine: ProviderPluginEngine, @unchecked Sendab
                 return try self.hostSettingGet(values)
             case .http:
                 try self.hostHTTP(values)
+                return cqjs_undefined()
+            case .rejectCookie:
+                let domain = try self.manifest.cookieDomain(values.first.map { try self.string(from: $0) } ?? "")
+                self.fetchState?.contextOptions.cookieInvalidator?(domain)
                 return cqjs_undefined()
             case .cookieHeader:
                 try self.hostCookieHeader(values)
@@ -603,13 +611,7 @@ final class QuickJSProviderPluginEngine: ProviderPluginEngine, @unchecked Sendab
             throw ProviderPluginError.secretAccess("cookie bridge is unavailable")
         }
         do {
-            let domain = try self.string(from: arguments[0])
-                .trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard self.manifest.capabilities.contains(.browserCookies),
-                  self.manifest.cookieDomains.contains(domain)
-            else {
-                throw ProviderPluginError.secretAccess("cookie domain is not declared")
-            }
+            let domain = try self.manifest.cookieDomain(self.string(from: arguments[0]))
             let header: String
             if let provider = self.manifest.id.firstPartyProvider, let resolver = state.cookieResolver {
                 header = try self.blockingValue(timeout: self.timeout) { try await resolver(provider, domain) }

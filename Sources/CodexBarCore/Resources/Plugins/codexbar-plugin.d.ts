@@ -158,6 +158,7 @@ interface CodexBarPluginContext {
     getSecret(key: string): string | null;
   };
   readonly browser: {
+    rejectCookie(domain: string): void;
     cookieHeader(domain: string): Promise<string>;
   };
   readonly html: {
