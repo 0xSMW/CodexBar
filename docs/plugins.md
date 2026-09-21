@@ -116,6 +116,11 @@ so portable third-party plugins must use the host helpers below instead of ECMA-
   retry field—declares `http-status`, receives the response, and throws `ctx.fail.rateLimited(message,
   {retryAfterSeconds})` or another transient classified failure. Both paths share one retry budget and never retry the
   retry. Cancellation during the delay stops the retry.
+- `ctx.browser.availability(domain)` returns `"available"`, `"manual"`, or `"off"` for a declared cookie domain.
+  It inspects source/cookie policy only, without accessing the broker, Keychain, or browser. It does not promise a
+  usable session. API-only (and other non-web) source modes report `"off"`; Manual reports `"manual"`, so plugins can
+  route an origin-less pasted header to one explicitly selected tenant. Missing cookie resolvers report `"off"`.
+  `cookieHeader` also enforces Off/API-only policy, even if the plugin skips this check.
 - `await ctx.browser.cookieHeader(domain)` returns a cookie header only with the `browser-cookies` capability and for a
   declared domain. The app imports from Chrome only. Cookie values are secret-equivalent and redacted.
 - `ctx.html.metaContent(html, name)` returns the first matching quoted meta value or `null`.
