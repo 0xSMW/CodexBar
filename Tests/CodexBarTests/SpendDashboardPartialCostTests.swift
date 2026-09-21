@@ -268,6 +268,116 @@ struct SpendDashboardPartialCostTests {
         #expect(spendDashboardModelHistoryPresentation(group) == .unavailable)
     }
 
+    @Test
+    func `provider breakdown groups accounts and models without inventing account attribution`() throws {
+        let group = try Self.group(inputs: [
+            .init(
+                id: "codex-one",
+                provider: .codex,
+                displayName: "Codex · #1",
+                modelProviderName: "Codex",
+                snapshot: Self.snapshot(
+                    entries: [Self.entry(day: "2026-07-15", cost: 4, tokens: 40, model: "model-one")],
+                    last30DaysTokens: 40,
+                    last30DaysCostUSD: 4)),
+            .init(
+                id: "codex-two",
+                provider: .codex,
+                displayName: "Codex · #2",
+                modelProviderName: "Codex",
+                snapshot: Self.snapshot(
+                    entries: [Self.entry(day: "2026-07-16", cost: nil, tokens: 20, model: "model-two")],
+                    last30DaysTokens: 20,
+                    last30DaysCostUSD: nil)),
+            .init(
+                provider: .cursor,
+                displayName: "Cursor",
+                snapshot: Self.snapshot(
+                    entries: [Self.entry(day: "2026-07-15", cost: 3, tokens: 30, model: "cursor-model")],
+                    last30DaysTokens: 30,
+                    last30DaysCostUSD: 3)),
+        ])
+
+        let breakdowns = spendDashboardProviderBreakdowns(group)
+        let codex = try #require(breakdowns.first { $0.provider == .codex })
+        #expect(codex.subscriptions.map(\.displayName) == ["Codex · #1", "Codex · #2"])
+        #expect(codex.models.map(\.modelName) == ["model-one", "model-two"])
+        #expect(codex.totalCost == 4)
+        #expect(codex.totalTokens == 60)
+        #expect(codex.hasPartialCost)
+        #expect(!codex.hasPartialTokens)
+        #expect(codex.hasPartialModelHistory)
+        let cursor = try #require(breakdowns.first { $0.provider == .cursor })
+        #expect(!cursor.hasPartialModelHistory)
+    }
+
+    @Test(arguments: [UsageProvider.claude, .pi])
+    func `provider hierarchy retains incomplete source and model rows beside known subtotals`(
+        provider: UsageProvider) throws
+    {
+        let pending = CostUsageDailyReport.Entry(
+            date: "2026-07-16",
+            inputTokens: nil,
+            outputTokens: nil,
+            totalTokens: nil,
+            costUSD: nil,
+            modelsUsed: ["fixture-pending"],
+            modelBreakdowns: [.init(
+                modelName: "fixture-pending", costUSD: nil, totalTokens: nil, incompleteRequestCount: 2)])
+        let group = try Self.group(inputs: [
+            .init(
+                id: "known-source",
+                provider: provider,
+                displayName: "Known source",
+                snapshot: Self.snapshot(
+                    entries: [Self.entry(day: "2026-07-15", cost: 4, tokens: 40, model: "fixture-known")],
+                    last30DaysTokens: 40,
+                    last30DaysCostUSD: 4)),
+            .init(
+                id: "pending-source",
+                provider: provider,
+                displayName: "Pending source",
+                snapshot: Self.snapshot(entries: [pending], last30DaysTokens: nil, last30DaysCostUSD: nil),
+                sourceKind: provider == .pi ? .localHistory : .native),
+        ])
+        let breakdown = try #require(spendDashboardProviderBreakdowns(group).first)
+        #expect(Set(breakdown.subscriptions.map(\.id)) == ["known-source", "pending-source"])
+        #expect(breakdown.totalCost == 4)
+        #expect(breakdown.totalTokens == 40)
+        #expect(breakdown.incompleteRequestCount == 2)
+        #expect(breakdown.hasPartialCost && breakdown.hasPartialTokens && breakdown.hasPartialModelHistory)
+        let pendingModel = try #require(breakdown.models.first { $0.modelName == "fixture-pending" })
+        #expect(pendingModel.totalCost == nil)
+        #expect(pendingModel.totalTokens == nil)
+        #expect(pendingModel.incompleteRequestCount == 2)
+        if provider == .pi {
+            #expect(breakdown.subscriptions.first { $0.id == "pending-source" }?.sourceKind == .localHistory)
+            #expect(spendDashboardProviderCountTitle(group) == L("Sources"))
+        }
+    }
+
+    @Test
+    func `provider model expansion retains incomplete rows beyond the initial display limit`() throws {
+        var models = (1...8).map {
+            CostUsageDailyReport.ModelBreakdown(modelName: "fixture-model-\($0)", costUSD: 1, totalTokens: 10)
+        }
+        models.append(.init(modelName: "fixture-incomplete", costUSD: nil, totalTokens: nil, incompleteRequestCount: 2))
+        let entry = CostUsageDailyReport.Entry(
+            date: "2026-07-16",
+            inputTokens: 80,
+            outputTokens: 0,
+            totalTokens: 80,
+            costUSD: 8,
+            modelsUsed: nil,
+            modelBreakdowns: models)
+        let group = try Self.group(Self.snapshot(entries: [entry], last30DaysTokens: 80, last30DaysCostUSD: 8))
+        let provider = try #require(spendDashboardProviderBreakdowns(group).first)
+        #expect(provider.models.count == 9)
+        #expect(provider.modelCount == 9)
+        #expect(provider.models.last?.modelName == "fixture-incomplete")
+        #expect(provider.models.last?.incompleteRequestCount == 2)
+    }
+
     private static func group(_ snapshot: CostUsageTokenSnapshot) throws -> SpendDashboardModel.CurrencyGroup {
         try self.group(inputs: [.init(provider: .codex, displayName: "Codex", snapshot: snapshot)])
     }

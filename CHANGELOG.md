@@ -13,6 +13,10 @@
 - Linux installation: preserve managed configuration symlinks and UTF-8 glyphs across reinstalls, and recover dangling Omarchy adapter links (#3784). Thanks @jsonMartin!
 - Linux packaging: include executable contents when the selected binary is a symlink, keeping archives self-contained (#3784).
 
+### Improved
+
+- Usage & Spend: group sources and models by provider, consolidate detail and daily/hourly chart selectors, and add a clear selected-day control while preserving incomplete-history warnings, local-history labels, calendar boundaries, privacy, and exports (#3353). Thanks @Yuxin-Qiao!
+
 ## 0.63.0 — 2026-09-20
 
 ### Highlights
