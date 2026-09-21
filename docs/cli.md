@@ -50,7 +50,9 @@ tar -xzf CodexBarCLI-v0.17.0-macos-x86_64.tar.gz
 CodexBar reads the resolved config file for provider settings, secrets, and ordering. New installs use
 `~/.config/codexbar/config.json`; absolute `XDG_CONFIG_HOME` paths and `CODEXBAR_CONFIG` are supported, and existing
 `~/.codexbar/config.json` installs keep using the legacy file when no XDG config exists.
-See `docs/configuration.md` for the schema.
+See [Configuration](configuration.md) for the schema and [Providers](providers.md) for every registered provider's
+sources and setup guide. The [provider ID list](provider-ids.md) is generated from the registry;
+`codexbar config providers` lists providers and their configured enablement without fetching usage.
 
 ## Command
 - `codexbar` defaults to the `usage` command.
@@ -155,7 +157,7 @@ See `docs/configuration.md` for the schema.
   - Stable guard exit codes: `0` means safe, `1` means below threshold, `64` (`EX_USAGE`) means invalid arguments, and `69` (`EX_UNAVAILABLE`) means the quota could not be checked or the selected window is unavailable. `--fail-open` changes only unavailable results from `69` to `0`; JSON still reports `decision: "unknown"` and the reason.
   - Guard fetches are read-only and use background interaction policy, matching `codexbar usage`; they never request interactive Keychain access.
 - `--provider <id|both|all>` (default: enabled providers in config; falls back to defaults when missing).
-  - Provider IDs live in the config file (see `docs/configuration.md`).
+  - Use a registered [provider ID](provider-ids.md) or CLI alias. Enabled providers and ordering live in the config file.
   - With three or more providers enabled, the default stays scoped to enabled providers; use `--provider all` to query
     every registered provider.
   - `--account <label>` / `--account-index <n>` / `--all-accounts` (token accounts from config, or all visible Codex accounts for Codex; requires a single provider).
@@ -168,7 +170,7 @@ See `docs/configuration.md` for the schema.
     - `web`: web-only where that provider exposes an explicit web source; no CLI/API fallback. Browser import is macOS-only, while supported providers can use configured manual cookies on Linux.
     - `cli`: CLI/local-helper source where the provider exposes one (for example Codex RPC/PTy, Claude PTY, Kilo CLI fallback, Kiro CLI, local probes).
     - `oauth`: OAuth-backed source where supported (Codex, Claude, Vertex AI).
-    - `api`: API-key/token flow when the provider supports it (OpenAI, Claude Admin API, z.ai, Gemini, Alibaba, Copilot, OpenCode Go, Kilo, Kimi, MiniMax, Ollama, Warp, OpenRouter, ElevenLabs, Deepgram, Synthetic, DeepSeek, DeepInfra, Moonshot, Doubao, Codebuff, Crof, Venice, AWS Bedrock).
+    - `api`: API-backed flow where supported; credentials may be API keys or existing tokens. See the complete [provider source table](providers.md#fetch-strategies-current) and each provider's guide for supported modes.
     - Output `source` reflects the strategy actually used (`openai-web`, `web`, `oauth`, `api`, `local`, `cli`, or provider CLI label).
     - Codex web: OpenAI web dashboard (usage limits, credits remaining, code review remaining, usage breakdown).
         - `--web-timeout <seconds>` (default: 60)
@@ -189,7 +191,7 @@ See `docs/configuration.md` for the schema.
 - `codexbar config validate` checks the resolved config file for invalid fields.
   - `--format text|json`, `--pretty`, and `--json-only` are supported.
   - Warnings keep exit code 0; errors exit non-zero.
-- `codexbar config dump` prints the normalized config JSON.
+- `codexbar config dump` prints normalized config JSON with secrets redacted by default. `--show-secrets` explicitly includes raw credentials; `--pretty` formats the output.
 - `codexbar hooks list` shows the local hook configuration; `--format json` and `--pretty` are supported.
 - `codexbar hooks enable|disable` changes the explicit top-level opt-in switch in the local config file.
 - `codexbar hooks test <event> --provider <id>` invokes matching enabled rules with a representative event. Hook
@@ -387,4 +389,3 @@ non-zero only when it cannot produce a valid snapshot document.
 - OpenAI web requires a signed-in `chatgpt.com` session in a supported browser or a manual cookie header. No passwords are stored; CodexBar reuses cookies.
 - Safari cookie import may require granting CodexBar Full Disk Access (System Settings → Privacy & Security → Full Disk Access).
 - The `openaiDashboard` JSON field is normally sourced from the app’s cached dashboard snapshot; `--source auto|web` refreshes it live via WebKit using a per-account cookie store.
-- Future: optional `--from-cache` flag to read the menubar app’s persisted snapshot (if/when that file lands).

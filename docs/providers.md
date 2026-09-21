@@ -109,7 +109,7 @@ complete when the available scan window covers fewer days.
 | Abacus AI | Browser cookies → compute points + billing API (`web`). |
 | Mistral | Console billing, credit balance, and Vibe subscription usage via browser cookies (`web`). |
 | DeepSeek | API key from env or token accounts → balance endpoint (`api`). |
-| Fireworks | API key + account slug → 30-day spend from the billing summary API (`api`). |
+| [Fireworks](fireworks.md) | API key + account slug → 30-day spend from the billing summary API (`api`). |
 | DeepInfra | API key from env or token accounts → billing checklist + monthly usage endpoints (`api`). |
 | Moonshot | API key from config/env → balance endpoint (`api`). |
 | Codebuff | API token from config/env or `codebuff login` credentials → usage API (`api`). |
@@ -117,23 +117,27 @@ complete when the available scan window covers fewer days.
 | Venice | Auto/API: API key from config/env → DIEM/USD balance (`api`). Explicit Web: Chrome or manual cookies → subscription credit details (`web`). |
 | Command Code | Web billing API via Command Code session cookies (`web`). |
 | ClinePass | API key from config/env → 5-hour, weekly, and monthly subscription usage limits (`api`). |
+| Qoder | Browser or manual cookies → big model credit usage (`web`). |
 | StepFun | Username/password login or manual Oasis token (`web`). |
 | AWS Bedrock | AWS credentials → Cost Explorer spend/budgets and optional CloudWatch Claude activity (`api`). |
 | Grok | `grok agent stdio` JSON-RPC `x.ai/billing` (`cli`) → grok.com billing gRPC-web via Chrome session cookies (`web`); local `~/.grok/sessions` signals as fallback. |
-| GroqCloud | API key → Prometheus metrics API for request/token/cache-hit rates (`api`). |
+| Groq | Browser session → console spend and usage (`web`); Enterprise API key → Prometheus metrics fallback (`api`). |
 | LLM Proxy | API key + base URL → `/v1/quota-stats` aggregate proxy usage (`api`). |
 | ClawRouter | API key + optional base URL → `/v1/usage` monthly budget, spend, and routed-provider usage (`api`). |
+| [LongCat](longcat.md) | Browser or manual cookies → token-pack quota and fuel-pack balances (`web`). |
+| sub2api | API key + base URL → gateway quota, subscription limits, wallet balance, and per-key usage (`api`). |
 | Wayfinder | Local gateway URL → `/healthz`, `/v1/savings`, `/router/models`, `/metrics` for health, routing split, savings, and decision latency (`api`). |
 | LiteLLM | API key + base URL → `/key/info`, then `/user/info` or `/team/info` budget usage (`api`). |
 | Deepgram | API key → project discovery and usage breakdown API (`api`). |
+| Poe | API key → current point balance and best-effort points history (`api`). |
 | Chutes | API key from config/env → subscription usage and quota API (`api`). |
 | Neuralwatt | API key from config/env → `/v1/quota` subscription kWh usage and prepaid balance (`api`). |
-| ZenMux | Management API key from config/env → five-hour and seven-day quota windows plus PAYG balance (`api`). |
+| [ZenMux](zenmux.md) | Management API key from config/env → five-hour and seven-day quota windows plus PAYG balance (`api`). |
 | ai& | API key from config/env → 30-day organization spend summed from the request logs API (`api`). |
 | xAI | Management key + team ID from config/env → prepaid balance and 30-day daily spend from the Management API (`api`). |
 | Zed | Zed editor Keychain session → `cloud.zed.dev/client/users/me` for plan and quota data (`local`). |
 | Notion AI | Browser cookies → workspace resolution and the AI usage allowance API (`web`). |
-| IBM Bob | API key from config/env → profile and per-team Bobcoin budget APIs (`api`). |
+| [IBM Bob](ibm-bob.md) | API key from config/env → profile and per-team Bobcoin budget APIs (`api`). |
 | [Pi](pi.md) | Local Pi/OMP assistant transcripts → token history and API-rate cost estimates (`local`); no subscription quota. |
 
 ## Codex
@@ -254,7 +258,7 @@ complete when the available scan window covers fewer days.
   data retained as a compatibility fallback.
 - Optional workspace ID comes from `~/.codexbar/config.json` (`providers[].workspaceID`) or `CODEXBAR_OPENCODEGO_WORKSPACE_ID`.
 - Status: none yet.
-- Details: `docs/opencode.md`.
+- Details: `docs/opencodego.md`.
 
 ## Alibaba Coding Plan
 - Web mode uses Alibaba console RPC with form payload + `sec_token`.
@@ -538,6 +542,7 @@ JavaScriptCore is the macOS rollback engine. The committed `.js` is generated fr
 - Reads 5-hour, weekly, and monthly usage limits from `GET https://api.cline.bot/api/v1/users/me/plan/usage-limits`.
 - ClinePass subscription limits are distinct from Cline pay-as-you-go balance and usage.
 - Status: none yet.
+- Details: `docs/clinepass.md`.
 
 ## Qoder
 - Chrome session cookies from automatic import, or a manual `Cookie:` header/cURL capture on macOS or Linux.
@@ -559,12 +564,13 @@ JavaScriptCore is the macOS rollback engine. The committed `.js` is generated fr
 - Status: link only to `https://status.x.ai` (no auto-polling yet).
 - Details: `docs/grok.md`.
 
-## GroqCloud
-- API key from `~/.codexbar/config.json` or `GROQ_API_KEY`; base URL override via `GROQ_API_URL`.
-- Reads Enterprise Prometheus metrics for request, token, and cache-hit rates per minute.
-- Dashboard link: GroqCloud metrics console.
-- Status: `https://status.groq.com`.
-- Details: `docs/groqcloud.md`.
+## Groq
+- Auto prefers the console browser session for organization spend, token, and request history.
+- An Enterprise API key from config or `GROQ_API_KEY` enables the Prometheus metrics fallback.
+- Explicit `web` and `api` modes select the console and metrics sources respectively.
+- CLI name: `groqcloud`; aliases: `groq`, `groq-api`.
+- Status: `https://status.groq.com` (link only).
+- Details: `docs/groq.md`.
 
 ## LLM Proxy
 - API key + base URL from `~/.codexbar/config.json` (`enterpriseHost`), `LLM_PROXY_API_KEY`, or `LLM_PROXY_BASE_URL`.

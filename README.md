@@ -96,9 +96,10 @@ See [CLI configuration](docs/cli-configuration.md) for the full flow.
 - [OpenAI](docs/openai.md) — Admin API key usage/cost graphs with legacy credit-balance fallback.
 - [Azure OpenAI](docs/azure-openai.md) — API key, endpoint, and deployment validation probe.
 - [Claude](docs/claude.md) — OAuth API, browser cookies, or CLI PTY fallback; session and weekly usage where available.
+- [ClinePass](docs/clinepass.md) — API key for five-hour, weekly, and monthly subscription limits.
 - [Cursor](docs/cursor.md) — Browser session cookies for plan + usage + billing resets.
 - [OpenCode](docs/opencode.md) — Browser cookies for workspace subscription usage.
-- [OpenCode Go](docs/opencode.md) — Usage API, browser fallback, and local SQLite cost history.
+- [OpenCode Go](docs/opencodego.md) — Usage API, browser fallback, and local SQLite cost history.
 - [Alibaba Coding Plan](docs/alibaba-coding-plan.md) — Web cookies or API key for coding-plan quotas.
 - [Alibaba Token Plan](docs/alibaba-token-plan.md) — Bailian browser/manual cookies for token-plan credits.
 - [Qwen Cloud](docs/qwen-cloud.md) — 5-hour and weekly individual Token Plan usage via browser/manual cookies.
@@ -144,7 +145,7 @@ See [CLI configuration](docs/cli-configuration.md) for the full flow.
 - [StepFun](docs/stepfun.md) — Username + password login for Step Plan rate limits (5‑hour + weekly windows) and subscription plan name.
 - [AWS Bedrock](docs/bedrock.md) — AWS access keys or a named AWS profile (SSO/assume-role via the AWS CLI) for Cost Explorer spend, monthly budgets, and optional CloudWatch Claude activity.
 - [Grok](docs/grok.md) — Grok CLI billing RPC plus grok.com browser-session fallback.
-- [GroqCloud](docs/groqcloud.md) — API key for Enterprise Prometheus request/token/cache-hit metrics.
+- [Groq](docs/groq.md) — Browser session for console spend and usage, with an Enterprise Prometheus API-key fallback.
 - [LLM Proxy](docs/llm-proxy.md) — API key + base URL for aggregate proxy quota stats and provider breakdowns.
 - [ClawRouter](docs/clawrouter.md) — API key for monthly budget, spend, requests, tokens, and routed-provider usage.
 - [sub2api](docs/sub2api.md) — Self-hosted gateway key quota, subscription limits, wallet balance, and per-key usage.
@@ -157,6 +158,15 @@ See [CLI configuration](docs/cli-configuration.md) for the full flow.
 - [ZenMux](docs/zenmux.md) — Management API key for rolling five-hour and seven-day quota windows plus PAYG balance.
 - [xAI](docs/xai.md) — Management API key + team ID for prepaid credit balance and daily platform spend.
 - [IBM Bob](docs/ibm-bob.md) — API key for monthly Bobcoin budget and usage across subscription teams.
+- [LongCat](docs/longcat.md) — Browser or manual cookies for token-pack quota and fuel-pack balances.
+- [ai&](docs/aiand.md) — API key for 30-day organization spend from request logs.
+- [Notion AI](docs/notion.md) — Browser or manual cookies for rolling and monthly workspace allowances.
+- [Nous Portal](docs/nous.md) — Existing Hermes OAuth login for monthly credits and purchased top-ups.
+- [Muse Code](docs/muse.md) — Existing Muse CLI login for subscription quotas, plus local token history.
+- [CodeRabbit](docs/coderabbit.md) — Local CLI usage report for review counts, billing state, and period resets.
+- [Replicate](docs/replicate.md) — Browser or manual cookies for monthly spend and optional prepaid credits.
+- [Hugging Face](docs/huggingface.md) — Access token for Inference Providers charges and optional ZeroGPU quota.
+- [Pi](docs/pi.md) — Local Pi/OMP transcripts for token history and API-rate cost estimates.
 - Open to new providers: [provider authoring guide](docs/provider.md).
 
 ## Icon & Screenshot
@@ -177,7 +187,7 @@ show an incident indicator.
   invalid preferences resolve to 5 minutes. Manual and fixed 1m, 2m, 5m, 15m, and 30m alternatives remain available.
 - Bundled CLI (`codexbar`) for scripts and CI (including `codexbar cost --provider codex`, `claude`, or `both` for local cost usage); macOS and Linux CLI builds available.
 - WidgetKit widgets for supported providers.
-- Localized app and website with a shared 21-language catalog, automatic website detection, persistent pickers, and RTL support.
+- Localized app and website with a shared 23-language catalog, automatic website detection, persistent pickers, and RTL support.
 - Optional session quota notifications and weekly-reset confetti.
 - Privacy-first: on-device parsing by default; browser cookies are opt-in and reused (no passwords stored).
 
