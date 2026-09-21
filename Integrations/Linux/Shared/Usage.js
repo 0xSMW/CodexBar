@@ -33,7 +33,9 @@ function rows(text, showIdentity) {
             var window = usage[key];
             var left = remaining(window);
             if (left === null) return;
-            var label = cadenceLabel(window.windowMinutes) || ["Session", "Weekly", "Additional"][index];
+            var suppliedLabel = entry.rateWindowLabels && entry.rateWindowLabels[key];
+            var safeLabel = typeof suppliedLabel === "string" ? displayText(suppliedLabel, false).trim() : "";
+            var label = cadenceLabel(window.windowMinutes) || safeLabel || ["Session", "Weekly", "Additional"][index];
             windows.push({key: key, label: label, remaining: left, resetsAt: window.resetsAt || "",
                 pace: entry.pace && entry.pace[key] ? String(entry.pace[key].summary || "") : ""});
         });

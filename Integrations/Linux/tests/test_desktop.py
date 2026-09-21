@@ -38,7 +38,7 @@ if args[0]=='cost':
 else:
  usage=state.get('usage',{'identity':{'accountEmail':'private@example.com'},
  'primary':{'usedPercent':40,'windowMinutes':300,'resetsAt':'2030-01-01T00:00:00Z'}})
- print(json.dumps([{'provider':provider,'usage':usage}]))
+ print(json.dumps([{'provider':provider,'usage':usage,'rateWindowLabels':state.get('rateWindowLabels')}]))
 ''')
         self.fake.chmod(0o755)
         self.log = (self.root / 'desktop.log').open('w+')
@@ -131,6 +131,20 @@ else:
         self.client('--refresh')
         refreshed = self.wait_for(lambda value: not value['busy'])
         self.assertEqual(refreshed['entries'][0]['windows'][1]['key'], windows[1]['key'])
+
+    def test_provider_window_labels_reach_private_snapshot(self):
+        (self.root / 'state.json').write_text(json.dumps({
+            'usage': {'secondary': {'usedPercent': 20}},
+            'rateWindowLabels': {'secondary': 'Rate limit'}
+        }))
+        self.client('--configure', '{"provider":"claude"}')
+        value = self.wait_for(lambda value: value.get('entries') and not value['busy']
+                              and value['entries'][0]['provider'] == 'claude')
+        windows = value['entries'][0]['windows']
+        self.assertEqual(len(windows), 1)
+        self.assertEqual(windows[0]['key'], 'secondary')
+        self.assertEqual(windows[0]['label'], 'Rate limit')
+        self.assertEqual(windows[0]['remaining'], 80)
 
     def test_invalid_config_is_not_overwritten(self):
         self.client('--quit')

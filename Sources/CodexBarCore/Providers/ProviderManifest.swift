@@ -81,5 +81,6 @@ public enum ProviderManifest {
         ReplicateProviderDescriptor.descriptor,
         HuggingFaceProviderDescriptor.descriptor,
         PiProviderDescriptor.descriptor,
+        V0ProviderDescriptor.descriptor,
     ]
 }

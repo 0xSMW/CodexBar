@@ -79,6 +79,7 @@ extension ProviderInstanceID {
     public static let replicate = UsageProvider.replicate.instanceID
     public static let huggingface = UsageProvider.huggingface.instanceID
     public static let pi = UsageProvider.pi.instanceID
+    public static let v0 = UsageProvider.v0.instanceID
 }
 
 // swiftformat:enable sortDeclarations
