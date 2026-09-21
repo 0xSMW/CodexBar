@@ -28,13 +28,13 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 11 |
+| `cut-over` | 12 |
 | `converted` | 5 |
-| `convertible-now` | 10 |
+| `convertible-now` | 7 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 15 |
 | `needs-pty/webview/native` | 8 |
-| `needs-host-extension` | 0 |
+| `needs-host-extension` | 2 |
 | **Total** | **68** |
 
 ## Matrix
@@ -45,7 +45,7 @@ weakening the plugin network policy.
 | openai | `converted` | Yes | Converted: fixed-origin bearer GET pagination with daily spend, model, line-item, and token details. |
 | azureopenai | `needs-pty/webview/native` | No | The current quota probe is a POST chat completion against a user-configured deployment origin. |
 | claude | `needs-files/subprocess/oauth-broker` | No | Full parity needs credential files/Keychain, OAuth refresh, CLI/PTY, cookies, local logs, and admin details. |
-| fireworks | `convertible-now` | No | Identity can now carry the successful empty-billing state without inventing a rate window or cost. |
+| fireworks | `needs-host-extension` | No | Account discovery persists the slug and returns a dynamic source label/diagnostic; the script strategy has no result-metadata or config-persistence bridge, and successful empty billing is entirely identity-free. |
 | clinepass | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET, typed quota lanes, credential aliases, and classified failures match native behavior; the Swift fetcher and Linux fixtures are deleted. |
 | cursor | `needs-cookie-import` | No | Browser cookies/app database provide auth, and integer request history also has bespoke detail. |
 | opencode | `needs-cookie-import` | No | Skipped: React server-function response parsing needs a protocol-specific text decoder beyond `matchFirst`. |
@@ -67,14 +67,14 @@ weakening the plugin network policy.
 | vertexai | `needs-files/subprocess/oauth-broker` | No | ADC/gcloud files, OAuth refresh, optional subprocess fallback, and local cost logs are required. |
 | augment | `needs-files/subprocess/oauth-broker` | No | The preferred strategy spawns `auggie`; the alternative imports browser cookies and maintains sessions. |
 | jetbrains | `needs-pty/webview/native` | No | There is no HTTP strategy; native IDE discovery and local XML parsing are the provider. |
-| moonshot | `convertible-now` | No | Balance can remain intentionally identity-only, matching the native sparse snapshot. |
+| moonshot | `needs-host-extension` | No | Identity-only snapshots now fit, but native USD/CNY currency formatting uses decimal half-even rounding and preserves negative zero; the plugin formatter uses binary toFixed rounding and loses negative zero. |
 | amp | `needs-files/subprocess/oauth-broker` | No | CLI subprocess and browser-cookie strategies plus workspace credit details are outside this host. |
 | t3chat | `converted` | Yes | Converted: declared-domain cookie import, JSONL text parsing, and generic base/overage windows. |
 | ollama | `needs-cookie-import` | No | Skipped: hosted parity requires HTML bootstrap/state extraction plus API-key fallback arbitration. |
 | synthetic | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET with generic windows, cost, dates, and identity; the native fetch twin is deleted. |
 | warp | `needs-pty/webview/native` | No | Warp sends a POST GraphQL operation, which the GET-only HTTP broker cannot express. |
 | openrouter | `cut-over` | Yes | Cut over on JavaScriptCore: endpoint and client-header overrides plus one-second best-effort key enrichment match native behavior; the native fetch core is Linux-only. |
-| elevenlabs | `convertible-now` | No | Verified `xi-api-key` GET; heterogeneous character/minute quotas map to named generic windows. |
+| elevenlabs | `cut-over` | Yes | Cut over on both engines: xi-api-key GET, validated endpoint overrides, subscription/voice windows, reset dates, and safe current/legacy auth diagnostics; the Swift fetch twin is deleted. |
 | windsurf | `needs-files/subprocess/oauth-broker` | No | Chromium localStorage, IDE databases, and binary protobuf decoding supply the current session. |
 | zed | `needs-files/subprocess/oauth-broker` | No | Zed server settings and a named Keychain credential must be read locally. |
 | perplexity | `converted` | Yes | Converted: declared-domain cookie import and generic recurring, bonus, and purchased credit windows. |

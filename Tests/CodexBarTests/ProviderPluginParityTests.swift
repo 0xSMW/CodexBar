@@ -14,6 +14,7 @@ struct ProviderPluginParityTests {
             (.openrouter, "OPENROUTER_API_KEY"),
             (.clawrouter, "CLAWROUTER_API_KEY"),
             (.deepgram, "DEEPGRAM_API_KEY"),
+            (.elevenlabs, "ELEVENLABS_API_KEY"),
             (.poe, "POE_API_KEY"),
             (.sub2api, "SUB2API_API_KEY"),
             (.synthetic, "SYNTHETIC_API_KEY"),
