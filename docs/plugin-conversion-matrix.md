@@ -28,13 +28,13 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 14 |
+| `cut-over` | 15 |
 | `converted` | 5 |
 | `convertible-now` | 5 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 15 |
 | `needs-pty/webview/native` | 8 |
-| `needs-host-extension` | 2 |
+| `needs-host-extension` | 1 |
 | **Total** | **68** |
 
 ## Matrix
@@ -99,7 +99,7 @@ weakening the plugin network policy.
 | poe | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET balance/history pagination with daily points and model/type summaries; the native fetch twins are deleted. |
 | chutes | `convertible-now` | No | Tolerant no-usage payloads can return an API identity without inventing quota data. |
 | helmcode | `cut-over` | Yes | Both tenant HTTP flows and quota projection live in the bundled TypeScript plugin, using domain-scoped cookies and policy-only availability. Swift supplies registration, settings, and dashboard routing. No native fetcher or cURL-capture fallback. |
-| neuralwatt | `needs-host-extension` | No | HTTP status retries and capped `Retry-After` are supported, but the bridge erases transport error codes and cancellation; native selective URL-error retries cannot be preserved yet. |
+| neuralwatt | `cut-over` | Yes | Cut over on both engines: validated configured HTTPS, subscription kWh, prepaid balance, key allowances, and exact confidence; the host preserves selective single retries, capped Retry-After, and cancellation. The native fetch twin is deleted. |
 | clawrouter | `cut-over` | Yes | Cut over on JavaScriptCore: validated configured origins, classified failures, exact confidence, budget/ledger details, and provider charts match native behavior; the native fetch core is Linux-only. |
 | longcat | `needs-cookie-import` | No | Skipped: browser-cookie retry needs domain/path-aware cookie selection across multiple imported sessions; the generic broker currently returns one flattened header. |
 | sub2api | `cut-over` | Yes | Cut over on JavaScriptCore: configured HTTPS/loopback origins, a hard 15-second request deadline, strict parsing, exact confidence, and classified failures match native behavior; the native fetch core is Linux-only. |

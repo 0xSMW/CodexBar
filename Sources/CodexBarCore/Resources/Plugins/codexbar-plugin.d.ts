@@ -118,6 +118,7 @@ interface CodexBarHTTPError extends Error {
   /** Foundation URLError code, preserved across both engines. */
   transportCode?: number;
   status?: number;
+  /** Error-code eligibility for an idempotent retry, not a remaining retry budget. */
   retryable?: boolean;
 }
 

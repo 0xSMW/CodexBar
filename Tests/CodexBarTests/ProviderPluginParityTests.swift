@@ -17,6 +17,7 @@ struct ProviderPluginParityTests {
             (.poe, "POE_API_KEY"),
             (.llmproxy, "LLM_PROXY_API_KEY"),
             (.litellm, "LITELLM_API_KEY"),
+            (.neuralwatt, "NEURALWATT_API_KEY"),
             (.sub2api, "SUB2API_API_KEY"),
             (.synthetic, "SYNTHETIC_API_KEY"),
             (.xai, "XAI_MANAGEMENT_API_KEY"),
@@ -69,7 +70,7 @@ struct ProviderPluginParityTests {
         }
     }
 
-    @Test(arguments: [UsageProvider.openrouter, .clawrouter, .deepgram])
+    @Test(arguments: [UsageProvider.openrouter, .clawrouter, .deepgram, .neuralwatt])
     func `override preflight preserves provider validation errors`(provider: UsageProvider) async throws {
         let environment: [String: String] = switch provider {
         case .openrouter:
@@ -90,6 +91,11 @@ struct ProviderPluginParityTests {
                 DeepgramSettingsReader.apiURLEnvironmentKey: "http://router.example.test",
                 ProviderPluginPrototype.environmentKey: "1",
             ]
+        case .neuralwatt:
+            [
+                NeuralWattSettingsReader.apiKeyEnvironmentKey: "fixture-key",
+                NeuralWattSettingsReader.apiURLEnvironmentKey: "http://quota.example.test",
+            ]
         default: [:]
         }
         let context = Self.context(environment: environment)
@@ -105,6 +111,9 @@ struct ProviderPluginParityTests {
         } catch let error as ClawRouterSettingsError {
             #expect(provider == .clawrouter)
             #expect(error == .invalidEndpointOverride(ClawRouterSettingsReader.baseURLEnvironmentKey))
+        } catch let error as NeuralWattSettingsError {
+            #expect(provider == .neuralwatt)
+            #expect(error == .invalidEndpointOverride(NeuralWattSettingsReader.apiURLEnvironmentKey))
         } catch let error as DeepgramSettingsError {
             #expect(provider == .deepgram)
             guard case let .invalidEndpointOverride(key) = error else {

@@ -821,16 +821,8 @@ final class JavaScriptCoreProviderPluginEngine: ProviderPluginEngine, @unchecked
         self.requests[requestID] = Task.detached {
             defer { _ = worker.requestLock.withLock { worker.requests.removeValue(forKey: requestID) } }
             do {
-                let responseTask = Task { try await transport.response(for: request, retryPolicy: retryPolicy) }
-                let deadline = request.timeoutInterval * Double(retryPolicy.maxRetries + 1) + retryPolicy
-                    .maxDelaySeconds
-                let response: ProviderHTTPResponse = switch await BoundedTaskJoin(sourceTask: responseTask)
-                    .value(joinGrace: .seconds(deadline))
-                {
-                case let .value(response): response
-                case let .failure(error): throw error
-                case .timedOut: throw URLError(.timedOut)
-                }
+                let response = try await ProviderPluginHTTPResponse.response(
+                    for: request, transport: transport, retryPolicy: retryPolicy)
                 guard response.data.count <= responseSizeLimit else {
                     throw ProviderPluginError.http("response exceeded the \(responseSizeLimit)-byte limit")
                 }

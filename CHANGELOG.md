@@ -36,6 +36,7 @@
 - Provider plugins: preserve transport error codes and cancellation on both engines, with an opt-in native retry policy for transient GET failures.
 - Provider plugins: accept explicitly declared empty results without inventing usage or account identity.
 - Provider plugins: expose native currency formatting with matching rounding, currency symbols, and negative zero on both engines.
+- Neuralwatt: use the bundled quota plugin while preserving subscription usage, prepaid balances, key allowances, selective retries, and cancellation (#3811).
 
 - CLI: show each host's source snapshot timestamp in SSH cost text reports, making stale remote totals visible without changing JSON output (#3765). Thanks @A-l-an!
 - Packaging: derive app/widget Team IDs from the selected signing identity, reject ambiguous or mismatched identities, and honor the same identity during notarized packaging without weakening widget or signature checks; use Developer ID or ad-hoc signing for local builds (#3372). Thanks @krazybean!

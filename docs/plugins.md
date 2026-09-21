@@ -109,7 +109,8 @@ so portable third-party plugins must use the host helpers below instead of ECMA-
   capped at ten seconds. POST, offline, TLS, and cancellation failures are not retried. This replaces the automatic
   status-based fetch replay for that request; explicit `ctx.fail` retry options should not add another retry.
 - HTTP rejections are `Error` objects on both engines. Native failures expose `transportCode` (the Foundation URL-error
-  code), `transportClass` (`timeout`, `dns`, `offline`, `cancelled`, `tls`, `connection`, or `other`), and `retryable`.
+  code), `transportClass` (`timeout`, `dns`, `offline`, `cancelled`, `tls`, `connection`, or `other`), and `retryable`
+  (the code's eligibility for an idempotent retry, not the remaining retry budget).
   Rejected HTTP responses expose `status` and class `http`. Plugins can use these fields when choosing a `ctx.fail`
   classification. Rethrow cancellation unchanged; uncaught cancellation remains a Swift `CancellationError`, and
   cancelling the refresh interrupts its pending request and retry delay.

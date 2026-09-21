@@ -603,7 +603,8 @@ final class QuickJSProviderPluginEngine: ProviderPluginEngine, @unchecked Sendab
                 enforcesUserResponsePolicy: self.enforcesUserResponsePolicy)
             let deadline = request.timeoutInterval * Double(retryPolicy.maxRetries + 1) + retryPolicy.maxDelaySeconds
             let response = try self.blockingValue(timeout: deadline) {
-                try await self.transport.response(for: request, retryPolicy: retryPolicy)
+                try await ProviderPluginHTTPResponse.response(
+                    for: request, transport: self.transport, retryPolicy: retryPolicy)
             }
             guard response.data.count <= self.responseSizeLimit else {
                 throw ProviderPluginError.http("response exceeded the \(self.responseSizeLimit)-byte limit")

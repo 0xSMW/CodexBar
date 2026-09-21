@@ -10,7 +10,7 @@ import Testing
 struct ProviderQuotaDetailPresentationTests {
     private static let now = Date(timeIntervalSince1970: 1_790_000_000)
 
-    private func snapshot(provider: UsageProvider, hasReset: Bool) throws -> UsageSnapshot {
+    private func snapshot(provider: UsageProvider, hasReset: Bool) async throws -> UsageSnapshot {
         let reset = hasReset ? Self.now.addingTimeInterval(7200) : nil
         switch provider {
         case .mistral:
@@ -51,7 +51,7 @@ struct ProviderQuotaDetailPresentationTests {
                 "current_period_end": reset.map { ISO8601DateFormatter().string(from: $0) } as Any? ?? NSNull(),
             ]]
             let data = try JSONSerialization.data(withJSONObject: body)
-            return try NeuralWattUsageFetcher._parseSnapshotForTesting(data, updatedAt: Self.now).toUsageSnapshot()
+            return try await NeuralWattPluginTestSupport.fetch(data, now: Self.now)
         default:
             preconditionFailure("Unexpected provider fixture")
         }
@@ -91,9 +91,9 @@ struct ProviderQuotaDetailPresentationTests {
 
     @Test(arguments: [UsageProvider.manus, .mimo, .neuralwatt, .mistral], [false, true])
     func `CLI keeps quota details visible without inventing reset clocks`(
-        provider: UsageProvider, hasReset: Bool) throws
+        provider: UsageProvider, hasReset: Bool) async throws
     {
-        let snapshot = try self.snapshot(provider: provider, hasReset: hasReset)
+        let snapshot = try await self.snapshot(provider: provider, hasReset: hasReset)
         let details = self.expectedDetails(provider)
         let windows = [snapshot.primary, snapshot.secondary].compactMap(\.self)
         #expect(windows.compactMap(\.resetDescription) == details)
@@ -140,9 +140,9 @@ struct ProviderQuotaDetailPresentationTests {
 
     @Test(arguments: [UsageProvider.manus, .mimo, .neuralwatt, .mistral], [false, true])
     func `native menus and cards retain quota details alongside real resets`(
-        provider: UsageProvider, hasReset: Bool) throws
+        provider: UsageProvider, hasReset: Bool) async throws
     {
-        let snapshot = try self.snapshot(provider: provider, hasReset: hasReset)
+        let snapshot = try await self.snapshot(provider: provider, hasReset: hasReset)
         let settings = testSettingsStore(
             suiteName: "ProviderQuotaDetailPresentationTests-\(provider.rawValue)-\(hasReset)",
             userDefaults: InMemoryUserDefaults())
@@ -179,12 +179,12 @@ struct ProviderQuotaDetailPresentationTests {
     }
 
     @Test
-    func `render synthetic Manus card proof`() throws {
+    func `render synthetic Manus card proof`() async throws {
         guard let path = ProcessInfo.processInfo.environment["CODEXBAR_QUOTA_DETAIL_PROOF_DIR"] else { return }
         let directory = URL(fileURLWithPath: path, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         for hasReset in [false, true] {
-            let snapshot = try self.snapshot(provider: .manus, hasReset: hasReset)
+            let snapshot = try await self.snapshot(provider: .manus, hasReset: hasReset)
             let model = try self.model(provider: .manus, snapshot: snapshot)
             for dark in [false, true] {
                 let view = UsageMenuCardView(model: model, width: 340)

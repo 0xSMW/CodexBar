@@ -95,6 +95,23 @@ enum ProviderPluginHTTPResponse {
         return seconds
     }
 
+    static func response(
+        for request: URLRequest,
+        transport: any ProviderHTTPTransport,
+        retryPolicy: ProviderHTTPRetryPolicy) async throws -> ProviderHTTPResponse
+    {
+        let bounded = ProviderHTTPTransportHandler { request in
+            try Task.checkCancellation()
+            let task = Task { try await transport.data(for: request) }
+            return switch await BoundedTaskJoin(sourceTask: task).value(joinGrace: .seconds(request.timeoutInterval)) {
+            case let .value(response): response
+            case let .failure(error): throw error
+            case .timedOut: throw URLError(.timedOut)
+            }
+        }
+        return try await bounded.response(for: request, retryPolicy: retryPolicy)
+    }
+
     struct StatusFailure: LocalizedError {
         let response: HTTPURLResponse
         let allowsRetry: Bool

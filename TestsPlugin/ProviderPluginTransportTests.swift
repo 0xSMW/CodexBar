@@ -12,6 +12,15 @@ struct ProviderPluginTransportTests {
     static let engines: [ProviderPluginEngineKind] = [.quickJS]
     #endif
 
+    @Test
+    func `outer QuickJS deadline retains the native timeout code`() {
+        let result = QuickJSBlockingResult<Int>()
+        result.markStarted()
+        #expect(throws: URLError(.timedOut)) {
+            try result.value(timeout: 0, fetchDeadline: Date().addingTimeInterval(20), watchdog: nil)
+        }
+    }
+
     @Test(arguments: Self.engines)
     func `HTTP rejections preserve transport codes and retry classification`(
         engine: ProviderPluginEngineKind) async throws
@@ -187,6 +196,24 @@ struct ProviderPluginTransportTests {
         #expect(try await runtime.fetchUsage().identity?.loginMethod == "ok")
         #expect(start.duration(to: .now) >= .seconds(10))
         #expect(await transport.count == 2)
+    }
+
+    @Test(arguments: Self.engines)
+    func `request deadline applies to each retry attempt`(engine: ProviderPluginEngineKind) async throws {
+        let counter = PluginStatusTransport(status: 200)
+        let runtime = try Self.runtime(
+            engine,
+            body: """
+            await ctx.http.get('https://example.com', { timeoutSeconds: 1, retryPolicy: 'transientIdempotent' });
+            return { identity: { loginMethod: 'ok' } };
+            """,
+            transport: ProviderHTTPTransportHandler { request in
+                let response = try await counter.data(for: request)
+                try await Task.sleep(for: .seconds(5))
+                return response
+            })
+        await #expect(throws: URLError(.timedOut)) { try await runtime.fetchUsage() }
+        #expect(await counter.count == 2)
     }
 
     @Test(arguments: Self.engines)
