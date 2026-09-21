@@ -851,6 +851,13 @@ extension UsageStore {
             self.reconcileCodexWidgetAccountSnapshots(after: error)
         }
         self.lastFetchAttempts[provider.instanceID] = attempts
+        if !Self.shouldPreservePriorSnapshot(
+            after: error,
+            hadPriorData: true,
+            priorSnapshot: self.snapshots[provider.instanceID] ?? self.lastKnownResetSnapshots[provider.instanceID])
+        {
+            self.invalidateGenericWidgetUsage(for: provider)
+        }
         self.recordStartupConnectivityRetryableFailure(error)
         await self.handleProviderFetchFailure(
             provider: provider,
