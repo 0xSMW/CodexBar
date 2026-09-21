@@ -59,8 +59,8 @@ Without a Management API key, CodexBar still shows regular API-key quota and key
 OpenRouter accepts the regular key. It leaves a rejected balance and 30-day account spend unavailable instead of
 treating either as zero.
 
-Optional requests each have a four-second production deadline, keeping the credits, key, and Activity request stages
-within the plugin's total deadline. If the Key API is slow or unavailable,
+Optional requests each have a four-second production deadline starting when the transport task begins. Scheduler
+waits remain bounded by the plugin's total fetch deadline, without consuming an optional request's own budget. If the Key API is slow or unavailable,
 CodexBar keeps any valid balance and labels the API key limit as unavailable with a safe timeout, HTTP,
 or response diagnostic.
 
