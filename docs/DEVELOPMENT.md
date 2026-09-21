@@ -130,13 +130,16 @@ See the canonical [provider authoring guide](provider.md#adding-a-new-provider) 
 
 Status-item creation checks the item's saved preferred position and its matching legacy key before assigning the
 autosave name. Malformed, non-finite, non-positive, and out-of-bounds positions are removed; unrelated items are
-untouched. The bound is at least the widest connected display's width in points and retains any larger legacy global
-coordinate bound, plus the existing safety padding. This avoids newly deleting menu-manager parking positions while
-covering wide displays left of the primary screen. When no display bound is available, finite positive positions are preserved.
-The stable autosave name is assigned immediately after `statusItem(withLength:)` and before any `onCreated` setup, so
-provider-item registration never observes the transient `Item-N` identity during callback work. Isolated placement tests
-cover this cleanup without creating status items or changing the user's saved preferences. Passing these tests does
-not establish the cause of a position that changes again after launch; that requires runtime placement evidence.
+untouched, and each removed key is logged. The bound is the widest connected display's width in points plus a
+512-point margin, independent of display arrangement. Finite positive positions are preserved when no display bound
+is available. Unlike the older global-coordinate bound, this also clears menu-manager parking positions beyond that
+range. Preferred-position repair runs on each creation, independently of the one-time hidden-visibility repair flag.
+Items are created with zero length, assigned their stable autosave name, registered, then given variable length.
+Startup, provider vending, and visibility recovery all use this synchronous factory; recovery keeps `codexbar-merged`.
+Dictionary-backed placement tests and a recording item cover cleanup and creation order without creating live status
+items. AppKit exposes no public factory taking an autosave name, so zero-length creation cannot prove how a menu
+manager enumerates an item inside AppKit's factory. These tests also do not establish the writer of a position that
+changes after launch; recurring placement and Bartender UUID behavior still require isolated runtime evidence.
 
 Runtime removal and visibility changes preserve the current saved position if AppKit clears it. This also covers
 status-menu Quit, which removes items before AppKit termination begins. The deterministic tests use in-memory

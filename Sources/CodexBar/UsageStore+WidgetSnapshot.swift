@@ -440,7 +440,6 @@ extension UsageStore {
         case .grok: GrokProviderDescriptor.displayLabel(window: snapshot.primary)
         case .doubao: DoubaoProviderDescriptor.primaryLabel(window: snapshot.primary)
         case .amp: AmpProviderDescriptor.primaryLabel(snapshot: snapshot)
-        case .crof: CrofProviderDescriptor.primaryLabel(snapshot: snapshot)
         case .alibabatokenplan: AlibabaTokenPlanProviderDescriptor.primaryLabel(window: snapshot.primary)
         case .ollama: OllamaProviderDescriptor.primaryLabel(window: snapshot.primary)
         default: nil
