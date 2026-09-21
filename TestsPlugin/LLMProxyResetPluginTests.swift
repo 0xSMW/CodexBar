@@ -1,20 +1,32 @@
-#if os(Linux)
 import CodexBarCore
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 import Testing
 
-struct LLMProxyResetLinuxTests {
+struct LLMProxyResetPluginTests {
     // 2023-11-14T22:13:20Z — the snapshot time treated as "now".
     private static let now = Date(timeIntervalSince1970: 1_700_000_000)
 
-    private func nextReset(resetTimes: [String]) throws -> Date? {
+    private func nextReset(resetTimes: [String]) async throws -> Date? {
         let groups = resetTimes
             .map { "{ \"remaining_percent\": 50, \"reset_time\": \"\($0)\" }" }
             .joined(separator: ", ")
         let json = "{ \"providers\": { \"p\": { \"quota_groups\": [ \(groups) ] } } }"
-        return try LLMProxyUsageFetcher
-            ._parseSnapshotForTesting(Data(json.utf8), updatedAt: Self.now)
-            .nextResetAt
+        let transport = ProviderHTTPTransportHandler { request in
+            (Data(json.utf8), HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil)!)
+        }
+        return try await ProviderPluginRuntime(bundledPlugin: "llmproxy", transport: transport)
+            .fetchUsage(
+                settings: ["LLM_PROXY_BASE_URL": "https://proxy.example.com"],
+                secrets: ["LLM_PROXY_API_KEY": "fixture-key"],
+                now: Self.now)
+            .primary?.resetsAt
     }
 
     private func date(_ year: Int, _ month: Int, _ day: Int) throws -> Date {
@@ -25,9 +37,9 @@ struct LLMProxyResetLinuxTests {
     }
 
     @Test
-    func `next reset skips already-elapsed reset times`() throws {
+    func `next reset skips already-elapsed reset times`() async throws {
         // A past reset (stale until the API refreshes) must not be chosen over the soonest upcoming one.
-        let reset = try self.nextReset(resetTimes: [
+        let reset = try await self.nextReset(resetTimes: [
             "2023-11-01T00:00:00Z", // past (before now)
             "2023-11-20T00:00:00Z", // soonest future
             "2023-12-25T00:00:00Z", // later future
@@ -36,8 +48,8 @@ struct LLMProxyResetLinuxTests {
     }
 
     @Test
-    func `all-past reset times yield no next reset`() throws {
-        let reset = try self.nextReset(resetTimes: [
+    func `all-past reset times yield no next reset`() async throws {
+        let reset = try await self.nextReset(resetTimes: [
             "2023-11-01T00:00:00Z",
             "2023-10-15T00:00:00Z",
         ])
@@ -45,9 +57,8 @@ struct LLMProxyResetLinuxTests {
     }
 
     @Test
-    func `future reset time is preserved`() throws {
-        let reset = try self.nextReset(resetTimes: ["2023-11-20T00:00:00Z"])
+    func `future reset time is preserved`() async throws {
+        let reset = try await self.nextReset(resetTimes: ["2023-11-20T00:00:00Z"])
         #expect(try abs(#require(reset).timeIntervalSince(self.date(2023, 11, 20))) < 0.001)
     }
 }
-#endif

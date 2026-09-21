@@ -10,15 +10,15 @@ read_when:
 This matrix evaluates all 68 providers in the current capability audit against the prototype documented in
 [`plugin-prototype.md`](plugin-prototype.md). Each provider has one primary blocker.
 
-`convertible-now` means the canonical first-party flow is GET-only, uses a fixed HTTPS origin and header secret, and fits
-the generic snapshot. Optional canonical-origin endpoint overrides do not change that bucket; providers whose identity
-is inherently a user-chosen origin (LLM Proxy and LiteLLM) do not qualify. The convertible rows were checked against the
+`convertible-now` means the canonical first-party flow fits the current HTTP, origin-policy, authentication, and generic
+snapshot capabilities. Settings-derived origins include the existing private-network HTTP policy for LLM Proxy and
+LiteLLM. The convertible rows were checked against the
 current Swift request methods and snapshot projections; Azure OpenAI, StepFun, and Warp were removed from the audit's
 earlier “fully expressible” baseline because their current implementations issue POST requests.
 
 `converted` means the bundled JavaScript conversion is present behind `CODEXBAR_JS_PROVIDERS=1`. `cut-over` means the
-bundled script is the only JavaScriptCore implementation, with any retained native core serving Linux only. The Converted column
-makes implementation state explicit and the totals are mutually exclusive: `convertible-now` counts only providers
+bundled script is authoritative on its supported engines; each row states whether a Linux native core remains. The
+Converted column makes implementation state explicit and the totals are mutually exclusive: `convertible-now` counts only providers
 that remain cheap to convert. Remaining buckets name the next blocker after this host-extension slice.
 
 `needs-host-extension` means an existing native behavior cannot be represented without changing provider semantics or
@@ -28,9 +28,9 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 12 |
+| `cut-over` | 13 |
 | `converted` | 5 |
-| `convertible-now` | 7 |
+| `convertible-now` | 6 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 15 |
 | `needs-pty/webview/native` | 8 |
@@ -94,7 +94,7 @@ weakening the plugin network policy.
 | bedrock | `needs-files/subprocess/oauth-broker` | No | AWS profiles/CLI credentials, SigV4 signing, pagination, and two services need host-owned credential/signing APIs. |
 | grok | `needs-pty/webview/native` | No | Persistent stdio JSON-RPC, auth/session files, cookies, logs, and binary gRPC-web are strongly native. |
 | groq | `needs-cookie-import` | No | Skipped: Stytch session exchange and console history remain a multi-step auth flow. |
-| llmproxy | `convertible-now` | No | Settings origins now preserve native HTTPS/public and approved private-network HTTP behavior. |
+| llmproxy | `cut-over` | Yes | Cut over on both engines: configured HTTPS/private-network HTTP, quota-group variants, aggregate totals, provider summaries, and classified failures; the native fetch twin is deleted. |
 | litellm | `convertible-now` | No | Settings origins now preserve native private-network HTTP behavior, and zero-spend identity-only snapshots are valid. |
 | deepgram | `cut-over` | Yes | Cut over on JavaScriptCore: project discovery, aggregation, configured origins, numeric validation, and classified auth/permission/rate/network/API/parse failures match native behavior; the native fetch core is Linux-only. |
 | poe | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET balance/history pagination with daily points and model/type summaries; the native fetch twins are deleted. |

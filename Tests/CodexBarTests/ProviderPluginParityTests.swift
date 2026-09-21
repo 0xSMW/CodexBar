@@ -16,6 +16,7 @@ struct ProviderPluginParityTests {
             (.deepgram, "DEEPGRAM_API_KEY"),
             (.elevenlabs, "ELEVENLABS_API_KEY"),
             (.poe, "POE_API_KEY"),
+            (.llmproxy, "LLM_PROXY_API_KEY"),
             (.sub2api, "SUB2API_API_KEY"),
             (.synthetic, "SYNTHETIC_API_KEY"),
             (.xai, "XAI_MANAGEMENT_API_KEY"),
@@ -25,6 +26,9 @@ struct ProviderPluginParityTests {
             var environment = [key: "fixture-key"]
             if provider == .sub2api {
                 environment[Sub2APISettingsReader.baseURLEnvironmentKey] = "https://api.example.com"
+            }
+            if provider == .llmproxy {
+                environment[LLMProxySettingsReader.baseURLEnvironmentKey] = "https://proxy.example.com"
             }
             if provider == .xai {
                 environment[XAISettingsReader.teamIDEnvironmentKey] = "team-1234"
@@ -37,6 +41,28 @@ struct ProviderPluginParityTests {
             environment[ProviderPluginPrototype.environmentKey] = "1"
             let flagged = await descriptor.fetchPlan.pipeline.resolveStrategies(Self.context(environment: environment))
             #expect(flagged.map(\.id) == ["\(provider.rawValue).js"])
+        }
+    }
+
+    @Test(arguments: [UsageProvider.llmproxy])
+    func `configured proxy origins reject invalid overrides before fetching`(provider: UsageProvider) async throws {
+        let key = provider == .llmproxy ? "LLM_PROXY_API_KEY" : "LITELLM_API_KEY"
+        let base = provider == .llmproxy ? "LLM_PROXY_BASE_URL" : "LITELLM_BASE_URL"
+        for origin in ["http://public.example.com", "https://user:password@example.com", "file:///tmp/proxy"] {
+            let context = Self.context(environment: [key: "fixture-key", base: origin])
+            let strategy = try #require(await ProviderDescriptorRegistry.descriptor(for: provider)
+                .fetchPlan.pipeline.resolveStrategies(context).first)
+            #expect(await strategy.isAvailable(context))
+            do {
+                _ = try await strategy.fetch(context)
+                Issue.record("Expected invalid override")
+            } catch let error as LLMProxyUsageError {
+                #expect(provider == .llmproxy)
+                #expect(error.localizedDescription.contains(base))
+            } catch let error as LiteLLMUsageError {
+                #expect(provider == .litellm)
+                #expect(error.localizedDescription.contains(base))
+            }
         }
     }
 
