@@ -453,10 +453,10 @@ struct PredictivePaceWarningTests {
             observation: .stable(identity: "account-b")).source
         #expect(store.warningClaudeAccountDiscriminators(
             strategyKind: .oauth,
-            observation: .stable(identity: nil)).source == nil)
+            observation: .stable(identity: nil)).source == "claude-account:unknown")
         #expect(store.warningClaudeAccountDiscriminators(
             strategyKind: .cli,
-            observation: .changed).source == nil)
+            observation: .changed).source == "claude-account:unknown")
         #expect(store.warningClaudeAccountDiscriminators(
             strategyKind: .web,
             observation: .stable(identity: "account-a")).source == nil)
@@ -522,11 +522,33 @@ struct PredictivePaceWarningTests {
         #expect(store.warningClaudeAccountDiscriminators(
             strategyKind: .cli,
             observation: .stable(identity: nil),
-            oauthHistoryOwnerIdentifier: owner).source == nil)
+            oauthHistoryOwnerIdentifier: owner).source == "claude-account:unknown")
         #expect(store.warningClaudeAccountDiscriminators(
             strategyKind: .web,
             observation: .stable(identity: nil),
             oauthHistoryOwnerIdentifier: owner).source == nil)
+    }
+
+    @Test(arguments: [ProviderFetchKind.oauth, .cli])
+    func `unresolved Claude sources still emit predictive warnings once per risk episode`(
+        strategyKind: ProviderFetchKind)
+    {
+        let settings = self.makeSettings(
+            suiteName: "PredictivePaceWarningTests-unresolved", defaults: InMemoryUserDefaults())
+        settings.predictivePaceWarningNotificationsEnabled = true
+        let notifier = NotifierSpy()
+        let store = self.makeStore(settings: settings, notifier: notifier)
+        let now = Date(timeIntervalSince1970: 1_780_000_000)
+        for used in [80.0, 81, 20, 80] {
+            let scopes = store.warningClaudeAccountDiscriminators(strategyKind: strategyKind, observation: .changed)
+            #expect(scopes.source == "claude-account:unknown")
+            store.handlePredictivePaceWarningTransitions(
+                provider: .claude,
+                snapshot: self.snapshot(now: now, sessionUsed: used, weeklyUsed: 20, accountEmail: nil),
+                accountDiscriminatorOverride: scopes.source,
+                requiresKnownAccount: true)
+        }
+        #expect(notifier.predictivePosts.map(\.event.window) == [.session, .session])
     }
 
     @Test

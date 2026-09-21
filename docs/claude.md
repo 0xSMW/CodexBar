@@ -114,9 +114,12 @@ Admin API key setup:
   credential-owner/account bindings also preserve threshold history when active-account metadata temporarily
   disappears or OAuth falls back to CLI. Threshold warnings re-arm after quota recovers above a threshold and fire
   on a later downward crossing. Predictive warnings and quota-low hooks keep their existing source-scoped histories;
-  their baselines are not merged with threshold notification state. OAuth/CLI samples without a warning owner defer
-  threshold, predictive, and quota-low hook evaluation until ownership is known. Unverified credential owners remain
-  independent; changing such an owner can still produce an initial warning because account continuity cannot be established.
+  their baselines are not merged with threshold notification state. OAuth/CLI samples without a warning owner use
+  one stable unresolved-account scope, so credential rewrites preserve threshold crossings and predictive warnings
+  remain available. When a stable account identity or verified owner binding becomes available, its threshold scope
+  adopts the newest unresolved history and removes that fallback entry. The first sample in a new unresolved episode
+  can issue an initial warning. Unverified credential owners remain independent; changing such an owner can still
+  produce an initial warning because account continuity cannot be established.
 - Successful OAuth login enables Claude and preserves the selected usage source. With the default Auto source, OAuth
   remains preferred when readable, while CLI/Web fallback stays available when OAuth credentials are not usable.
 - Claude Code periodically rotates its `Claude Code-credentials` Keychain item and can replace the ACL grant that

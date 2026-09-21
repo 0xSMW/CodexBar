@@ -227,21 +227,27 @@ extension UsageStore {
         } else {
             nil
         }
-        let account = identity.flatMap { $0.isEmpty ? nil : "claude-account:\($0)" }
-        guard strategyKind == .oauth,
-              let owner = oauthHistoryOwnerIdentifier?
-                  .trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), !owner.isEmpty
-        else { return (account, account) }
-        let ownerKey = "claude-oauth-owner:\(owner)"
-        let source = account ?? ownerKey
-        guard let boundIdentity = Self.loadClaudeOAuthAccountUuidMap(from: self.settings.userDefaults)[owner] else {
-            return (source, source)
+        let unknownAccount = "claude-account:unknown"
+        var account = identity.flatMap { $0.isEmpty ? nil : "claude-account:\($0)" }
+        var source = account ?? unknownAccount
+        if strategyKind == .oauth,
+           let owner = oauthHistoryOwnerIdentifier?
+               .trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), !owner.isEmpty
+        {
+            let ownerKey = "claude-oauth-owner:\(owner)"
+            source = account ?? ownerKey
+            if let boundIdentity = Self.loadClaudeOAuthAccountUuidMap(from: self.settings.userDefaults)[owner] {
+                let boundAccount = "claude-account:\(boundIdentity)"
+                // A stable metadata observation alone cannot bind credentials to a different verified owner.
+                guard account == nil || account == boundAccount else { return (nil, nil) }
+                self.reconcileClaudeQuotaWarningOwner(ownerKey, account: boundAccount)
+                account = boundAccount
+            }
         }
-        let boundAccount = "claude-account:\(boundIdentity)"
-        // Reuse verified history ownership; a stable metadata observation alone cannot bind credentials.
-        guard account == nil || account == boundAccount else { return (nil, nil) }
-        self.reconcileClaudeQuotaWarningOwner(ownerKey, account: boundAccount)
-        return (boundAccount, source)
+        if let account, account != unknownAccount {
+            self.reconcileClaudeQuotaWarningOwner(unknownAccount, account: account)
+        }
+        return (account ?? source, source)
     }
 
     private func reconcileClaudeQuotaWarningOwner(_ owner: String, account: String) {

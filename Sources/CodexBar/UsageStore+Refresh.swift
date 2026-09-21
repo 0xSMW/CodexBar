@@ -1323,7 +1323,8 @@ extension UsageStore {
     }
 
     private func clearClaudeCredentialDerivedStateForCredentialSwap() {
-        // Provider-specific by design: retire Claude projections but preserve known accounts' warning episodes.
+        // Provider-specific by design: retire Claude projections but preserve scoped warning episodes, including
+        // unresolved accounts.
         self.widgetUsagePreservationBlockedProviders.insert(.claude)
         self.snapshots.removeValue(forKey: .claude)
         self.lastKnownResetSnapshots.removeValue(forKey: .claude)
