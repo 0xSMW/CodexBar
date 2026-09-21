@@ -82,5 +82,6 @@ enum ProviderImplementationManifest {
         HuggingFaceProviderImplementation(),
         PiProviderImplementation(),
         V0ProviderImplementation(),
+        TypeSafeProviderImplementation(),
     ]
 }

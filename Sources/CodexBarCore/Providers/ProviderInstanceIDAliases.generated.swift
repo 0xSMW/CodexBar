@@ -80,6 +80,7 @@ extension ProviderInstanceID {
     public static let huggingface = UsageProvider.huggingface.instanceID
     public static let pi = UsageProvider.pi.instanceID
     public static let v0 = UsageProvider.v0.instanceID
+    public static let typesafe = UsageProvider.typesafe.instanceID
 }
 
 // swiftformat:enable sortDeclarations
