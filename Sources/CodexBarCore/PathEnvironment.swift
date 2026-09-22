@@ -126,7 +126,12 @@ public enum BinaryLocator {
         fileManager: FileManager = .default,
         home: String = NSHomeDirectory()) -> String?
     {
-        self.resolveBinary(
+        // Background refreshes must not discover and launch another agy when
+        // an explicit override disables the configured CLI source.
+        if let override = env["ANTIGRAVITY_CLI_PATH"] {
+            return fileManager.isExecutableFile(atPath: override) ? override : nil
+        }
+        return self.resolveBinary(
             name: "agy",
             overrideKey: "ANTIGRAVITY_CLI_PATH",
             env: env,
@@ -414,17 +419,11 @@ public enum BinaryLocator {
         }
 
         // 6) Minimal fallback
-        let fallback = ["/usr/bin", "/bin", "/usr/sbin", "/sbin"]
-        if let pathHit = self.find(
+        return self.find(
             name,
-            in: fallback,
+            in: ["/usr/bin", "/bin", "/usr/sbin", "/sbin"],
             fileManager: fileManager,
             launchCandidateFilter: launchCandidateFilter)
-        {
-            return pathHit
-        }
-
-        return nil
     }
 
     private static func find(

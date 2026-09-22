@@ -17,9 +17,18 @@ signal and never enables or falls back to Antigravity automatically.
 
 To use the `agy` CLI source without keeping the desktop app open, install the CLI first
 (`brew install --cask antigravity-cli`; use `ANTIGRAVITY_CLI_PATH` when it is not on PATH), then
-run `agy` once and sign in. CodexBar keeps the signed-in `agy` local HTTPS server alive briefly
+run `agy` once and sign in. An explicit `ANTIGRAVITY_CLI_PATH` is authoritative: if it is empty,
+points to a missing file, or is not executable, CodexBar skips the CLI source instead of discovering another `agy`
+through PATH, installation directories, shell lookup, or aliases. Unset the variable to restore
+automatic discovery. Other providers retain their existing override behavior.
+CodexBar keeps the signed-in `agy` local HTTPS server alive briefly
 after each refresh and stops it when idle, or reuses a signed-in `agy` you already have running
 without taking ownership of that process.
+
+The menu bar also reuses an already-running, same-user `agy` that matches the resolved executable;
+this does not require the desktop app or a saved Google account in CodexBar. Selected accounts still
+require matching identity. CLI quota refresh and **Add Account...** are separate: starting a new OAuth
+login still needs the app's OAuth client or the explicit client environment overrides described below.
 
 `agy` 1.2.2 and later reject tokenless local requests with `401 missing CSRF token` on both ports and do not
 expose the generated token (1.1.28, 1.2.0, and 1.2.1 answer the same request with `200`). When the selected
