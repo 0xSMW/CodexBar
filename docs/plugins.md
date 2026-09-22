@@ -305,3 +305,8 @@ cache and browser import, and Off fails before either is accessed.
 Call `ctx.browser.rejectCookie(domain)` after the server rejects a session. The host checks the declared domain and
 evicts only the cached entry observed by that fetch (each domain is pinned for the fetch lifetime); a newer session and other domains remain intact. Manual headers
 are never erased. User plugins have no persistent cookie cache, so rejection is a validated no-op for them.
+
+## GitKraken AI bundled provider
+
+[GitKraken AI](gitkraken.md) uses bearer GET against its declared first-party API origin, with optional
+organization scope and generic weekly windows/details. Swift supplies only registration and config projection.
