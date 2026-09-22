@@ -56,10 +56,23 @@ struct KimiTokenAccountTests {
             #expect(KimiCookieHeader.resolveCookieOverride(context: context)?.token ==
                 (index == 0 ? "eyJ.first.fixture" : "second"))
             #expect(mode == .web)
+            #expect(!CodexBarCLI.sourceModeRequiresWebSupport(
+                mode, provider: .kimi, environment: environment, settings: snapshot))
             let strategies = await KimiProviderDescriptor.descriptor.fetchPlan.pipeline.resolveStrategies(context)
             #expect(strategies.map(\.id) == ["kimi.web"])
         }
         #expect(cli.effectiveSourceMode(base: source, provider: .kimi, account: nil) == source)
+    }
+
+    @Test(arguments: [ProviderSourceMode.auto, .web], [ProviderCookieSource.auto, .off])
+    func `automatic Kimi cookies still require browser support`(
+        source: ProviderSourceMode, cookies: ProviderCookieSource)
+    {
+        #expect(CodexBarCLI.sourceModeRequiresWebSupport(
+            source,
+            provider: .kimi,
+            environment: [:],
+            settings: .make(kimi: .init(cookieSource: cookies, manualCookieHeader: nil))))
     }
 
     @Test(arguments: KimiRegion.allCases)

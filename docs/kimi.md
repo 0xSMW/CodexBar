@@ -134,7 +134,8 @@ An explicit cookie environment variable can still supply the web token.
 In Settings → Providers → Kimi, use **Kimi accounts** to add a label and either the `kimi-auth`
 token value or a Cookie header for each account. Select an account in the existing account list or
 use the shared multi-account display controls. The CLI supports `--account <label>`,
-`--account-index <index>`, and `--all-accounts` for the same saved accounts.
+`--account-index <index>`, and `--all-accounts` for the same saved accounts, including on Linux.
+Manual account cookies use HTTP directly and do not require browser-cookie import support.
 
 Saved accounts use the web usage source with their own manual cookie, even when **Usage source** is
 Auto or API key and **Cookie source** is Automatic or Off. These overrides apply only to the fetch;

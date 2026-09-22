@@ -131,6 +131,7 @@ public enum KimiProviderDescriptor {
                 aliases: ["kimi-ai"],
                 versionDetector: { _ in ProviderVersionDetector.kimiVersion() },
                 browserSupportExemption: { sourceMode, environment, settings in
+                    if settings?.kimi?.cookieSource == .manual { return true }
                     guard sourceMode == .auto else { return false }
                     return environment.map { environment in
                         ProviderTokenResolver.token(for: .kimi, kind: .secondary, environment: environment) != nil ||
