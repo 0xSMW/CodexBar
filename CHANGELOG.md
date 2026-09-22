@@ -2,6 +2,11 @@
 
 ## 0.64.2 — Unreleased
 
+### Added
+
+- Omarchy: identify providers with theme-tinted logos in the compact bar, retaining text fallback for missing logos and older backends (#3795). Thanks @jsonMartin!
+- GitKraken AI: track personal weekly credits and organization pool sharing through a bundled provider plugin (#3842). Thanks @RyanTheTechMan!
+
 ### Fixed
 
 - Antigravity: explain failed live fetches when falling back to offline history, keep diagnostics free of raw process and account details, and show the active source in settings instead of misleading detection warnings (#3865, fixes #3861). Thanks @vincent-peng!
@@ -19,12 +24,6 @@
 - Codex: confirm unused weekly resets across normal refresh intervals when the provider advances the reset date with each zero-use observation, preventing stale pre-reset usage from persisting (#3248). Thanks @kcharlan!
 - Codex costs: read local Priority/Fast trace evidence on Linux so supported usage retains Priority pricing, including after refreshing existing history (#3820). Thanks @A-l-an!
 - CLI: keep `last30DaysTokens` and `last30DaysCostUSD` scoped to 30 local calendar days when requesting longer cost histories, while retaining full-window totals (#3824). Thanks @tillstriegel!
-
-### Added
-
-- Omarchy: identify providers with theme-tinted logos in the compact bar, retaining text fallback for missing logos and older backends (#3795). Thanks @jsonMartin!
-
-- GitKraken AI: track personal weekly credits and organization pool sharing through a bundled provider plugin (#3842). Thanks @RyanTheTechMan!
 
 ## 0.64.1 — 2026-09-22
 
