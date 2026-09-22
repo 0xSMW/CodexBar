@@ -83,7 +83,7 @@ usage is a separate [OpenAI provider](openai.md), not Codex subscription quota.
   import only runs when the cached cookie fails.
 - OpenCode Go unscoped Auto mode tries daily cost history derived from local `opencode-go` assistant costs first,
   overlays authoritative API windows when an API key is configured, then falls back through the API and legacy web
-  sources when local history is unavailable. Auto stays web-first when a token account, manual cookie, or workspace
+  sources when local history is unavailable. Auto stays web-first when a Cookie token account, manual cookie, or workspace
   override scopes the request, because local history is device-wide.
 - The local monthly window is an estimate anchored at the earliest local row and can drift from the real billing
   cycle. The local strategy prefers API-reported rolling/weekly/monthly percentages and reset timestamps. When no API
