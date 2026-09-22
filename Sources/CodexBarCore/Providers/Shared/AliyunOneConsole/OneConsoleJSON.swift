@@ -110,6 +110,31 @@ public enum OneConsoleJSON {
         }
     }
 
+    /// Alibaba checks exact keys in caller order at each dictionary before descending.
+    static func findFirstValue<T>(
+        forExactKeys keys: [String],
+        in value: Any,
+        descendingIntoArrays: Bool = true,
+        transform: (Any?) -> T?) -> T?
+    {
+        self.firstMatch(in: value, descendingIntoArrays: descendingIntoArrays) { dictionary in
+            self.firstValue(forKeys: keys, in: dictionary, transform: transform)
+        }
+    }
+
+    static func firstValue<T>(
+        forKeys keys: [String],
+        in dictionary: [String: Any],
+        transform: (Any?) -> T?) -> T?
+    {
+        for key in keys {
+            if let value = transform(dictionary[key]) {
+                return value
+            }
+        }
+        return nil
+    }
+
     /// Searches each dictionary before its descendants, preserving container iteration order.
     static func firstMatch<T>(
         in value: Any,
