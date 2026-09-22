@@ -11,10 +11,17 @@ import Foundation
 public struct ClaudeSwapAccountList: Equatable, Sendable {
     public let activeAccountNumber: Int?
     public let accounts: [ClaudeSwapAccountRow]
+    /// Additive adapter capability. Defaults to true for claude-swap schema-v1 compatibility.
+    public let supportsAccountSwitching: Bool
 
-    public init(activeAccountNumber: Int?, accounts: [ClaudeSwapAccountRow]) {
+    public init(
+        activeAccountNumber: Int?,
+        accounts: [ClaudeSwapAccountRow],
+        supportsAccountSwitching: Bool = true)
+    {
         self.activeAccountNumber = activeAccountNumber
         self.accounts = accounts
+        self.supportsAccountSwitching = supportsAccountSwitching
     }
 }
 
@@ -183,6 +190,12 @@ public enum ClaudeSwapListParser {
         guard let rawActiveAccountNumber = object["activeAccountNumber"] else {
             throw ClaudeSwapListParserError.malformedShape("missing activeAccountNumber")
         }
+        let rawSupportsAccountSwitching = object["supportsAccountSwitching"] ?? true
+        guard let supportsAccountSwitching = rawSupportsAccountSwitching as? NSNumber,
+              CFGetTypeID(supportsAccountSwitching) == CFBooleanGetTypeID()
+        else {
+            throw ClaudeSwapListParserError.malformedShape("supportsAccountSwitching is not a boolean")
+        }
         let activeAccountNumber: Int? = switch rawActiveAccountNumber {
         case is NSNull: nil
         case let number as Int where number > 0: number
@@ -204,7 +217,10 @@ public enum ClaudeSwapListParser {
         guard activeSlots == (activeAccountNumber.map { [$0] } ?? []) else {
             throw ClaudeSwapListParserError.malformedShape("active account fields disagree")
         }
-        return ClaudeSwapAccountList(activeAccountNumber: activeAccountNumber, accounts: accounts)
+        return ClaudeSwapAccountList(
+            activeAccountNumber: activeAccountNumber,
+            accounts: accounts,
+            supportsAccountSwitching: supportsAccountSwitching.boolValue)
     }
 
     private static func parseRow(_ row: [String: Any]) throws -> ClaudeSwapAccountRow {
@@ -298,17 +314,11 @@ public enum ClaudeSwapListParser {
             guard let rawName = row["name"] as? String else { return nil }
             let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { return nil }
-            guard let pct = self.finiteDouble(row["pct"]) else { return nil }
-
-            var resetsAt: Date?
-            if let rawResetsAt = row["resetsAt"] {
-                guard let text = rawResetsAt as? String, let date = ISO8601DateParser.parse(text) else { return nil }
-                resetsAt = date
-            }
+            guard let window = try? self.parseWindow(row, slot: 0, name: "scoped") else { return nil }
             return ClaudeSwapScopedUsageWindow(
                 name: name,
-                usedPercent: min(max(pct, 0), 100),
-                resetsAt: resetsAt)
+                usedPercent: window.usedPercent,
+                resetsAt: window.resetsAt)
         }
     }
 

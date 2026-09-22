@@ -44,7 +44,7 @@ public enum ClaudeSwapAccountProjection {
                 displayLabel: self.decoratedLabel(label, row: row),
                 accountEmail: row.email.isEmpty ? nil : row.email,
                 isActive: row.isActive,
-                canActivate: self.canActivate(row),
+                canActivate: list.supportsAccountSwitching && self.canActivate(row),
                 usesLastKnownUsage: projected.usesLastKnownUsage,
                 snapshot: snapshot,
                 error: self.errorText(for: row, usage: projected, now: now),
@@ -150,7 +150,13 @@ public enum ClaudeSwapAccountProjection {
     {
         switch row.usageStatus {
         case .ok, .unavailable:
-            if let projected = self.projectedUsageSnapshot(for: row, now: now) {
+            // claude-swap serves a per-account cache, so an `ok` row can carry a
+            // measurement fetched minutes ago. Prefer its own fetch time over `now`.
+            if let projected = self.snapshot(
+                from: row.measurement,
+                row: row,
+                updatedAt: row.usageFetchedAt ?? now)
+            {
                 if row.usageStatus == .ok {
                     return .live(projected)
                 }
@@ -238,15 +244,6 @@ public enum ClaudeSwapAccountProjection {
         return window
     }
 
-    private static func projectedUsageSnapshot(for row: ClaudeSwapAccountRow, now: Date) -> UsageSnapshot? {
-        // claude-swap serves a per-account cache, so an `ok` row can carry a
-        // measurement fetched minutes ago. Prefer its own fetch time over `now`.
-        self.snapshot(
-            from: row.measurement,
-            row: row,
-            updatedAt: row.usageFetchedAt ?? now)
-    }
-
     private static func snapshot(
         from measurement: ClaudeSwapUsageMeasurement,
         row: ClaudeSwapAccountRow,
@@ -267,7 +264,15 @@ public enum ClaudeSwapAccountProjection {
                 resetDescription: nil)
         }
         let scoped = self.scopedRateWindows(measurement.scoped)
-        let providerCost = self.providerCost(from: measurement.spend, updatedAt: updatedAt)
+        // Pay-as-you-go spend uses the shared cost row beside the 5h/7d bars.
+        let providerCost = measurement.spend.map { spend in
+            ProviderCostSnapshot(
+                used: spend.used,
+                limit: spend.limit,
+                currencyCode: spend.currencyCode,
+                resetsAt: spend.resetsAt,
+                updatedAt: updatedAt)
+        }
         guard primary != nil || secondary != nil || !scoped.isEmpty || providerCost != nil else { return nil }
         return UsageSnapshot(
             primary: primary,
@@ -276,21 +281,6 @@ public enum ClaudeSwapAccountProjection {
             providerCost: providerCost,
             updatedAt: updatedAt,
             identity: self.identitySnapshot(for: row))
-    }
-
-    /// Pay-as-you-go spend for accounts that have it. claude-swap shows this
-    /// beside the 5h/7d bars; CodexBar renders it through the shared cost row.
-    private static func providerCost(
-        from spend: ClaudeSwapSpendWindow?,
-        updatedAt: Date) -> ProviderCostSnapshot?
-    {
-        guard let spend else { return nil }
-        return ProviderCostSnapshot(
-            used: spend.used,
-            limit: spend.limit,
-            currencyCode: spend.currencyCode,
-            resetsAt: spend.resetsAt,
-            updatedAt: updatedAt)
     }
 
     private static func identitySnapshot(for row: ClaudeSwapAccountRow) -> ProviderIdentitySnapshot {

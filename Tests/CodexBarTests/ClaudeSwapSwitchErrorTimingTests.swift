@@ -5,8 +5,8 @@ import Testing
 
 @MainActor
 struct ClaudeSwapSwitchErrorTimingTests {
-    @Test
-    func `active foreign credential repair uses the existing exact slot command`() async throws {
+    @Test(arguments: [true, false])
+    func `active foreign credential repair respects adapter capability`(supportsAccountSwitching: Bool) async throws {
         let fixture = try CodexWorkspacesNavigationFixture(userDefaults: InMemoryUserDefaults())
         defer { fixture.cleanup() }
         let executable = fixture.files.root.appendingPathComponent("cswap-repair")
@@ -39,15 +39,22 @@ struct ClaudeSwapSwitchErrorTimingTests {
                 isActive: true,
                 usageStatus: .foreignCredential,
                 fiveHour: nil,
-                sevenDay: nil)])).first)
+                sevenDay: nil)],
+            supportsAccountSwitching: supportsAccountSwitching)).first)
         fixture.store.claudeSwapAccountSnapshots = [account]
-        #expect(account.canActivate)
+        #expect(account.canActivate == supportsAccountSwitching)
         #expect(ClaudeSwapAccountMenuDisplay.actionLabel(
             for: account,
             switchingAccountID: nil,
             switchInFlight: false,
-            switchPhase: nil) == L("Re-authenticate"))
+            switchPhase: nil) == (supportsAccountSwitching ? L("Re-authenticate") : L("Active")))
         fixture.store.switchClaudeSwapAccount(account.id)
+        if !supportsAccountSwitching {
+            #expect(fixture.store.claudeSwapTransientState.task == nil)
+            #expect(!gate.entered)
+            #expect(!FileManager.default.fileExists(atPath: executable.path + ".calls"))
+            return
+        }
         let task = try #require(fixture.store.claudeSwapTransientState.task)
         await task.value
         #expect(gate.entered)

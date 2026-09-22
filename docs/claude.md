@@ -241,6 +241,9 @@ The accepted multi-account design in
   Fable) plus its reset time — not "Usage fetch failed." A first refresh that is already `unavailable` with no
   retained windows says usage is unavailable, without assuming why the source could not fetch it. Active rows are marked `[active]`; no claude-swap row infers
   a plan badge.
+- Read-only adapters may set top-level `supportsAccountSwitching: false` in their schema-v1 list response. Usage,
+  account details, and active markers remain visible, while switching and re-authentication actions are suppressed.
+  Omitting the capability preserves existing switching behavior; a present value must be a JSON boolean.
 - Switching: an inactive account with usable source credentials shows “Switch Account…”. Clicking it runs exactly
   `cswap --switch-to <slot> --json`, validates the versioned result and requested slot, then refreshes both ambient
   Claude usage and every claude-swap account card. Switches are serialized; no automatic switching occurs. While
