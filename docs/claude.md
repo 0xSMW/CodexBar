@@ -285,7 +285,8 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   1) Start CLI with `--allowed-tools ""` (no tools).
   2) Auto-respond to first-run prompts (trust files, workspace, telemetry).
   3) Send `/usage`, wait for rendered panel; send Enter retries if needed.
-  4) Optionally send `/status` to extract identity fields.
+  4) Dismiss the open panel with Escape before reusing the session for `/status` identity or the next `/usage` refresh.
+  5) Optionally send `/status` to extract identity fields.
 - Parsing (`ClaudeStatusProbe`):
   - Strips ANSI, locates "Current session" + "Current week" headers.
   - Extracts percent left/used and reset text near those headers.
