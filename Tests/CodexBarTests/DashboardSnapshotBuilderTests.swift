@@ -740,7 +740,8 @@ struct DashboardSnapshotBuilderTests {
                 ],
                 updatedAt: now),
             error: nil)
-        #expect(cost.last30DaysCostUSD == 12)
+        #expect(cost.last30DaysCostUSD == 5)
+        #expect(cost.totals?.totalCostUSD == 12)
         #expect(cost.incompleteRequestCount == 1)
         let snapshot = DashboardSnapshotBuilder.makeSnapshot(
             usagePayloads: [self.identityPayload(email: "fixture@example.test")],
