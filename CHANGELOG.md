@@ -18,7 +18,7 @@
 - Antigravity: retain account-scoped quota observations without a reset duration, including replenishment within an hour, and avoid assuming a five-hour pace (#3619). Thanks @hhh2210!
 - Antigravity: honor unusable `ANTIGRAVITY_CLI_PATH` overrides instead of discovering another CLI that could start interactive login during background refresh (#3689). Thanks @hhh2210!
 - Claude: respect read-only account adapters, preserving usage and account details while hiding switching and re-authentication actions (#3658). Thanks @benedictfrancis!
-- OpenCode Go: use per-account API keys for multi-account usage, preserving Cookie accounts and isolating selected credentials from provider-wide keys (#3841).
+- OpenCode Go: use per-account API keys for multi-account usage, preserving Cookie accounts and saved cookie-source preferences while isolating selected credentials from provider-wide keys (#3841).
 - Claude: include claude-swap session homes in local Usage & Spend totals without counting shared or copied history twice (#2954). Thanks @Newarr!
 - LiteLLM: show clearly scoped month-to-date spend when management routes are disabled, without inventing budgets or account identity (#3834). Thanks @xiaoxianma!
 - Codex: confirm unused weekly resets across normal refresh intervals when the provider advances the reset date with each zero-use observation, preventing stale pre-reset usage from persisting (#3248). Thanks @kcharlan!

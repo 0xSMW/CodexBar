@@ -29,6 +29,9 @@ struct OpenCodeGoProviderImplementation: ProviderImplementation {
 
     @MainActor
     func applyTokenAccountCookieSource(settings: SettingsStore) {
+        guard let account = settings.selectedTokenAccount(for: .opencodego),
+              TokenAccountSupportCatalog.envOverride(for: .opencodego, token: account.token) == nil
+        else { return }
         if settings.opencodegoCookieSource != .manual {
             settings.opencodegoCookieSource = .manual
         }

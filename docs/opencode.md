@@ -62,6 +62,9 @@ usage is a separate [OpenAI provider](openai.md), not Codex subscription quota.
   `=`, or `:`; surrounding quotes and whitespace are removed. Selected accounts override the provider-wide API
   key and `OPENCODE_API_KEY`; selecting a Cookie account clears those API credentials for that fetch. Existing
   single-key setups without token accounts are unchanged.
+- Adding, selecting, editing, or removing API key accounts preserves the saved cookie source, so Automatic browser
+  imports remain available after the final API key account is removed. Cookie accounts select Manual; API key
+  accounts also preserve an existing Manual choice.
 - Legacy responses are `text/javascript` with serialized objects; Console responses are JSON.
 - Missing workspace ID or rolling usage fields should raise parse errors; omitted weekly usage stays absent.
 - OpenCode web Auto imports Chrome first, then Dia when their cookie stores exist; Keychain preflight stays scoped
