@@ -46,6 +46,11 @@ struct KimiProviderImplementation: ProviderImplementation {
     }
 
     @MainActor
+    func tokenAccountsVisibility(context _: ProviderSettingsContext, support _: TokenAccountSupport) -> Bool {
+        true
+    }
+
+    @MainActor
     func settingsPickers(context: ProviderSettingsContext) -> [ProviderSettingsPickerDescriptor] {
         let usageBinding = context.rawValueBinding(\.kimiUsageDataSource, fallback: .auto)
         let usageOptions = [

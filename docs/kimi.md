@@ -23,6 +23,7 @@ Code subscription credentials.
 - Enriches Code API/CLI usage with the monthly membership pool when a web session is available
 - Automatic menu-bar usage prioritizes an exhausted monthly Total usage pool over reset Code windows; explicit window selections remain authoritative
 - API-key, Kimi Code CLI, automatic cookie, and manual cookie authentication methods
+- Multiple labeled web accounts through the shared token-account editor
 - Automatic refresh countdown
 
 ## Setup
@@ -127,6 +128,23 @@ For advanced users or when automatic import fails:
 
 Manual mode never imports Desktop or browser credentials, including when the token field is empty or invalid.
 An explicit cookie environment variable can still supply the web token.
+
+### Multiple Web Accounts
+
+In Settings → Providers → Kimi, use **Kimi accounts** to add a label and either the `kimi-auth`
+token value or a Cookie header for each account. Select an account in the existing account list or
+use the shared multi-account display controls. The CLI supports `--account <label>`,
+`--account-index <index>`, and `--all-accounts` for the same saved accounts.
+
+Saved accounts use the web usage source with their own manual cookie, even when **Usage source** is
+Auto or API key and **Cookie source** is Automatic or Off. These overrides apply only to the fetch;
+your saved source preferences and single-account credentials are preserved. Removing the final account
+restores those preferences. Invalid or expired account cookies fail for that account without importing
+another browser/Desktop session or falling back to an environment credential.
+
+All saved Kimi accounts use the provider's selected **Region**. Add accounts issued for that region;
+the account list does not support mixing China and International credentials. Accounts and labels use
+the existing `providers[].tokenAccounts` configuration, with no separate Kimi credential store.
 
 ### Cookie Environment Variable
 

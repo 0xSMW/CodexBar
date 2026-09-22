@@ -20,6 +20,20 @@ public enum KimiProviderDescriptor {
             guard let token else { return nil }
             return ProviderTokenResolution(token: token, source: .environment)
         },
+        tokenAccountSupport: TokenAccountSupport(
+            title: "Kimi accounts",
+            subtitle: "Store labeled web accounts for the selected region. Each uses its own cookie.",
+            placeholder: "kimi-auth token or Cookie: …",
+            injection: .cookieHeader,
+            requiresManualCookieSource: true,
+            cookieName: "kimi-auth",
+            environmentScrubber: { environment, _ in
+                for key in ["KIMI_AUTH_TOKEN", "kimi_auth_token", "KIMI_MANUAL_COOKIE"]
+                    + KimiSettingsReader.apiKeyEnvironmentKeys
+                {
+                    environment.removeValue(forKey: key)
+                }
+            }),
         authDetector: { environment, _ in
             var modes: [String] = []
             if KimiSettingsReader.apiKey(environment: environment) != nil {
@@ -32,7 +46,8 @@ public enum KimiProviderDescriptor {
         },
         configValidator: ProviderCredentialAdapter.regionValidator(
             displayName: "Kimi", isValid: { KimiRegion(rawValue: $0) != nil }),
-        missingCredentialMessage: { _ in KimiAPIError.missingToken.errorDescription })
+        missingCredentialMessage: { _ in KimiAPIError.missingToken.errorDescription },
+        selectedAccountSourceModeResolver: { base, account, _ in account == nil ? base : .web })
 
     static func makeDescriptor() -> ProviderDescriptor {
         ProviderDescriptor(
