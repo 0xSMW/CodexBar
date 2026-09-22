@@ -59,6 +59,7 @@ enum ProviderImplementationManifest {
         GroqProviderImplementation(),
         LLMProxyProviderImplementation(),
         LiteLLMProviderImplementation(),
+        BifrostProviderImplementation(),
         DeepgramProviderImplementation(),
         PoeProviderImplementation(),
         ChutesProviderImplementation(),

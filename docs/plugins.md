@@ -259,7 +259,7 @@ change to instance ID, normalized origins, auth mode/header, secure setting name
 invalidates approval before the next request. There is no bulk approval or import path.
 
 Bundled first-party plugins do not use the interactive plugin-approval flow. The private-network HTTP policy is therefore
-accepted for bundled code only for LLM Proxy and LiteLLM, whose existing Swift providers already permit exactly those
+accepted for bundled code only for LLM Proxy, LiteLLM, and Bifrost, whose configured gateways permit exactly those
 targets. Other bundled providers fail manifest validation if they request that policy.
 
 `codexbar plugins list` shows locally discovered plugins. `codexbar plugins fetch <id>` displays the same approval

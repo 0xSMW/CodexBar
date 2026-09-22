@@ -7,7 +7,7 @@ read_when:
 
 # Provider plugin conversion matrix
 
-This matrix evaluates all 68 providers in the current capability audit against the prototype documented in
+This matrix evaluates 69 providers in the current capability audit against the prototype documented in
 [`plugin-prototype.md`](plugin-prototype.md). Each provider has one primary blocker.
 
 `convertible-now` means the canonical first-party flow fits the current HTTP, origin-policy, authentication, and generic
@@ -28,14 +28,14 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 15 |
+| `cut-over` | 16 |
 | `converted` | 5 |
 | `convertible-now` | 5 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 15 |
 | `needs-pty/webview/native` | 8 |
 | `needs-host-extension` | 1 |
-| **Total** | **68** |
+| **Total** | **69** |
 
 ## Matrix
 
@@ -95,6 +95,7 @@ weakening the plugin network policy.
 | groq | `needs-cookie-import` | No | Skipped: Stytch session exchange and console history remain a multi-step auth flow. |
 | llmproxy | `cut-over` | Yes | Cut over on both engines: configured HTTPS/private-network HTTP, quota-group variants, aggregate totals, provider summaries, and classified failures; the native fetch twin is deleted. |
 | litellm | `cut-over` | Yes | Cut over on both engines: configured HTTPS/private-network HTTP, key-bound user/team lookups, budgets, spend-only and identity-only snapshots; the native fetch twin is deleted. |
+| bifrost | `cut-over` | Yes | Bundled TypeScript on both engines: configured HTTPS/private-network HTTP, virtual-key header auth, budget overrides, reset-only rate limits, and numeric model/budget details. Swift owns registration and settings only. |
 | deepgram | `cut-over` | Yes | Cut over on JavaScriptCore: project discovery, aggregation, configured origins, numeric validation, and classified auth/permission/rate/network/API/parse failures match native behavior; the native fetch core is Linux-only. |
 | poe | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET balance/history pagination with daily points and model/type summaries; the native fetch twins are deleted. |
 | chutes | `convertible-now` | No | Tolerant no-usage payloads can return an API identity without inventing quota data. |
