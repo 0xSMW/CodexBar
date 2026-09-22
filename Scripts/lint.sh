@@ -69,6 +69,10 @@ check_release_checksum() {
   "${ROOT_DIR}/Scripts/test_release_checksum.sh"
 }
 
+check_release_assets() {
+  python3 "${ROOT_DIR}/Scripts/test_check_release_assets.py"
+}
+
 check_sparkle_signing_paths() {
   "${ROOT_DIR}/Scripts/test_sparkle_signing_paths.sh"
 }
@@ -138,6 +142,7 @@ run_portable_checks() {
   check_packaged_app_launch
   check_release_dsym_paths
   check_release_checksum
+  check_release_assets
   check_sparkle_signing_paths
   check_swift_static_sdk_installer
   check_mimo_usage_script

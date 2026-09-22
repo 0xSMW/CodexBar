@@ -110,7 +110,7 @@ Each Homebrew handoff uses the release tag, workflow run ID, and run attempt as 
 - [ ] `./Scripts/sign-and-notarize.sh`
 - [ ] Generate Sparkle appcast via `Scripts/release.sh` or `Scripts/make_appcast.sh`; use `SPARKLE_PRIVATE_KEY_FILE` only if overriding Keychain signing.
   - Upload the dSYM archive alongside the app zip on the GitHub release; the release script now automates this and will fail if it’s missing.
-  - After publishing the release and the Release CLI workflow finishes, run `Scripts/check-release-assets.sh <tag>` to confirm the app zip, dSYM zip, CLI tarballs/checksums and Linux desktop tarballs/checksums are present on GitHub.
+  - After publishing the release and the Release CLI workflow finishes, run `Scripts/check-release-assets.sh <tag>` on macOS to confirm the app zip, dSYM zip, CLI tarballs/checksums and Linux desktop tarballs/checksums are present on GitHub. It also downloads the app zip, extracts it with `ditto`, and strictly verifies the app and nested code signatures across all architectures, requiring CodexBar's bundle ID and Developer ID team `Y5PE65HELJ`, without launching the app or reading signing keys; any failed download, extraction, or signature check fails the command.
   - Generate the appcast + HTML release notes: `./Scripts/make_appcast.sh CodexBar-macos-universal-<ver>.zip https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml`
   - Beta channel: prefix the command with `SPARKLE_CHANNEL=beta` to tag the entry.
   - Verify the enclosure signature + size: `./Scripts/verify_appcast.sh <ver>`
