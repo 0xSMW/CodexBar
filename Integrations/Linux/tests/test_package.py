@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from pathlib import Path
@@ -40,7 +41,13 @@ class PackageTests(unittest.TestCase):
             self.assertTrue(any(re.fullmatch(pattern, archive_path.name) for pattern in patterns))
             self.assertTrue(any(re.fullmatch(pattern, checksum.name) for pattern in patterns))
             with tarfile.open(archive_path) as archive:
-                self.assertEqual(len(archive.getmembers()), 7)
+                names = {name.split('/', 1)[1] for name in archive.getnames()}
+                fixed = {'bin/codexbar-linux', 'README.md', 'LICENSE', 'Integrations/Linux/install.py',
+                         'Integrations/Linux/icon.svg', 'Integrations/Omarchy/Panel.qml',
+                         'Integrations/Omarchy/manifest.json'}
+                logos = sorted((REPO / 'Sources/CodexBar/Resources').glob('ProviderIcon-*.svg'))
+                self.assertTrue(logos)
+                self.assertEqual(names, fixed | {f'Integrations/Omarchy/icons/{logo.name}' for logo in logos})
                 self.assertFalse(any('linux.json' in name for name in archive.getnames()))
                 archive.extractall(root / 'unpacked', filter='data')
             package = next((root / 'unpacked').iterdir())
@@ -50,6 +57,15 @@ class PackageTests(unittest.TestCase):
             subprocess.run(['python3', str(package / 'Integrations/Linux/install.py'), '--cli', '/usr/bin/true'],
                            env=env, check=True, capture_output=True)
             self.assertTrue((home / '.local/bin/codexbar-linux').is_file())
+            shell = home / 'config/omarchy/shell.json'
+            shell.parent.mkdir(parents=True)
+            shell.write_text(json.dumps({'bar': {'layout': {'right': []}}}))
+            for _ in range(2):
+                subprocess.run(['python3', str(package / 'Integrations/Linux/install.py'),
+                                '--cli', '/usr/bin/true', '--omarchy'], env=env, check=True, capture_output=True)
+                installed = shell.parent / 'plugins/steipete.codexbar/icons'
+                for logo in logos:
+                    self.assertEqual((installed / logo.name).read_bytes(), logo.read_bytes())
 
     def test_invalid_version_does_not_create_an_archive(self):
         with tempfile.TemporaryDirectory() as temporary:

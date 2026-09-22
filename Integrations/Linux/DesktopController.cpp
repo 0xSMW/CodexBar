@@ -41,7 +41,7 @@ void stop(QProcess &process) {
 }
 
 DesktopController::DesktopController(const QString &cliOverride, QObject *parent) : QObject(parent) {
-    m_usageModel = module(m_engine, ":/Shared/Usage.js", "rows:rows, costs:costs, command:command, summary:summary, resetText:resetText");
+    m_usageModel = module(m_engine, ":/Shared/Usage.js", "rows:rows, costs:costs, command:command, summary:summary, barSegments:barSegments, resetText:resetText");
     m_noticeModel = module(m_engine, ":/Shared/Notifications.js", "transition:transition, summary:summary");
     m_noticeState = m_engine.newObject();
     loadSettings(cliOverride);
@@ -157,7 +157,7 @@ bool DesktopController::saveSettings(const QVariantMap &changes) {
         if (m_usage.state() == QProcess::NotRunning) { m_usageBatch = false; m_pendingProviders.clear(); }
         m_entries.clear(); m_spending.clear(); m_updated = 0; m_costUpdated = 0;
     }
-    m_summary = call(m_usageModel, "summary", {m_engine.toScriptValue(m_entries), m_settings.value("quotaDisplay").toString()}).toString();
+    updateLabels();
     m_noticeState = m_engine.newObject();
     m_poll.start(m_settings.value("refreshSeconds").toInt() * 1000);
     emit settingsChanged(); emit changed(); if (queryChanged) refresh();
@@ -241,8 +241,7 @@ void DesktopController::probe(QProcess &process, const QStringList &command, boo
             }
             m_usageBatch = false;
             m_entries = m_batchEntries;
-            const auto rows = m_engine.toScriptValue(m_entries);
-            m_summary = call(m_usageModel, "summary", {rows, m_settings.value("quotaDisplay").toString()}).toString();
+            updateLabels();
             if (m_batchFailed) {
                 m_error = "Some usage could not be refreshed. Previous results may be out of date.";
                 m_noticeState = m_engine.newObject();
@@ -293,6 +292,13 @@ void DesktopController::showWindow(const QString &page) {
     emit windowRequested(page);
 }
 
+void DesktopController::updateLabels() {
+    const auto rows = m_engine.toScriptValue(m_entries);
+    const auto mode = m_settings.value("quotaDisplay").toString();
+    m_summary = call(m_usageModel, "summary", {rows, mode}).toString();
+    m_barEntries = QJsonArray::fromVariantList(call(m_usageModel, "barSegments", {rows, mode}).toVariant().toList());
+}
+
 QJsonObject DesktopController::snapshot() const {
     static const auto extraKeySalt = QUuid::createUuid().toRfc4122();
     QJsonArray compact;
@@ -321,7 +327,7 @@ QJsonObject DesktopController::snapshot() const {
             {"windows", windows},
             {"error", row.value("error").toString()}});
     }
-    return {{"schemaVersion", 1}, {"pid", QCoreApplication::applicationPid()}, {"summary", m_summary},
+    return {{"schemaVersion", 1}, {"pid", QCoreApplication::applicationPid()}, {"summary", m_summary}, {"barEntries", m_barEntries},
         {"entries", compact}, {"quotaDisplay", m_settings.value("quotaDisplay").toString()}, {"busy", busy()}, {"stale", stale()}, {"error", m_error},
         {"updated", updated()}, {"costBusy", costBusy()}, {"costProviders", m_spending.size()}, {"costError", m_costError}};
 }

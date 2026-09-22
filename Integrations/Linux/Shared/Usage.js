@@ -160,12 +160,19 @@ function costs(text, today) {
     });
 }
 
+// Share the same compact labels and display limit between text and logo adapters.
+function barSegments(entries, mode) {
+    return entries.slice(0, 2).map(function(entry) {
+        return {provider: entry.provider,
+            tag: entry.provider === "codex" ? "CX" : entry.provider === "claude" ? "CL" : entry.provider,
+            text: entry.windows.length ? quotaValue(entry.windows[0].remaining, mode) + "%" : "—"};
+    });
+}
+
 function summary(entries, mode) {
-    var label = entries.slice(0, 2).map(function(entry) {
-        var label = entry.provider === "codex" ? "CX" : entry.provider === "claude" ? "CL" : entry.provider;
-        return label + " " + (entry.windows.length ? quotaValue(entry.windows[0].remaining, mode) + "%" : "—");
-    }).join("  ·  ");
-    return label + (entries.length > 2 ? "  +" + (entries.length - 2) : "");
+    var shown = barSegments(entries, mode);
+    var label = shown.map(function(entry) { return entry.tag + " " + entry.text; }).join("  ·  ");
+    return label + (entries.length > shown.length ? "  +" + (entries.length - shown.length) : "");
 }
 
 function resetLabel(value, now) {

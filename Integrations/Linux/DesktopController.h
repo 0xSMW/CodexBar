@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJSEngine>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QLocalServer>
 #include <QObject>
@@ -65,10 +66,12 @@ private:
     bool m_usageBatch = false, m_batchFailed = false;
     void nextProvider();
     void loadProviders();
+    void updateLabels();
     QTimer m_poll, m_clock;
     QLocalServer m_server;
     QVariantMap m_settings;
     QVariantList m_entries, m_spending;
+    QJsonArray m_barEntries;
     QString m_configPath, m_error, m_costError, m_configError, m_summary;
     qint64 m_updated = 0, m_costUpdated = 0;
     int m_generation = 0;

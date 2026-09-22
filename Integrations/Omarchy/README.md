@@ -34,6 +34,13 @@ stays unavailable, and old data carries a stale indicator. The popup contains no
 account identities or settings form. Desktop notifications and clipboard actions
 use Qt/D-Bus, so the app also works outside Omarchy.
 
+The bar marks each displayed provider with its logo, tinted to the bar's foreground
+color. Missing logos keep the provider's text tag. It retains the compact quota
+percentage, two-entry limit, and `+N` count for additional entries; all configured
+providers remain in the popup and continue polling. Both checkout and release
+archive installs include the existing Mac app SVGs. The backend supplies structured
+`barEntries`, and older backends fall back to their plain `summary` text.
+
 The `steipete.codexbar` layout entry in `~/.config/omarchy/shell.json` now accepts
 only `desktopExecutable` (default `codexbar-linux`) in addition to its ID. Configure
 providers and their order, accounts, status, costs, notifications, display, and polling in the Settings

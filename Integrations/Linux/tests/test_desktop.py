@@ -85,6 +85,7 @@ else:
         for _ in range(3):
             self.assertEqual(self.client('--background')['pid'], first['pid'])
         self.assertEqual(first['summary'], 'CX 60%')
+        self.assertEqual(first['barEntries'], [{'provider': 'codex', 'tag': 'CX', 'text': '60%'}])
         self.assertNotIn('private@example.com', json.dumps(first))
         self.assertNotIn('executable', first)
         socket = self.runtime / 'codexbar-linux' / 'desktop.sock'
@@ -264,6 +265,7 @@ else:
         self.client('--configure', '{"quotaDisplay":"used","resetDisplay":"absolute"}')
         value = self.client('--snapshot')
         self.assertEqual(value['summary'], 'CX 40%')
+        self.assertEqual(value['barEntries'], [{'provider': 'codex', 'tag': 'CX', 'text': '40%'}])
         self.assertEqual(value['entries'][0]['windows'][0]['displayValue'], 40)
         self.assertEqual(value['entries'][0]['windows'][0]['displaySuffix'], 'used')
         self.assertFalse(value['busy'])

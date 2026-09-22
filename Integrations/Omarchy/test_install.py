@@ -32,6 +32,13 @@ class InstallTests(unittest.TestCase):
             self.assertTrue(settings['allAccounts'])
             self.assertFalse(settings['showTray'])
             self.assertEqual(len(list((shell.parent / 'plugins').glob('*/manifest.json'))), 1)
+            sources = Path(__file__).resolve().parents[2] / 'Sources/CodexBar/Resources'
+            installed = shell.parent / 'plugins/steipete.codexbar/icons'
+            logos = sorted(sources.glob('ProviderIcon-*.svg'))
+            self.assertTrue(logos)
+            self.assertEqual(sorted(path.name for path in installed.iterdir()), [path.name for path in logos])
+            for logo in logos:
+                self.assertEqual((installed / logo.name).read_bytes(), logo.read_bytes())
             self.assertEqual(len(list((shell.parent / 'backups').iterdir())), 1)
             self.assertEqual((config/'codexbar/linux.json').stat().st_mode & 0o077, 0)
             launcher = (home/'data/applications/com.steipete.CodexBar.desktop').read_text()

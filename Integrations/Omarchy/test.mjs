@@ -5,6 +5,27 @@ import test from 'node:test';
 
 const model = vm.createContext({});
 vm.runInContext(fs.readFileSync(new URL('../Linux/Shared/Usage.js', import.meta.url), 'utf8'), model);
+test('bar entries preserve compact summary quotas, order, privacy and the two-entry limit', () => {
+    const rows = model.rows(JSON.stringify([
+        {provider: 'codex', usage: {primary: {usedPercent: 10}, identity: {accountEmail: 'private@example.com'}}},
+        {provider: 'acme', usage: {primary: {usedPercent: 20}}},
+        {provider: 'claude', usage: {primary: {usedPercent: 30}}}]), true);
+    assert.deepEqual(JSON.parse(JSON.stringify(model.barSegments(rows, 'remaining'))), [
+        {provider: 'codex', tag: 'CX', text: '90%'},
+        {provider: 'acme', tag: 'acme', text: '80%'}]);
+    assert.equal(model.summary(rows, 'remaining'), 'CX 90%  ·  acme 80%  +1');
+    assert.deepEqual([...model.barSegments(rows, 'used').map(segment => segment.text)], ['10%', '20%']);
+    assert.equal(model.summary(rows, 'used'), 'CX 10%  ·  acme 20%  +1');
+    assert.equal(rows.length, 3, 'hidden providers stay available to the popup and notifications');
+});
+test('bar entries retain unavailable quotas and handle empty or single-provider snapshots', () => {
+    assert.equal(model.barSegments([]).length, 0);
+    assert.equal(model.summary([]), '');
+    const rows = model.rows(JSON.stringify([{provider: 'claude', error: {message: 'private error'}}]));
+    assert.deepEqual(JSON.parse(JSON.stringify(model.barSegments(rows))), [
+        {provider: 'claude', tag: 'CL', text: '—'}]);
+    assert.equal(model.summary(rows), 'CL —');
+});
 test('quota is clamped, missing quota stays unknown', () => {
     assert.equal(model.remaining({usedPercent: 28}), 72);
     assert.equal(model.remaining({usedPercent: 150}), 0);
