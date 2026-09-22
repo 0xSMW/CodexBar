@@ -4,6 +4,44 @@ import Testing
 
 @Suite(.serialized)
 struct ProviderHTTPClientTests {
+    @Test(arguments: [nil, URLError.Code.notConnectedToInternet, .cancelled])
+    func `request sessions preserve delegates and finish once on every outcome`(code: URLError.Code?) async throws {
+        let delegate = ProviderHTTPRedirectGuardDelegate()
+        let finished = LockIsolated<[URLSession]>([])
+        StubURLProtocol.handler = { request in
+            if let code { throw URLError(code) }
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (Data("fixture".utf8), response)
+        }
+        defer { StubURLProtocol.handler = nil }
+        let factory = ProviderHTTPSessionFactory(
+            makeSession: { receivedDelegate in
+                #expect(receivedDelegate === delegate)
+                let configuration = URLSessionConfiguration.ephemeral
+                configuration.protocolClasses = [StubURLProtocol.self]
+                return URLSession(configuration: configuration, delegate: receivedDelegate, delegateQueue: nil)
+            },
+            finishSession: { session in
+                finished.setValue(finished.value + [session])
+                session.finishTasksAndInvalidate()
+            })
+        let request = try URLRequest(url: #require(URL(string: "https://provider.invalid/usage")))
+        for _ in 0..<2 {
+            if let code {
+                let error = await #expect(throws: URLError.self) {
+                    try await factory.response(for: request, delegate: delegate)
+                }
+                #expect(error?.code == code)
+            } else {
+                let response = try await factory.response(for: request, delegate: delegate)
+                #expect(response.statusCode == 200)
+                #expect(response.data == Data("fixture".utf8))
+            }
+        }
+        #expect(finished.value.count == 2)
+        #expect(finished.value[0] !== finished.value[1])
+    }
+
     @Test(arguments: [
         ["/usr/local/bin/codexbar", "--account", "swift-testing"],
         ["/usr/local/bin/codexbar", "--account", "Example.xctest"],

@@ -71,104 +71,17 @@ extension CodexBarCLI {
         let output = Self.resolveUsageOutputPreferences(from: values)
         let config = Self.loadConfig(output: output)
         let provider = Self.decodeProvider(from: values, config: config)
-        let format = output.format
-        let includeCredits = format == .json ? true : !values.flags.contains("noCredits")
-        let includeStatus = values.flags.contains("status")
-        let sourceModeRaw = values.options["source"]?.last
-        let parsedSourceMode = Self.decodeSourceMode(from: values)
-        if sourceModeRaw != nil, parsedSourceMode == nil {
-            Self.exit(
-                code: .failure,
-                message: "Error: --source must be auto|web|cli|oauth|api.",
-                output: output,
-                kind: .args)
-        }
-        let antigravityPlanDebug = values.flags.contains("antigravityPlanDebug"),
-            augmentDebug = values.flags.contains("augmentDebug")
-        let appAutoVerifier = values.flags.contains("appAutoVerifier")
-        let webDebugDumpHTML = values.flags.contains("webDebugDumpHtml")
-        let webTimeout: TimeInterval
-        do {
-            webTimeout = try Self.decodeWebTimeout(from: values) ?? 60
-        } catch {
-            Self.exit(code: .failure, message: "Error: \(error.localizedDescription)", output: output, kind: .args)
-        }
-        let verbose = values.flags.contains("verbose"), noColor = values.flags.contains("noColor")
-        let useColor = Self.shouldUseColor(noColor: noColor, format: format)
-        let resetStyle = Self.resetTimeDisplayStyleFromDefaults()
-        let weeklyWorkDays = Self.weeklyProgressWorkDaysFromDefaults()
         let providerList = provider.asList
-
-        let tokenSelection: TokenAccountCLISelection
-        do {
-            tokenSelection = try Self.decodeTokenAccountSelection(from: values)
-        } catch {
-            Self.exit(code: .failure, message: "Error: \(error.localizedDescription)", output: output, kind: .args)
-        }
-
-        if tokenSelection.allAccounts, tokenSelection.label != nil || tokenSelection.index != nil {
-            Self.exit(
-                code: .failure,
-                message: "Error: --all-accounts cannot be combined with --account or --account-index.",
-                output: output,
-                kind: .args)
-        }
-
-        if let message = Self.appAutoVerifierArgumentError(
-            enabled: appAutoVerifier,
-            providers: providerList,
-            sourceMode: parsedSourceMode,
-            tokenSelection: tokenSelection)
-        {
-            Self.exit(
-                code: .failure,
-                message: "Error: \(message)",
-                output: output,
-                kind: .args)
-        }
-
-        if let message = tokenSelection.providerSelectionError(providerList) {
-            Self.exit(code: .failure, message: "Error: \(message)", output: output, kind: .args)
-        }
-
-        let browserDetection = BrowserDetection()
-        let fetcher = UsageFetcher()
-        let claudeFetcher = ClaudeUsageFetcher(browserDetection: browserDetection)
-        let tokenContext: TokenAccountCLIContext
-        do {
-            tokenContext = try TokenAccountCLIContext(
-                selection: tokenSelection,
-                config: config,
-                verbose: verbose,
-                resolutionScope: appAutoVerifier ? .ambientAccount : .configuredAccounts)
-        } catch {
-            Self.exit(code: .failure, message: "Error: \(error.localizedDescription)", output: output, kind: .config)
-        }
-
+        let setup = Self.usageFetchSetup(values: values, providers: providerList, output: output)
+        let command = setup.command
+        let tokenContext = setup.tokenContext(config: config, output: output)
+        let appAutoVerifier = command.providerRuntime == .app
         var sections: [String] = []
         var payload: [ProviderPayload] = []
         var exitCode: ExitCode = .success
-        let command = UsageCommandContext(
-            format: format,
-            includeCredits: includeCredits,
-            sourceModeOverride: parsedSourceMode,
-            antigravityPlanDebug: antigravityPlanDebug,
-            augmentDebug: augmentDebug,
-            webDebugDumpHTML: webDebugDumpHTML,
-            webTimeout: webTimeout,
-            verbose: verbose,
-            useColor: useColor,
-            resetStyle: resetStyle,
-            weeklyWorkDays: weeklyWorkDays,
-            jsonOnly: output.jsonOnly,
-            includeAllCodexAccounts: tokenSelection.allAccounts && providerList == [.codex],
-            fetcher: fetcher,
-            claudeFetcher: claudeFetcher,
-            browserDetection: browserDetection,
-            providerRuntime: appAutoVerifier ? .app : .cli)
 
         for p in providerList {
-            let status = includeStatus ? await Self.fetchStatus(for: p) : nil
+            let status = setup.includeStatus ? await Self.fetchStatus(for: p) : nil
             if appAutoVerifier {
                 // Background app Auto intentionally launches the opaque Claude owner CLI only after a successful
                 // user-initiated fetch has established this process's account-scoped availability marker. Recreate
@@ -205,7 +118,7 @@ extension CodexBarCLI {
         }
 
         Self.printUsageOutput(
-            format: format,
+            format: command.format,
             toonRequested: output.toonRequested,
             sections: sections,
             payload: payload,

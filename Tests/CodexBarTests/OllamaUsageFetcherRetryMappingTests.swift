@@ -869,14 +869,15 @@ struct OllamaUsageFetcherRetryMappingTests {
         finishURLSession: @escaping @Sendable (URLSession) -> Void = { $0.finishTasksAndInvalidate() })
         -> OllamaUsageFetcher
     {
-        OllamaUsageFetcher(
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            makeURLSession: { delegate in
+        var fetcher = OllamaUsageFetcher(browserDetection: BrowserDetection(cacheTTL: 0))
+        fetcher.sessionFactory = ProviderHTTPSessionFactory(
+            makeSession: { delegate in
                 let config = URLSessionConfiguration.ephemeral
                 config.protocolClasses = [OllamaRetryMappingStubURLProtocol.self]
                 return URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
             },
-            finishURLSession: finishURLSession)
+            finishSession: finishURLSession)
+        return fetcher
     }
 
     private static func makeResponse(

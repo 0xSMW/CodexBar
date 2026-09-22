@@ -60,7 +60,7 @@ extension UsageStore {
         // overwrite real disk history.
         if !self.planUtilizationHistoryLoaded {
             let providerBuckets = self.planUtilizationHistory[provider.instanceID] ?? PlanUtilizationHistoryBuckets()
-            return PlanUtilizationHistorySelection(accountKey: nil, histories: providerBuckets.histories(for: nil))
+            return providerBuckets.selection(for: nil)
         }
         var providerBuckets = self.planUtilizationHistory[provider.instanceID] ?? PlanUtilizationHistoryBuckets()
         // Provider-specific by design: Claude OAuth provenance can outrank configured token-account selection.
@@ -71,9 +71,7 @@ extension UsageStore {
             // Persisted OAuth provenance outranks an unrelated configured token account. The unscoped
             // sentinel intentionally resolves to nil, including after the history store is reloaded.
             let accountKey = self.stickyPlanUtilizationAccountKey(providerBuckets: providerBuckets)
-            return PlanUtilizationHistorySelection(
-                accountKey: accountKey,
-                histories: providerBuckets.histories(for: accountKey))
+            return providerBuckets.selection(for: accountKey)
         }
         let originalProviderBuckets = providerBuckets
         let accountKey = self.resolvePlanUtilizationAccountKey(
@@ -91,9 +89,7 @@ extension UsageStore {
                 await self.planUtilizationPersistenceCoordinator.enqueue(snapshotToPersist)
             }
         }
-        return PlanUtilizationHistorySelection(
-            accountKey: accountKey,
-            histories: providerBuckets.histories(for: accountKey))
+        return providerBuckets.selection(for: accountKey)
     }
 
     func planUtilizationHistorySelection(
@@ -112,9 +108,7 @@ extension UsageStore {
             }
         }
         let providerBuckets = self.planUtilizationHistory[provider.instanceID] ?? PlanUtilizationHistoryBuckets()
-        return PlanUtilizationHistorySelection(
-            accountKey: accountKey,
-            histories: providerBuckets.histories(for: accountKey))
+        return providerBuckets.selection(for: accountKey)
     }
 
     func planUtilizationHistorySelection(
@@ -136,9 +130,7 @@ extension UsageStore {
             }
         }
         let providerBuckets = self.planUtilizationHistory[provider.instanceID] ?? PlanUtilizationHistoryBuckets()
-        return PlanUtilizationHistorySelection(
-            accountKey: accountKey,
-            histories: providerBuckets.histories(for: accountKey))
+        return providerBuckets.selection(for: accountKey)
     }
 
     func codexPlanUtilizationHistories(forVisibleAccount account: CodexVisibleAccount)
@@ -163,9 +155,7 @@ extension UsageStore {
 
         if ownership.hasAdjacentEmailScopeAmbiguity {
             guard canonicalKey != ownership.canonicalEmailHashKey else { return .unavailable }
-            return PlanUtilizationHistorySelection(
-                accountKey: canonicalKey,
-                histories: providerBuckets.histories(for: canonicalKey))
+            return providerBuckets.selection(for: canonicalKey)
         }
 
         let accountKey = self.materializeCodexPlanUtilizationHistoryIfNeeded(
@@ -182,9 +172,7 @@ extension UsageStore {
                 await self.planUtilizationPersistenceCoordinator.enqueue(snapshotToPersist)
             }
         }
-        return PlanUtilizationHistorySelection(
-            accountKey: accountKey,
-            histories: providerBuckets.histories(for: accountKey))
+        return providerBuckets.selection(for: accountKey)
     }
 
     func shouldShowRefreshingMenuCard(for provider: UsageProvider) -> Bool {

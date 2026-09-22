@@ -129,6 +129,10 @@ struct PlanUtilizationHistoryBuckets: Equatable, Sendable {
         return self.accounts[accountKey] ?? []
     }
 
+    func selection(for accountKey: String?) -> PlanUtilizationHistorySelection {
+        PlanUtilizationHistorySelection(accountKey: accountKey, histories: self.histories(for: accountKey))
+    }
+
     mutating func setHistories(_ histories: [PlanUtilizationSeriesHistory], for accountKey: String?) {
         let sorted = histories.sorted(by: PlanUtilizationSeriesHistory.precedes)
         guard let accountKey, !accountKey.isEmpty else {

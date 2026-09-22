@@ -454,25 +454,10 @@ public struct OllamaUsageFetcher: Sendable {
     }
 
     public let browserDetection: BrowserDetection
-    private let makeURLSession: @Sendable (URLSessionTaskDelegate?) -> URLSession
-    private let finishURLSession: @Sendable (URLSession) -> Void
+    var sessionFactory = ProviderHTTPSessionFactory()
 
     public init(browserDetection: BrowserDetection) {
         self.browserDetection = browserDetection
-        self.makeURLSession = { delegate in
-            URLSession(configuration: .ephemeral, delegate: delegate, delegateQueue: nil)
-        }
-        self.finishURLSession = { $0.finishTasksAndInvalidate() }
-    }
-
-    init(
-        browserDetection: BrowserDetection,
-        makeURLSession: @escaping @Sendable (URLSessionTaskDelegate?) -> URLSession,
-        finishURLSession: @escaping @Sendable (URLSession) -> Void = { $0.finishTasksAndInvalidate() })
-    {
-        self.browserDetection = browserDetection
-        self.makeURLSession = makeURLSession
-        self.finishURLSession = finishURLSession
     }
 
     public func fetch(
@@ -769,9 +754,7 @@ public struct OllamaUsageFetcher: Sendable {
         request.setValue("https://ollama.com", forHTTPHeaderField: "origin")
         request.setValue(Self.settingsURL.absoluteString, forHTTPHeaderField: "referer")
 
-        let session = self.makeURLSession(diagnostics)
-        defer { self.finishURLSession(session) }
-        let httpResponse = try await session.response(for: request)
+        let httpResponse = try await self.sessionFactory.response(for: request, delegate: diagnostics)
         let responseInfo = ResponseInfo(
             statusCode: httpResponse.statusCode,
             url: httpResponse.response.url?.absoluteString ?? "unknown")
