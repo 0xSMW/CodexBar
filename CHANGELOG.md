@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Website: show all 77 current providers with setup links, highlight Helmcode, v0, and TypeSafe, and clarify provider-specific data availability across all 23 languages.
 - Linux: list each Antigravity quota pool once with its family label, preserving tray representatives and alert history (#3799). Thanks @jsonMartin!
 - Plugins: start HTTP attempt deadlines when transport tasks begin, preserving OpenRouter balance when optional key requests time out under scheduler load (#3836).
 - Menu bar: assign stable item names before normal sizing and clear saved positions beyond the widest attached display on creation, including visibility recovery (#3355, #3201).
