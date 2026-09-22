@@ -407,6 +407,8 @@ public enum KeychainAccessPreflight {
         return inspectionIncomplete ? .indeterminate : .rejected
     }
 
+    private static let validationMemo = ValidationMemo()
+
     static func trustedApplication(
         _ application: SecTrustedApplication,
         validatesExecutableAt path: String) -> OSStatus?
@@ -415,7 +417,22 @@ public enum KeychainAccessPreflight {
             named: "SecTrustedApplicationValidateWithPath",
             as: SecTrustedApplicationValidateWithPathFunction.self)
         else { return nil }
-        return path.withCString { validate(application, $0) }
+        return self.validationMemo.validate(
+            trustedApplication: self.trustedApplicationRepresentation(application), path: path)
+        {
+            path.withCString { validate(application, $0) }
+        }
+    }
+
+    private static func trustedApplicationRepresentation(_ application: SecTrustedApplication) -> Data? {
+        // CopyData only contains the path; the full representation also distinguishes signing requirements.
+        guard let copy = self.securityFunction(
+            named: "SecTrustedApplicationCopyExternalRepresentation",
+            as: SecTrustedApplicationCopyExternalRepresentationFunction.self)
+        else { return nil }
+        var data: Unmanaged<CFData>?
+        guard copy(application, &data) == errSecSuccess else { return nil }
+        return data?.takeRetainedValue() as Data?
     }
 
     private typealias SecKeychainItemCopyAccessFunction = @convention(c) (
@@ -432,6 +449,9 @@ public enum KeychainAccessPreflight {
     private typealias SecTrustedApplicationValidateWithPathFunction = @convention(c) (
         SecTrustedApplication,
         UnsafePointer<CChar>) -> OSStatus
+    private typealias SecTrustedApplicationCopyExternalRepresentationFunction = @convention(c) (
+        SecTrustedApplication,
+        UnsafeMutablePointer<Unmanaged<CFData>?>) -> OSStatus
 
     private nonisolated(unsafe) static let securityFrameworkHandle: UnsafeMutableRawPointer? = dlopen(
         "/System/Library/Frameworks/Security.framework/Security",

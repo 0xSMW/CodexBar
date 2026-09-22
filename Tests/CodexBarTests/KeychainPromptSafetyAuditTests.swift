@@ -199,7 +199,8 @@ struct KeychainPromptSafetyAuditTests {
             "Sources/CodexBarCore/KeychainCacheStore.swift",
             // Audited 2026-08-02: resolves only read-only ACL inspection functions
             // (SecKeychainItemCopyAccess, SecAccessCopyMatchingACLList, SecACLCopyContents,
-            // SecTrustedApplicationValidateWithPath); attributes-only, cannot prompt (#2528).
+            // SecTrustedApplicationValidateWithPath, SecTrustedApplicationCopyExternalRepresentation);
+            // attributes-only, cannot prompt (#2528, #3837).
             "Sources/CodexBarCore/KeychainAccessPreflight.swift",
             "Sources/CodexBarCore/KeychainNoUIQuery.swift",
             "Sources/CodexBarCore/KeychainSecurity.swift",

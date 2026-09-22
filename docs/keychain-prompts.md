@@ -38,6 +38,13 @@ decisions are never retried. Each distinct preflight can add two 30 ms waits plu
 repeated checks within one operation reuse the final result. This applies to generic-password preflights for
 browser storage, credential repair, and CodexBar caches, without changing their permission requirements.
 
+Repeated preflights share code-signature validation for the same trusted application and executable, including
+concurrent checks. The process-local memo holds at most 64 completed results: successes expire after 30 seconds and
+confirmed signature rejections after five minutes; transient failures are never cached. Changes to the executable,
+enclosing app bundle metadata, bundle version, or main executable trigger revalidation. Other sealed-resource changes
+are detected when the short success lifetime expires. The current Keychain ACL and prompt selector are still read on
+every preflight, and background secret reads remain non-interactive.
+
 Provider-owned child processes are a separate boundary. CodexBar may intentionally launch a provider CLI such as
 Claude for usage. That executable owns its credential behavior, which CodexBar cannot constrain or fully inspect.
 
