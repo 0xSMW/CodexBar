@@ -326,7 +326,11 @@ actor ClaudeCLISession {
 
         var primaryFD: Int32 = -1
         var secondaryFD: Int32 = -1
-        var win = winsize(ws_row: 50, ws_col: 160, ws_xpixel: 0, ws_ypixel: 0)
+        var win = winsize(
+            ws_row: UInt16(ClaudeCLIScreen.rows),
+            ws_col: UInt16(ClaudeCLIScreen.columns),
+            ws_xpixel: 0,
+            ws_ypixel: 0)
         guard openpty(&primaryFD, &secondaryFD, nil, nil, &win) == 0 else {
             Self.log.warning("Claude CLI PTY openpty failed")
             throw SessionError.launchFailed("openpty failed")

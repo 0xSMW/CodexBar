@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Claude: preserve model-specific weekly quotas and account identity when CLI panels redraw with cursor jumps (#3822, fixes #3746). Thanks @fanwenlin!
 - Antigravity: explain failed live fetches when falling back to offline history, keep diagnostics free of raw process and account details, and show the active source in settings instead of misleading detection warnings (#3865, fixes #3861). Thanks @vincent-peng!
 - Provider plugins: preserve unknown usage on named quota windows and numeric progress in detail rows.
 - Claude: dismiss open CLI panels before reading account identity or refreshing usage in a reused session (#3821). Thanks @sczhui!

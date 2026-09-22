@@ -288,7 +288,10 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   4) Dismiss the open panel with Escape before reusing the session for `/status` identity or the next `/usage` refresh.
   5) Optionally send `/status` to extract identity fields.
 - Parsing (`ClaudeStatusProbe`):
-  - Strips ANSI, locates "Current session" + "Current week" headers.
+  - Replays cursor-based `/usage` and `/status` captures onto a bounded screen with the same geometry as the PTY, then locates
+    "Current session" + "Current week" headers. Cursor jumps preserve unchanged cells from earlier frames, keeping
+    scoped weekly percentages, reset spacing, and account identity intact. Erased content is not reused as history.
+  - Plain reports, including color-only ANSI output and legacy CR-delimited text, retain their existing parsing behavior.
   - Extracts percent left/used and reset text near those headers.
   - When a reset date cannot be parsed, the menu preserves its description and normalizes leading `Reset` or `Resets` labels once, including scoped weekly limits.
   - Parses `Account:` and `Org:` lines when present.
