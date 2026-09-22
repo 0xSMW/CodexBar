@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.64.1 — Unreleased
+## 0.64.1 — 2026-09-21
+
+### Highlights
+
+- **More menu-bar control:** pin Cursor's Grok Bot usage and recover icons stranded beyond an attached display.
+- **Kimi regions:** choose China or International for usage, browser sessions, and dashboard links.
+- **More reliable quotas:** preserve OpenRouter balances under load and show each Antigravity quota pool once on Linux.
 
 ### Added
 
