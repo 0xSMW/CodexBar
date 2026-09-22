@@ -4,6 +4,8 @@ import SweetCookieKit
 
 /// Locates raw LevelDB sources; each caller supplies its own browser allowlist and origin decoder.
 enum ChromiumLocalStorageDiscovery {
+    static let defaultBrowsers = Browser.defaultImportOrder.filter(\.usesChromiumProfileStore)
+
     struct Candidate {
         let label: String
         let url: URL

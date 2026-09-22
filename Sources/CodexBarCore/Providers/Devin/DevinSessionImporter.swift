@@ -52,7 +52,7 @@ enum DevinSessionImporter {
         let candidates = candidates ?? ChromiumLocalStorageDiscovery
             .candidates(browsers: self.localStorageBrowsers(browserDetection: browserDetection))
         if !candidates.isEmpty {
-            log("Chrome local storage candidates: \(candidates.count)")
+            log("Chromium local storage candidates: \(candidates.count)")
         }
 
         var sessions: [SessionInfo] = []
@@ -63,7 +63,7 @@ enum DevinSessionImporter {
                 storage = try self.readLocalStorage(from: candidate.url, logger: log)
             } catch {
                 unreadableStorage = true
-                log("Could not read Chrome local storage in \(candidate.label)")
+                log("Could not read Chromium local storage in \(candidate.label)")
                 continue
             }
             guard let session = self.session(
@@ -197,7 +197,8 @@ enum DevinSessionImporter {
     }
 
     static func localStorageBrowsers(browserDetection: BrowserDetection) -> [Browser] {
-        let order = ProviderDefaults.metadata[.devin]?.browserCookieOrder ?? [.chrome]
+        let order = ProviderDefaults.metadata[.devin]?.browserCookieOrder ?? ChromiumLocalStorageDiscovery
+            .defaultBrowsers
         return order.browsersWithProfileData(using: browserDetection)
     }
 

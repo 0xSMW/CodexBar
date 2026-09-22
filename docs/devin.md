@@ -13,17 +13,18 @@ The Devin provider tracks included daily and weekly usage quotas from
 
 ## Setup
 
-1. Sign in to Devin in Google Chrome.
+1. Sign in to Devin in Chrome, Brave, Edge, Arc, or another supported Chromium browser.
 2. Open the organization Usage & Limits page once.
 3. Enable **Devin** in **Settings → Providers**.
 
-Automatic mode reads only the Devin session and organization metadata from Chrome localStorage. It does not scan other
-browsers or import other sites' sessions. Current decoded session values take precedence over raw storage fallback
+Automatic mode reads only the Devin session and organization metadata from supported Chromium browsers' localStorage,
+using the shared browser catalog and skipping browsers without profile data. It does not import other sites' sessions.
+Current decoded session values take precedence over raw storage fallback
 data. CodexBar sends the session token only to `https://app.devin.ai`.
 
 For accounts with multiple organizations, set **Organization** to select one explicitly. An internal `org-...` or
-`org_...` ID takes precedence over Chrome's cached organization metadata. A slug uses only its matching cached ID;
-open that organization's Usage & Limits page in Chrome if the metadata is missing.
+`org_...` ID takes precedence over the browser's cached organization metadata. A slug uses only its matching cached ID;
+open that organization's Usage & Limits page in your Chromium browser if the metadata is missing.
 Inferred names and internal IDs must belong to the same storage record or JSON object. Incomplete metadata never
 borrows an ID from another organization, and an explicit selection prefers its complete matching record.
 
@@ -56,7 +57,7 @@ Some Auth1 sessions need the internal organization ID even when the same token w
 
 The internal-ID path is already supported; manual mode does not discover IDs from public slugs. Other 401/403 responses
 still report invalid or expired credentials. For automatic auth with missing organization metadata, open the
-organization's Usage page in Chrome and refresh.
+organization's Usage page in your Chromium browser and refresh.
 
 Environment overrides:
 
@@ -65,7 +66,7 @@ Environment overrides:
 
 ## CLI (macOS and Linux)
 
-Automatic Chrome session import is macOS-only. For manual auth on either platform, configure
+Automatic Chromium session import is macOS-only. For manual auth on either platform, configure
 `~/.config/codexbar/config.json` (or your existing legacy config):
 
 ```json
@@ -87,18 +88,19 @@ without enabling automatic auth; an empty override does not fall back to the con
 
 ## Automatic auth troubleshooting
 
-- Automatic import supports Google Chrome profiles only. Being signed in to Safari, Firefox, Arc, or another browser
-  does not provide a Devin session to CodexBar. Open `app.devin.ai` and the organization's Usage & Limits page in Chrome.
-- Devin uses Chrome's **localStorage**, not its Cookies database. CodexBar reads `auth1_session` (an `auth1_` token) or
+- Automatic import supports the shared Chromium browser catalog, including Chrome, Brave, Edge, Arc, Vivaldi, Dia,
+  ChatGPT Atlas, Chromium, Helium, Yandex, and Comet, plus supported preview channels. Safari and Firefox localStorage
+  are not supported. Open `app.devin.ai` and the organization's Usage & Limits page in your Chromium browser.
+- Devin uses **localStorage**, not the Cookies database. CodexBar reads `auth1_session` (an `auth1_` token) or
   Auth0 cached `access_token` / `accessToken` values for `app.devin.ai`. Cookies for `.devin.ai` or `api.devin.ai`, Chrome
   Safe Storage Keychain permissions, and Safari cookie permissions are not part of this import path.
-- A **no session** error means no supported session was found in the discovered Chrome storage. A **could not read
-  Chrome local storage** error means a discovered store could not be opened; it does not mean Devin rejected your token.
-  Reopen Chrome and its Devin Usage & Limits page, refresh CodexBar, or use Manual auth above.
+- A **no session** error means no supported session was found in the discovered Chromium storage. A **could not read
+  Chromium local storage** error means a discovered store could not be opened; it does not mean Devin rejected your token.
+  Reopen your browser and its Devin Usage & Limits page, refresh CodexBar, or use Manual auth above.
 - A **token rejected** error means Devin returned an authentication rejection. Sign in again or replace the manual
   token. A **missing organization** error instead needs the organization setup described above.
 
-When reporting a failure, include the CodexBar, macOS, and Chrome versions, your selected Auth source, the browser used
+When reporting a failure, include the CodexBar, macOS, and browser versions, your selected Auth source, the browser used
 for Devin, and the exact error text. Do not share session values.
 
 ## Data Source
