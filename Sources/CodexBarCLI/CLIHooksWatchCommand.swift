@@ -394,15 +394,6 @@ struct HooksWatchOptions: CommanderParsable {
     @Flag(name: .long("verbose"), help: "Print fetch diagnostics")
     var verbose: Bool = false
 
-    @Option(name: .long("format"), help: "Output format: text | json")
-    var format: OutputFormat?
-
-    @Flag(name: .long("json"), help: "Emit JSON")
-    var jsonShortcut: Bool = false
-
-    @Flag(name: .long("json-only"), help: "Emit JSON only (suppress non-JSON output)")
-    var jsonOnly: Bool = false
-
-    @Flag(name: .long("pretty"), help: "Pretty-print JSON output")
-    var pretty: Bool = false
+    @OptionGroup
+    var output: HooksOptions
 }

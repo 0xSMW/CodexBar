@@ -505,31 +505,31 @@ struct CLIArgumentError: LocalizedError {
 #if DEBUG
 extension CodexBarCLI {
     static func _usageSignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(UsageOptions())
+        CommandSignature.describe(UsageOptions()).flattened()
     }
 
     static func _costSignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(CostOptions())
+        CommandSignature.describe(CostOptions()).flattened()
     }
 
     static func _cacheSignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(CacheOptions())
+        CommandSignature.describe(CacheOptions()).flattened()
     }
 
     static func _diagnoseSignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(DiagnoseOptions())
+        CommandSignature.describe(DiagnoseOptions()).flattened()
     }
 
     static func _configSetAPIKeySignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(ConfigSetAPIKeyOptions())
+        CommandSignature.describe(ConfigSetAPIKeyOptions()).flattened()
     }
 
     static func _configDumpSignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(ConfigDumpOptions())
+        CommandSignature.describe(ConfigDumpOptions()).flattened()
     }
 
     static func _configProviderToggleSignatureForTesting() -> CommandSignature {
-        CommandSignature.describe(ConfigProviderToggleOptions())
+        CommandSignature.describe(ConfigProviderToggleOptions()).flattened()
     }
 
     static func _decodeFormatForTesting(from values: ParsedValues) -> OutputFormat {
