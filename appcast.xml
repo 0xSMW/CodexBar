@@ -3,6 +3,41 @@
     <channel>
         <title>CodexBar</title>
         <item>
+            <title>0.64.1</title>
+            <pubDate>Tue, 22 Sep 2026 00:45:20 -0700</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
+            <sparkle:version>153</sparkle:version>
+            <sparkle:shortVersionString>0.64.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>CodexBar 0.64.1</h2>
+<h3>Highlights</h3>
+<ul>
+<li><strong>More menu-bar control:</strong> pin Cursor&#x27;s Grok Bot usage and recover icons stranded beyond an attached display.</li>
+<li><strong>Kimi regions:</strong> choose China or International for usage, browser sessions, and dashboard links.</li>
+<li><strong>More reliable quotas:</strong> preserve OpenRouter balances under load and show each Antigravity quota pool once on Linux.</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Cursor: pin Grok Bot usage with the “Grok Bot %” menu-bar layout token, hiding it when the allowance is unavailable and preserving reset selections when downgrading (#3712, fixes #3309). Thanks @yicone!</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Website: show all 77 current providers with setup links, highlight Helmcode, v0, and TypeSafe, and clarify provider-specific data availability across all 23 languages.</li>
+<li>Linux: list each Antigravity quota pool once with its family label, preserving tray representatives and alert history (#3799). Thanks @jsonMartin!</li>
+<li>Plugins: start HTTP attempt deadlines when transport tasks begin, preserving OpenRouter balance when optional key requests time out under scheduler load (#3836).</li>
+<li>Menu bar: assign stable item names before normal sizing and clear saved positions beyond the widest attached display on creation, including visibility recovery (#3355, #3201).</li>
+<li>Kimi: select China or International regions for usage, cookies, and dashboard links, while preventing unscoped CLI credentials from crossing hosts (#3752). Thanks @LPFchan!</li>
+<li>Crof: remove the provider after the service shut down; existing config entries are ignored on read and removed on the next save (#3657). Thanks @baanish!</li>
+<li>Provider plugins: preserve transport error codes and cancellation on both engines, with an opt-in native retry policy for transient GET failures.</li>
+<li>Provider plugins: accept explicitly declared empty results without inventing usage or account identity.</li>
+<li>Provider plugins: expose native currency formatting with matching rounding, currency symbols, and negative zero on both engines.</li>
+<li>Neuralwatt: use the bundled quota plugin while preserving subscription usage, prepaid balances, key allowances, selective retries, and cancellation (#3811).</li>
+</ul>
+<p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.64.1/CodexBar-macos-universal-0.64.1.zip" length="74369599" type="application/octet-stream" sparkle:edSignature="vD7uXDlMahWksc5msZBxEGa0un2ApIk8E5gLNNSUnBxBFRWbSyFaSQDroktBRD19xDKUi/WAZ801KOltQlOCAQ=="/>
+        </item>
+        <item>
             <title>0.64.0</title>
             <pubDate>Mon, 21 Sep 2026 11:53:09 -0700</pubDate>
             <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
@@ -118,46 +153,6 @@
 <p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.63.0/CodexBar-macos-universal-0.63.0.zip" length="74335541" type="application/octet-stream" sparkle:edSignature="wTFGIMx10uxJN/4cmqu/V8TBprLa2HN5sgNwHryWh2e+jR9H20LyrTl6P8F3VWBaY3GqYnlYQuSbWbhknibvCg=="/>
-        </item>
-        <item>
-            <title>0.62.0</title>
-            <pubDate>Sat, 19 Sep 2026 13:43:23 -0700</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
-            <sparkle:version>150</sparkle:version>
-            <sparkle:shortVersionString>0.62.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>CodexBar 0.62.0</h2>
-<h3>Highlights</h3>
-<ul>
-<li><strong>History that follows your quotas:</strong> compare Codex and Claude costs and tokens across current and recent weekly quota windows, with history preserved across restarts.</li>
-<li><strong>An Overview that fits your menu:</strong> choose a compact layout, hide individual provider details, and share the Usage &amp; Spend summary you see.</li>
-<li><strong>Clearer widgets for multiple accounts:</strong> pin saved accounts, see the quota closest to its limit, and retain full provider names and secondary allowances.</li>
-<li><strong>More ways to follow your work:</strong> track Muse Code session tokens, compare Codex costs with an SSH host, and launch terminal actions in Warp.</li>
-<li><strong>Automate successful refreshes:</strong> run opt-in commands when the app or CLI watcher receives fresh usage.</li>
-</ul>
-<h3>Added</h3>
-<ul>
-<li>Codex and Claude: align local cost and token history with current and recent weekly quota windows, preserving partial subtotals, exact reset boundaries, and history across restarts (#3358). Thanks @stabey and @ramapitecusment!</li>
-<li>Overview: choose Detailed or Compact in Menu settings, with labeled usage bars, provider navigation, and useful details for providers without quota bars (#2616). Thanks @Zihao-Qi!</li>
-<li>Overview: share the displayed Usage &amp; Spend summary through a local snapshot preview, excluding hidden sources and reporting clipboard failures accurately (#3677). Thanks @Chipagosfinest!</li>
-<li>Provider cards: hide individual detail sections from Visible usage items, preserving choices across language changes and restarts (#3638). Thanks @elijah7x!</li>
-<li>Widgets: pin saved accounts in a dedicated Account Usage widget, with opt-in refresh for up to six accounts per provider, privacy-aware labels, and account verification that survives credential rotation (#3585). Thanks @rokas-tarasevicius!</li>
-<li>Muse Code: show local session token history and comparisons in the menu and CLI without inventing dollar costs, while retaining the bundled JavaScript subscription provider (#3340, #3587). Thanks @sanjay3290 and @Srimi1!</li>
-<li>CLI: compare local Codex costs with one SSH host, keeping each host&#x27;s totals, coverage, and day boundaries separate (#3538). Thanks @ECuteri!</li>
-<li>Hooks: run opt-in <code>usage_updated</code> commands after successful current app refreshes and CLI watcher polls, with quota metadata and per-account throttling (#3512). Thanks @guillem-gelabert!</li>
-<li>Terminal actions: select stable Warp as the default terminal, with private temporary launch configs, cleanup across restarts, and Terminal fallback (#3664, #3283). Thanks @salmonumbrella and @liorp!</li>
-</ul>
-<h3>Improved</h3>
-<ul>
-<li>Widgets: make the quota closest to its limit easier to read, retain full provider names and secondary allowances, and adapt Usage and Switcher tiles to the available space (#3137). Thanks @iamenahs!</li>
-</ul>
-<h3>Fixed</h3>
-<ul>
-<li>Codex costs: recover excess cached request rows from their original session files, retain pricing through interrupted scans, and avoid guessing request boundaries or conflicting prices (#3741, related to #3618). Thanks @BUKOWSKIREAL!</li>
-</ul>
-<p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.62.0/CodexBar-macos-universal-0.62.0.zip" length="73503666" type="application/octet-stream" sparkle:edSignature="yat/5lvlDzzpN72HKtHP80D7tC9KYu0C854bguUUKbU1HyUmXsNsVboDcUfRm2K0jcbVIkyCT8g+GZhl0ZPVCA=="/>
         </item>
         <item>
             <title>0.14.0</title>
