@@ -288,7 +288,18 @@ extension UsageStore {
             providerConfigRevision: self.settings.providerConfigRevision(for: provider),
             scopeSignature: self.tokenSnapshotScopeSignature(for: provider),
             accounting: accounting)
+        self.warmQuotaProjection(for: snapshot)
         self.synchronizeSharedSpendDashboardAfterTokenPublication(for: provider)
+    }
+
+    /// The menu card projects quota weeks synchronously while it builds, so the per-slice pass runs
+    /// off the main actor when possible; a card arriving first can still build it synchronously.
+    private func warmQuotaProjection(for snapshot: CostUsageTokenSnapshot?) {
+        guard let snapshot, !snapshot.quotaSlices.isEmpty || !snapshot.hourly.isEmpty else { return }
+        let calendar = self.settings.costUsageBucketCalendar
+        Task.detached(priority: .utility) {
+            snapshot.warmQuotaProjection(calendar: calendar)
+        }
     }
 
     func installCachedTokenSnapshot(
@@ -302,6 +313,7 @@ extension UsageStore {
             providerConfigRevision: self.settings.providerConfigRevision(for: provider),
             scopeSignature: self.tokenSnapshotScopeSignature(for: provider),
             accounting: accounting)
+        self.warmQuotaProjection(for: snapshot)
     }
 
     func clearTokenSnapshot(for provider: UsageProvider) {

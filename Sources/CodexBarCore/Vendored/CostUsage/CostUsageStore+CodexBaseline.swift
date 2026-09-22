@@ -68,10 +68,14 @@ extension CostUsageStore {
         self.retainedCodexBaseline = nil
         _ = self.removeLegacyCodexArtifactIfPresent()
         let receipt = CodexBaselineReceipt(store: self)
-        guard let baseline = self.readCodexBaseline() else {
+        if self.retainedCodexScan?.stamp != self.currentDatabaseStamp() {
+            self.retainedCodexScan = nil
+        }
+        guard let baseline = self.retainedCodexScan ?? self.readCodexBaseline() else {
             // Keep a receipt even on failure so save cannot fall back to accepting unbased content.
             return CostUsageStoreLoad(store: self, cache: CostUsageCache(), receipt: receipt)
         }
+        self.retainedCodexScan = baseline
         self.retainedCodexBaseline = RetainedCodexBaseline(id: receipt.id, baseline: baseline)
         let compatible = baseline.decoded.timeZoneIdentifier == nil
             || baseline.decoded.timeZoneIdentifier == calendar.timeZone.identifier
@@ -116,7 +120,10 @@ extension CostUsageStore {
 
     func readCodexBaseline(loadTokenSnapshots: Bool = false) -> CodexDecodedBaseline? {
         let baseline: CodexDecodedBaseline? = self.withDatabase(default: nil) { database in
-            guard let before = try? self.databaseStamp(database) else { return nil }
+            guard let before = try? self.databaseStamp(database) else {
+                self.requiresReadReopen = true
+                return nil
+            }
             let snapshot = try? Self.inReadTransaction(database) {
                 let snapshot = try Self.readSnapshot(
                     database,

@@ -1487,11 +1487,7 @@ extension CostUsageStore {
     }
 
     private static func totals(_ value: CostUsageCodexTotals?) -> CostUsageStoreTotals? {
-        value.map { CostUsageStoreTotals(
-            input: Int64($0.input),
-            cached: Int64($0.cached),
-            output: Int64($0.output),
-            reasoning: $0.reasoning.map(Int64.init)) }
+        value.map(self.totals)
     }
 
     private static func totals(_ value: CostUsageCodexTotals) -> CostUsageStoreTotals {
@@ -1529,11 +1525,11 @@ struct CostUsageStoreLoad: @unchecked Sendable {
 }
 
 enum CostUsageStoreAccess {
-    private final class SharedReadStoreRegistry: @unchecked Sendable {
+    private final class SharedStoreRegistry: @unchecked Sendable {
         private let lock = NSLock()
         private var entries: [(path: String, store: CostUsageStore)] = []
         /// The app normally owns one cache root. Keep a small bound for managed/test roots so
-        /// decoded activity state and idle SQLite connections cannot grow with every path seen.
+        /// decoded scan/read state and idle SQLite connections cannot grow with every path seen.
         private let capacity = 4
 
         func store(cacheRoot: URL?) -> CostUsageStore {
@@ -1552,7 +1548,9 @@ enum CostUsageStoreAccess {
         }
     }
 
-    private static let sharedReadStores = SharedReadStoreRegistry()
+    private static let sharedReadStores = SharedStoreRegistry()
+    /// Separate stores prevent report reads from superseding an in-flight scanner receipt.
+    private static let sharedScanStores = SharedStoreRegistry()
 
     static func readView(
         cacheRoot: URL?,
@@ -1564,8 +1562,7 @@ enum CostUsageStoreAccess {
     }
 
     static func load(cacheRoot: URL?, calendar: Calendar) -> CostUsageStoreLoad {
-        let store = CostUsageStore(cacheRoot: cacheRoot)
-        return store.syncLoadCodexScan(calendar: calendar)
+        self.sharedScanStores.store(cacheRoot: cacheRoot).syncLoadCodexScan(calendar: calendar)
     }
 
     static func read(cacheRoot: URL?, calendar: Calendar = .current) -> CostUsageCache {
