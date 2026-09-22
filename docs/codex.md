@@ -45,6 +45,10 @@ Usage source picker:
 - Credits-only updates preserve pending weekly-reset evidence in memory and account-snapshot storage, including
   when published credits are cleared. Candidate admission, expiry, boundary tolerances, and account guards remain
   unchanged; preserving evidence does not make an otherwise incompatible reset eligible for publication.
+- Delayed confirmation also accepts an unused weekly window whose reset date advances with observation time:
+  both observations must report zero usage, a seven-day duration, and a reset within two minutes of a full week
+  ahead. The later reset must not move backward. Exact OAuth, account, plan, unchanged positive reset-credit
+  inventory, minimum confirmation age, and candidate expiry checks still apply.
 - Debug logs in `codex-weekly-reset-publication` include fixed reason codes for delayed-candidate
   creation, pruning, revalidation, and account-scoped storage requests. They distinguish source/confidence,
   timing, boundary, identity/plan compatibility, and credit-inventory failures without logging account or credit
