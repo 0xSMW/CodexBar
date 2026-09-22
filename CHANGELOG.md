@@ -5,6 +5,7 @@
 ### Fixed
 
 - Antigravity: explain failed live fetches when falling back to offline history, keep diagnostics free of raw process and account details, and show the active source in settings instead of misleading detection warnings (#3865, fixes #3861). Thanks @vincent-peng!
+- Claude: include claude-swap session homes in local Usage & Spend totals without counting shared or copied history twice (#2954). Thanks @Newarr!
 - LiteLLM: show clearly scoped month-to-date spend when management routes are disabled, without inventing budgets or account identity (#3834). Thanks @xiaoxianma!
 - Codex: confirm unused weekly resets across normal refresh intervals when the provider advances the reset date with each zero-use observation, preventing stale pre-reset usage from persisting (#3248). Thanks @kcharlan!
 - Codex costs: read local Priority/Fast trace evidence on Linux so supported usage retains Priority pricing, including after refreshing existing history (#3820). Thanks @A-l-an!

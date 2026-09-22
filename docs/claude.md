@@ -298,6 +298,7 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
 - Source roots:
   - Native Claude logs:
     - `$CLAUDE_CONFIG_DIR` selects one literal directory and uses `<root>/projects`; commas are part of its path.
+    - Also includes claude-swap session profiles at `~/.claude-swap-backup/sessions/<slot>-<label>/projects`. On Linux, also checks `$XDG_DATA_HOME/claude-swap/sessions` (default `~/.local/share/claude-swap/sessions`). Discovery examines only immediate positive-numbered slot directories and their `projects` child; it does not read credentials or run cswap.
     - Fallback roots:
       - `~/.config/claude/projects`
       - `~/.claude/projects` (Claude Code and current Claude Desktop Code/Cowork CLI sessions)
@@ -323,6 +324,7 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   - pi and OMP sessions attribute `anthropic` assistant usage to Claude and bucket it by assistant-turn timestamp, so a
     single pi-compatible session can contribute to multiple models/days.
   - Matching assistant entry IDs within the same session are counted once across roots; distinct turns are retained.
+  - Claude-swap history contributes to the combined Claude total, including when an explicit `$CLAUDE_CONFIG_DIR` is set. Shared-history symlinks are scanned once, copied responses use the same deduplication as native logs, and missing profile directories do not prevent other homes from contributing. Local cost records do not establish per-account attribution.
 - Cache:
   - GPT usage recorded through Claude Code uses the bundled OpenAI model's long-context boundary (272K for supported models), while retaining catalog rates. Uncached input and cache-read/create tokens all contribute to the prompt length. Saved reports are recalculated after pricing corrections without discarding retained Codex history.
   - Native provider cache: `~/Library/Caches/CodexBar/cost-usage/claude-v6.json`

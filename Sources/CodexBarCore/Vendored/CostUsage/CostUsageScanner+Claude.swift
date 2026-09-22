@@ -105,51 +105,11 @@ extension CostUsageScanner {
         fileManager: FileManager = .default,
         workingDirectory: URL? = nil) -> [URL]
     {
-        if let override = options.claudeProjectsRoots {
-            return override
-        }
-
-        var roots: [URL] = []
-
-        if let configuredRoot = environment[ClaudeConfigPaths.configDirectoryEnvironmentKey],
-           !configuredRoot.isEmpty
-        {
-            let root = ClaudeConfigPaths.configRoot(
-                environment: environment,
-                workingDirectory: workingDirectory)
-            roots.append(root.appendingPathComponent("projects", isDirectory: true))
-        } else {
-            var pathEnvironment = environment
-            if pathEnvironment["HOME"]?.isEmpty ?? true {
-                pathEnvironment["HOME"] = homeDirectory.path
-            }
-            let ownerHome = ClaudeConfigPaths.homeDirectory(
-                environment: pathEnvironment,
-                workingDirectory: workingDirectory)
-            let configRoot = ClaudeConfigPaths.configRoot(
-                environment: pathEnvironment,
-                workingDirectory: workingDirectory)
-            roots.append(ownerHome.appendingPathComponent(".config/claude/projects", isDirectory: true))
-            roots.append(configRoot.appendingPathComponent("projects", isDirectory: true))
-            roots.append(contentsOf: ClaudeDesktopProjectsLocator.roots(
-                homeDirectory: ownerHome,
-                fileManager: fileManager))
-        }
-
-        return self.deduplicatedClaudeProjectRoots(roots)
-    }
-
-    private static func deduplicatedClaudeProjectRoots(_ roots: [URL]) -> [URL] {
-        var seen: Set<String> = []
-        var out: [URL] = []
-        for root in roots {
-            let standardized = root.standardizedFileURL
-            let path = standardized.path
-            guard !seen.contains(path) else { continue }
-            seen.insert(path)
-            out.append(standardized)
-        }
-        return out
+        options.claudeProjectsRoots ?? ClaudeConfigPaths.costProjectsRoots(
+            environment: environment,
+            homeDirectory: homeDirectory,
+            fileManager: fileManager,
+            workingDirectory: workingDirectory)
     }
 
     static func parseClaudeFile(
