@@ -30,10 +30,7 @@ public struct AlibabaCodingPlanSettingsReader: Sendable {
     public static func apiToken(
         environment: [String: String] = ProcessInfo.processInfo.environment) -> String?
     {
-        for key in self.apiTokenEnvironmentKeys {
-            if let token = SettingsValue.cleaned(environment[key]) { return token }
-        }
-        return nil
+        SettingsValue.first(in: environment, keys: self.apiTokenEnvironmentKeys)
     }
 
     public static func hostOverride(
@@ -41,20 +38,17 @@ public struct AlibabaCodingPlanSettingsReader: Sendable {
     {
         self.endpointValidator.validatedHost(
             SettingsValue.cleaned(environment[self.hostKey]),
-            policy: self.endpointOverrideHostPolicy(environment: environment))
+            policy: .init(requireProviderOwned: environment[self.requireProviderEndpointOverridesKey]))
     }
 
     public static func rejectedEndpointOverrideKey(
         environment: [String: String] = ProcessInfo.processInfo.environment) -> String?
     {
-        let policy = self.endpointOverrideHostPolicy(environment: environment)
-        return self.endpointOverrideKeys.first { key in
-            guard let value = SettingsValue.cleaned(environment[key]) else { return false }
-            if key == Self.hostKey {
-                return self.endpointValidator.validatedHost(value, policy: policy) == nil
-            }
-            return self.endpointValidator.validatedURL(value, policy: policy) == nil
-        }
+        self.endpointValidator.rejectedOverrideKey(
+            environment: environment,
+            keys: self.endpointOverrideKeys,
+            hostKey: self.hostKey,
+            policy: .init(requireProviderOwned: environment[self.requireProviderEndpointOverridesKey]))
     }
 
     public static func cookieHeader(
@@ -68,15 +62,7 @@ public struct AlibabaCodingPlanSettingsReader: Sendable {
     {
         self.endpointValidator.validatedURL(
             SettingsValue.cleaned(environment[self.quotaURLKey]),
-            policy: self.endpointOverrideHostPolicy(environment: environment))
-    }
-
-    static func endpointOverrideHostPolicy(environment: [String: String]) -> ProviderEndpointOverrideValidator
-    .HostPolicy {
-        guard let value = SettingsValue.cleaned(environment[self.requireProviderEndpointOverridesKey])?.lowercased(),
-              ["1", "true", "yes", "on"].contains(value)
-        else { return .allowAnyHTTPSHost }
-        return .providerOwnedOnly
+            policy: .init(requireProviderOwned: environment[self.requireProviderEndpointOverridesKey]))
     }
 }
 

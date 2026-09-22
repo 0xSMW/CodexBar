@@ -17,10 +17,7 @@ public struct MiniMaxAPISettingsReader: Sendable {
     public static func apiToken(
         environment: [String: String] = ProcessInfo.processInfo.environment) -> String?
     {
-        for key in self.apiTokenEnvironmentKeys {
-            if let token = SettingsValue.cleaned(environment[key]) { return token }
-        }
-        return nil
+        SettingsValue.first(in: environment, keys: self.apiTokenEnvironmentKeys)
     }
 
     public static func apiKeyKind(

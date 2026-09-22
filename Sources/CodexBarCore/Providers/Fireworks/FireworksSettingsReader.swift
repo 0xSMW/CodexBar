@@ -12,22 +12,14 @@ public struct FireworksSettingsReader: Sendable {
     public static func apiKey(
         environment: [String: String] = ProcessInfo.processInfo.environment) -> String?
     {
-        for key in [self.configAPIKeyEnvironmentKey] + self.apiKeyEnvironmentKeys {
-            if let value = SettingsValue.cleaned(environment[key]) {
-                return value
-            }
-        }
-        return nil
+        SettingsValue.first(in: environment, keys: [self.configAPIKeyEnvironmentKey] + self.apiKeyEnvironmentKeys)
     }
 
     public static func accountSlug(
         environment: [String: String] = ProcessInfo.processInfo.environment) -> String?
     {
-        for key in [self.configAccountSlugEnvironmentKey, self.accountSlugEnvironmentKey] {
-            if let value = SettingsValue.cleaned(environment[key]) {
-                return value
-            }
-        }
-        return nil
+        SettingsValue.first(
+            in: environment,
+            keys: [self.configAccountSlugEnvironmentKey, self.accountSlugEnvironmentKey])
     }
 }

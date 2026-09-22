@@ -7,11 +7,6 @@ public struct DeepInfraSettingsReader: Sendable {
     public static func apiKey(
         environment: [String: String] = ProcessInfo.processInfo.environment) -> String?
     {
-        for key in self.apiKeyEnvironmentKeys {
-            if let value = SettingsValue.cleaned(environment[key]) {
-                return value
-            }
-        }
-        return nil
+        SettingsValue.first(in: environment, keys: self.apiKeyEnvironmentKeys)
     }
 }
