@@ -6,7 +6,6 @@ import Security
 extension KeychainAccessPreflight {
     final class ValidationMemo: @unchecked Sendable {
         static let capacity = 64
-        static let successLifetime: TimeInterval = 30
         static let rejectionLifetime: TimeInterval = 5 * 60
 
         /// Preflights are synchronous. Each pending key has its own result promise, so waiting callers
@@ -67,14 +66,15 @@ extension KeychainAccessPreflight {
             let result = check()
             self.lock.withLock {
                 self.entries = self.entries.filter { now < $0.value.expiresAt }
-                if result == errSecSuccess || result == OSStatus(CSSMERR_CSP_VERIFY_FAILED), let result {
+                // Executable and bundle metadata cannot prove that all sealed resources are unchanged.
+                // Only confirmed rejections may outlive the validation currently in flight.
+                if result == OSStatus(CSSMERR_CSP_VERIFY_FAILED), let result {
                     if self.entries.count >= Self.capacity,
                        let firstToExpire = self.entries.min(by: { $0.value.expiresAt < $1.value.expiresAt })?.key
                     {
                         self.entries.removeValue(forKey: firstToExpire)
                     }
-                    let lifetime = result == errSecSuccess ? Self.successLifetime : Self.rejectionLifetime
-                    self.entries[key] = (result, now + lifetime)
+                    self.entries[key] = (result, now + Self.rejectionLifetime)
                 }
                 flight.complete(result)
                 self.flights.removeValue(forKey: key)

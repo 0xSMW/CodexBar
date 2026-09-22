@@ -38,12 +38,14 @@ decisions are never retried. Each distinct preflight can add two 30 ms waits plu
 repeated checks within one operation reuse the final result. This applies to generic-password preflights for
 browser storage, credential repair, and CodexBar caches, without changing their permission requirements.
 
-Repeated preflights share code-signature validation for the same trusted application and executable, including
-concurrent checks. The process-local memo holds at most 64 completed results: successes expire after 30 seconds and
-confirmed signature rejections after five minutes; transient failures are never cached. Changes to the executable,
-enclosing app bundle metadata, bundle version, or main executable trigger revalidation. Other sealed-resource changes
-are detected when the short success lifetime expires. The current Keychain ACL and prompt selector are still read on
-every preflight, and background secret reads remain non-interactive.
+Concurrent preflights for the same trusted application and executable share an in-flight code-signature validation.
+Completed successful validations and transient failures are not retained process-wide: executable and app metadata
+cannot detect every change to a sealed resource. The existing short, explicit operation memo can still reuse a
+generic-password preflight within that operation; it does not span asynchronous refreshes or deferred work.
+The process-local validation memo holds at most 64 confirmed signature rejections for five minutes. Changes to the
+executable, enclosing app bundle metadata, bundle version, or main executable invalidate those rejections sooner.
+Outside the explicit operation memo, the current Keychain ACL and prompt selector are read on every preflight, and
+background secret reads remain non-interactive.
 
 Provider-owned child processes are a separate boundary. CodexBar may intentionally launch a provider CLI such as
 Claude for usage. That executable owns its credential behavior, which CodexBar cannot constrain or fully inspect.

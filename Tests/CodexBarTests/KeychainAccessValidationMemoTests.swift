@@ -39,8 +39,12 @@ struct KeychainAccessValidationMemoTests {
             self.bundle.appendingPathComponent("Contents/Helpers/FixtureCLI")
         }
 
+        var resource: URL {
+            self.bundle.appendingPathComponent("Contents/Resources/fixture.txt")
+        }
+
         init() throws {
-            for url in [self.main, self.helper] {
+            for url in [self.main, self.helper, self.resource] {
                 try FileManager.default.createDirectory(
                     at: url.deletingLastPathComponent(),
                     withIntermediateDirectories: true)
@@ -80,7 +84,56 @@ struct KeychainAccessValidationMemoTests {
     }
 
     @Test
-    func `one hundred serial browser preflights validate once`() throws {
+    func `a changed sealed resource blocks the next background preflight`() throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        let memo = Memo()
+        let calls = Counter()
+        let original = try Data(contentsOf: fixture.resource)
+        let check: () -> OSStatus? = {
+            _ = calls.increment()
+            return (try? Data(contentsOf: fixture.resource)) == original
+                ? errSecSuccess : OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+        }
+        #expect(Self.gate(memo: memo, path: fixture.helper.path, check: check))
+
+        // This leaves the invoking executable, app-root metadata, and version unchanged.
+        try Data("changed sealed resource".utf8).write(to: fixture.resource)
+
+        #expect(!Self.gate(memo: memo, path: fixture.helper.path, check: check))
+        #expect(calls.count == 2)
+    }
+
+    @Test
+    func `a changed non-version plist field blocks the next background preflight`() throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        let memo = Memo()
+        let calls = Counter()
+        let plist = fixture.bundle.appendingPathComponent("Contents/Info.plist")
+        let original = try Data(contentsOf: plist)
+        let check: () -> OSStatus? = {
+            _ = calls.increment()
+            return (try? Data(contentsOf: plist)) == original
+                ? errSecSuccess : OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+        }
+        #expect(Self.gate(memo: memo, path: fixture.helper.path, check: check))
+        let changed = try PropertyListSerialization.data(
+            fromPropertyList: [
+                "CFBundleVersion": "1",
+                "CFBundleExecutable": "Fixture",
+                "CFBundleDisplayName": "Changed fixture",
+            ],
+            format: .xml,
+            options: 0)
+        try changed.write(to: plist)
+
+        #expect(!Self.gate(memo: memo, path: fixture.helper.path, check: check))
+        #expect(calls.count == 2)
+    }
+
+    @Test
+    func `completed successes revalidate for subsequent browser preflights`() throws {
         let fixture = try Fixture()
         defer { fixture.remove() }
         let memo = Memo()
@@ -91,8 +144,29 @@ struct KeychainAccessValidationMemoTests {
                 return errSecSuccess
             })
         }
-        #expect(calls.count == 1)
+        #expect(calls.count == 100)
         print("validation memo serial: requests=100 validations=\(calls.count)")
+    }
+
+    @Test
+    func `an explicit short operation reuses its preflight but the next operation validates again`() throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        let memo = Memo()
+        let calls = Counter()
+        let check: () -> OSStatus? = {
+            _ = calls.increment()
+            return errSecSuccess
+        }
+        KeychainAccessPreflight.withMemoizedGenericPasswordChecks {
+            for _ in 0..<100 {
+                #expect(Self.gate(memo: memo, path: fixture.helper.path, check: check))
+            }
+        }
+        #expect(calls.count == 1)
+
+        #expect(Self.gate(memo: memo, path: fixture.helper.path, check: check))
+        #expect(calls.count == 2)
     }
 
     @Test
@@ -146,7 +220,7 @@ struct KeychainAccessValidationMemoTests {
     }
 
     @Test(arguments: ["version", "main executable", "invoking executable", "bundle directory"])
-    func `changed bundle or executable metadata revalidates`(_ change: String) throws {
+    func `changed bundle or executable metadata revalidates cached rejections`(_ change: String) throws {
         let fixture = try Fixture()
         defer { fixture.remove() }
         let memo = Memo()
@@ -154,8 +228,8 @@ struct KeychainAccessValidationMemoTests {
         func validate() {
             #expect(memo.validate(trustedApplication: Self.trust, path: fixture.helper.path) {
                 calls += 1
-                return errSecSuccess
-            } == errSecSuccess)
+                return OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+            } == OSStatus(CSSMERR_CSP_VERIFY_FAILED))
         }
         validate()
         validate()
@@ -189,12 +263,13 @@ struct KeychainAccessValidationMemoTests {
         #expect(Self.gate(memo: memo, path: fixture.helper.path) { errSecSuccess })
     }
 
-    @Test(arguments: [errSecSuccess, OSStatus(CSSMERR_CSP_VERIFY_FAILED)])
-    func `stable results expire at their bounded lifetime`(_ status: OSStatus) throws {
+    @Test
+    func `confirmed rejections expire at their bounded lifetime`() throws {
         let fixture = try Fixture()
         defer { fixture.remove() }
         let memo = Memo()
-        let lifetime = status == errSecSuccess ? Memo.successLifetime : Memo.rejectionLifetime
+        let status = OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+        let lifetime = Memo.rejectionLifetime
         var calls = 0
         for now in [100, 100 + lifetime - 1, 100 + lifetime] {
             #expect(memo.validate(trustedApplication: Self.trust, path: fixture.helper.path, now: now) {
@@ -213,22 +288,31 @@ struct KeychainAccessValidationMemoTests {
         var calls = 0
         for index in 0...Memo.capacity {
             #expect(memo
-                .validate(trustedApplication: Data("trust-\(index)".utf8), path: fixture.helper.path, now: 100) {
+                .validate(
+                    trustedApplication: Data("trust-\(index)".utf8),
+                    path: fixture.helper.path,
+                    now: 100 + Double(index))
+                {
                     calls += 1
-                    return index == 0 ? errSecSuccess : OSStatus(CSSMERR_CSP_VERIFY_FAILED)
-                } == (index == 0 ? errSecSuccess : OSStatus(CSSMERR_CSP_VERIFY_FAILED)))
+                    return OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+                } == OSStatus(CSSMERR_CSP_VERIFY_FAILED))
         }
-        #expect(memo.validate(trustedApplication: Data("trust-1".utf8), path: fixture.helper.path, now: 100) {
+        #expect(memo.validate(trustedApplication: Data("trust-1".utf8), path: fixture.helper.path, now: 200) {
             calls += 1
             return OSStatus(CSSMERR_CSP_VERIFY_FAILED)
         } == OSStatus(CSSMERR_CSP_VERIFY_FAILED))
         #expect(calls == Memo.capacity + 1)
-        #expect(memo.validate(trustedApplication: Data("trust-0".utf8), path: fixture.helper.path, now: 100) {
+        #expect(memo.validate(trustedApplication: Data("trust-0".utf8), path: fixture.helper.path, now: 200) {
             calls += 1
-            return errSecSuccess
-        } == errSecSuccess)
+            return OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+        } == OSStatus(CSSMERR_CSP_VERIFY_FAILED))
         #expect(calls == Memo.capacity + 2)
-        #expect(memo.validate(trustedApplication: Data("trust-0".utf8), path: fixture.main.path, now: 100) {
+        #expect(memo.validate(trustedApplication: Data("trust-2".utf8), path: fixture.helper.path, now: 200) {
+            calls += 1
+            return OSStatus(CSSMERR_CSP_VERIFY_FAILED)
+        } == OSStatus(CSSMERR_CSP_VERIFY_FAILED))
+        #expect(calls == Memo.capacity + 2)
+        #expect(memo.validate(trustedApplication: Data("trust-0".utf8), path: fixture.main.path, now: 200) {
             calls += 1
             return OSStatus(CSSMERR_CSP_VERIFY_FAILED)
         } == OSStatus(CSSMERR_CSP_VERIFY_FAILED))
