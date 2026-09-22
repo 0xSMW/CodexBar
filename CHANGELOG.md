@@ -5,6 +5,7 @@
 ### Fixed
 
 - Antigravity: explain failed live fetches when falling back to offline history, keep diagnostics free of raw process and account details, and show the active source in settings instead of misleading detection warnings (#3865, fixes #3861). Thanks @vincent-peng!
+- Provider plugins: preserve unknown usage on named quota windows and numeric progress in detail rows.
 - Claude: dismiss open CLI panels before reading account identity or refreshing usage in a reused session (#3821). Thanks @sczhui!
 - Performance: reuse code-signature checks across browser-cookie preflights, coalesce concurrent checks, and revalidate after app updates while preserving no-UI Keychain access (#3837, #3838). Thanks @jeffloo886!
 - Cost history: reuse quota-week projections across menu card builds and warm them off the main thread (#3831, fixes #3827). Thanks @giuseppebisemi!
