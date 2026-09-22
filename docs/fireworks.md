@@ -49,6 +49,12 @@ that state with `empty: true`. Account discovery also persists the selected slug
 returns a dynamic source label plus a save-failure diagnostic. The script strategy has no result-metadata or
 config-persistence bridge for those behaviors, so explicit empty-snapshot support alone does not complete this conversion.
 
+The remaining bridge needs a typed fetch-result envelope (`usage`, `sourceLabel`, and requested plain-setting updates),
+validated identically by both engines. A provider-owned allowlist must map updates to an injected app/CLI settings writer,
+with stale-refresh checks and an observable save result. The current settings registration is read-only; app saves are
+debounced and log failures instead of returning them. Direct config writes in the generic script strategy would bypass
+that ownership, so this persistence change remains a separate host task before Fireworks can cut over.
+
 ## Key files
 
 - `Sources/CodexBarCore/Providers/Fireworks/FireworksProviderDescriptor.swift` (descriptor + fetch strategy)

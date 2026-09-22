@@ -230,6 +230,10 @@ displayable usage or identity remains invalid unless `empty: true` is explicitly
 
 ## TypeScript
 
+Moonshot's bundled `moonshot.ts` runs on both engines. Its Swift descriptor resolves the regional credential and passes
+the selected origin as `BASE_URL`; the plugin validates the fixed International/China origins and uses
+`ctx.format.currency` for identity-only balance and deficit text. See [Moonshot](moonshot.md).
+
 [`codexbar-plugin.d.ts`](../Sources/CodexBarCore/Resources/Plugins/codexbar-plugin.d.ts) is the canonical authoring
 contract for `defineProvider`, the `ctx` host API, manifests, and usage snapshots. Bundled plugins may use that contract
 directly as `.ts` sources. `Scripts/regenerate-plugin-js.sh` transpiles them with the vendored Sucrase build into
