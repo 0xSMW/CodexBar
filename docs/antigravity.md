@@ -283,6 +283,7 @@ shared OAuth file can still be used as a fallback credential source.
   `idle` instead. The `codexbar serve` web UI skips those rows, so the web card matches the menu without repeating
   the family rule in JavaScript. See `docs/dashboard-api.md`.
 - CLI text and `cards` render quota-summary buckets once, using the same idle-family visibility rule. Missing or disabled quota stays unavailable, including in brief cards, while reset context remains visible. Raw JSON retains every bucket.
+- Linux and Omarchy list each measured quota-summary bucket once with its family title. The most constrained bucket in each family stays first for the tray meters; notification history follows the bucket when its position changes.
 
 ## Local token history
 

@@ -25,21 +25,24 @@ private slots:
         QVERIFY(writeExecutable("claude", "#!/bin/sh\nexit 0\n"));
         QVERIFY(writeExecutable("fake-cli", "#!/bin/sh\nprintf '[]'\n"));
         qputenv("ACCOUNT_TEST_LOG", temporary.filePath("arguments").toUtf8());
-        QVERIFY(writeExecutable("xdg-terminal-exec", "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$ACCOUNT_TEST_LOG\"\n"));
+        // Make the create-before-write race deterministic, including on fast runners.
+        QVERIFY(writeExecutable("xdg-terminal-exec",
+            "#!/bin/sh\nexec > \"$ACCOUNT_TEST_LOG\"\n/bin/sleep 0.2\nprintf '%s\\n' \"$@\"\n"));
         DesktopController controller(temporary.filePath("fake-cli"));
         QVERIFY(!controller.accountAction("codex;anything", "login"));
         QVERIFY(!controller.accountAction("codex", "unrecognized"));
         QVERIFY(!QFile::exists(temporary.filePath("arguments")));
+        // The shell's redirect creates the log before printf fills it, so wait for the contents,
+        // not just the file.
+        const auto logged = [&] {
+            QFile file(temporary.filePath("arguments"));
+            return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+        };
         QVERIFY(controller.accountAction("claude", "login"));
-        QTRY_VERIFY(QFile::exists(temporary.filePath("arguments")));
-        QFile file(temporary.filePath("arguments"));
-        QVERIFY(file.open(QIODevice::ReadOnly));
-        QCOMPARE(file.readAll(), QByteArray("--hold\n--\n") + temporary.filePath("claude").toUtf8() + "\nauth\nlogin\n");
-        file.close(); file.remove();
+        QTRY_COMPARE(logged(), QByteArray("--hold\n--\n") + temporary.filePath("claude").toUtf8() + "\nauth\nlogin\n");
+        QVERIFY(QFile::remove(temporary.filePath("arguments")));
         QVERIFY(controller.accountAction("codex", "logout"));
-        QTRY_VERIFY(QFile::exists(temporary.filePath("arguments")));
-        QVERIFY(file.open(QIODevice::ReadOnly));
-        QCOMPARE(file.readAll(), QByteArray("--hold\n--\n") + temporary.filePath("codex").toUtf8() + "\nlogout\n");
+        QTRY_COMPARE(logged(), QByteArray("--hold\n--\n") + temporary.filePath("codex").toUtf8() + "\nlogout\n");
         qputenv("PATH", originalPath);
     }
 };

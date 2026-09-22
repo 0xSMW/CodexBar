@@ -69,3 +69,30 @@ test('scoped clipboard summaries omit unmeasured windows and private titles', ()
         ]}}]), true);
     assert.equal(model.summary(entries), 'CLAUDE\nScoped [hidden email]: 7% remaining');
 });
+
+// Antigravity copies the tightest pool of each family into its positional windows, so which
+// pool leads can change between polls.
+const antigravity = (geminiSession, geminiWeekly, claudeSession) => {
+    const pool = (remaining, windowMinutes) => ({usedPercent: 100 - remaining, windowMinutes, resetsAt: '2026-09-21T01:00:00Z'});
+    const pools = {geminiSession: pool(geminiSession, 300), geminiWeekly: pool(geminiWeekly, 10080),
+        claudeSession: pool(claudeSession, 300)};
+    const tightest = (a, b) => a.usedPercent >= b.usedPercent ? a : b;
+    const summary = (id, title, window) => ({id: 'antigravity-quota-summary-' + id, title, usageKnown: true, window});
+    return usage.rows(JSON.stringify([{provider: 'antigravity', usage: {
+        primary: tightest(pools.geminiSession, pools.geminiWeekly), secondary: pools.claudeSession,
+        extraRateWindows: [summary('gemini-5h', 'Gemini 5-hour', pools.geminiSession),
+            summary('gemini-weekly', 'Gemini weekly', pools.geminiWeekly),
+            summary('claude-5h', 'Claude/GPT 5-hour', pools.claudeSession)]}}]), false);
+};
+
+test('a pool that becomes its family representative keeps its alert history', () => {
+    const baseline = model.transition({}, antigravity(20, 5, 90), 10);
+    const low = model.transition(baseline.state, antigravity(4, 5, 90), 10);
+    assert.deepEqual(Array.from(low.events, event => event.message), ['Gemini 5-hour: 4% quota remaining.']);
+});
+
+test('families reporting equal values keep their own titles', () => {
+    const baseline = model.transition({}, antigravity(5, 0, 20), 10);
+    const low = model.transition(baseline.state, antigravity(5, 0, 5), 10);
+    assert.deepEqual(Array.from(low.events, event => event.message), ['Claude/GPT 5-hour: 5% quota remaining.']);
+});

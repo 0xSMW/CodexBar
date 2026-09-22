@@ -240,6 +240,9 @@ It includes display values and reset text for adapters. Adapters should check `s
 unknown fields, and treat a missing backend as unavailable.
 Measured provider-scoped windows follow the standard windows and require a stable, nonempty identifier.
 Their exported `key` values are opaque and remain stable for the lifetime of the backend process.
+Antigravity quota-summary buckets appear once with their family titles. Each family's
+most constrained bucket keeps its leading position for tray meters and summary text;
+its key and alert history stay with the bucket when a different bucket leads.
 
 ## Validation and removal
 
