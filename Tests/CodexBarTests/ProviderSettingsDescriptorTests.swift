@@ -9,6 +9,16 @@ import Testing
 @Suite(.serialized)
 struct ProviderSettingsDescriptorTests {
     @Test
+    func `OpenCode Go can add API accounts while automatic cookies are selected`() throws {
+        let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-opencodego-accounts")
+        fixture.settings.opencodegoCookieSource = .auto
+        let support = try #require(TokenAccountSupportCatalog.support(for: .opencodego))
+        #expect(OpenCodeGoProviderImplementation().tokenAccountsVisibility(
+            context: fixture.settingsContext(provider: .opencodego), support: support))
+        #expect(support.subtitle.contains("API keys"))
+    }
+
+    @Test
     func `bedrock discloses monitoring charges before credentials in either authentication mode`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-bedrock-charges")
         let context = fixture.settingsContext(provider: .bedrock)

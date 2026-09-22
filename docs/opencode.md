@@ -12,7 +12,7 @@ read_when:
   functions) and `__Host-console_session` (the console). Both are forwarded, and either one alone is
   enough for an import to succeed, because a migrated workspace may carry only the console cookie.
 - OpenCode Go usage API at `GET https://opencode.ai/zen/go/v1/usage`, authenticated by `OPENCODE_API_KEY` or
-  `providers[].apiKey`.
+  `providers[].apiKey`, or a selected token account's API key.
 - OpenCode Go local history from `~/.local/share/opencode/opencode.db` on macOS and Linux.
 - OpenCode Console JSON, used first for OpenCode Go web reads:
   - `GET https://opencode.ai/console/api/orgs` lists workspaces (cookie auth only).
@@ -53,6 +53,15 @@ Ordinary OpenCode sessions using OpenAI/Codex are not currently included in loca
 usage is a separate [OpenAI provider](openai.md), not Codex subscription quota.
 
 ## Notes
+- OpenCode Go token accounts accept raw API keys as well as existing Cookie headers. Add each key with its own
+  label under **OpenCode Go accounts**; the selected account controls the single-account view, and the stacked
+  submenu or `codexbar usage --provider opencodego --all-accounts` reads each account separately. In Auto mode,
+  raw keys use the public usage API without browser cookies or device-wide local history. A failed key stays an
+  account-local error. Explicit `--source api` or `--source web` still selects that source.
+- Cookie headers containing `name=value` retain their manual web path. Keys are plain tokens without whitespace,
+  `=`, or `:`; surrounding quotes and whitespace are removed. Selected accounts override the provider-wide API
+  key and `OPENCODE_API_KEY`; selecting a Cookie account clears those API credentials for that fetch. Existing
+  single-key setups without token accounts are unchanged.
 - Legacy responses are `text/javascript` with serialized objects; Console responses are JSON.
 - Missing workspace ID or rolling usage fields should raise parse errors; omitted weekly usage stays absent.
 - OpenCode web Auto imports Chrome first, then Dia when their cookie stores exist; Keychain preflight stays scoped
