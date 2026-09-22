@@ -127,15 +127,23 @@ for (const [, attrs, body] of providerCards) {
   if (providerID) {
     listedProviderIDs.push(providerID);
     assert(!attrs.includes("hidden"), `registered provider ${providerID} must be visible`);
-    const documentationPath = body.match(/href="https:\/\/github\.com\/steipete\/CodexBar\/blob\/main\/(docs\/[^"#]+\.md)"/)?.[1];
+    const documentationPath = body.match(
+      /href="https:\/\/github\.com\/steipete\/CodexBar\/blob\/main\/(docs\/[^"#]+\.md)"/,
+    )?.[1];
     assert(documentationPath, `${providerID} must link to its provider documentation`);
     assert(
       !["docs/provider.md", "docs/providers.md"].includes(documentationPath),
       `${providerID} must link to its own setup guide`,
     );
-    assert(fs.existsSync(path.join(repoRoot, documentationPath)), `missing provider documentation ${documentationPath}`);
+    assert(
+      fs.existsSync(path.join(repoRoot, documentationPath)),
+      `missing provider documentation ${documentationPath}`,
+    );
   } else {
-    assert(body.includes('data-i18n="providers.yourProvider"'), "provider cards must identify their registered provider");
+    assert(
+      body.includes('data-i18n="providers.yourProvider"'),
+      "provider cards must identify their registered provider",
+    );
   }
   if (!attrs.includes("hidden")) {
     assert(body.includes('class="provider-card-link"'), "provider cards must link to provider documentation");
@@ -147,7 +155,9 @@ for (const [, attrs, body] of providerCards) {
 }
 assertEqual([...listedProviderIDs].sort(), [...providerIDs].sort(), "website provider coverage");
 
-console.log(`app/site locales OK: ${catalogCodes.length} locales, ${englishKeys.length} site messages, ${providerCount} provider cards`);
+console.log(
+  `app/site locales OK: ${catalogCodes.length} locales, ${englishKeys.length} site messages, ${providerCount} provider cards`,
+);
 
 function tokens(value) {
   return [...value.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]).sort();
