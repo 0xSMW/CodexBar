@@ -1392,3 +1392,39 @@ private struct AntigravityFallbackFixtureStrategy: ProviderFetchStrategy {
         self.priorFailureDiagnostic
     }
 }
+
+extension AntigravityCLIHTTPSFetchStrategyTests {
+    @Test
+    func `identified account mismatch skips the readiness wait`() async {
+        let attempts = AntigravityCLICounter()
+        let start = Date(timeIntervalSince1970: 100)
+        let clock = AntigravityCLITestClock(date: start)
+        await #expect(throws: AntigravityStatusProbeError.accountMismatch(
+            expected: "selected@example.com", found: "ambient@example.com"))
+        {
+            try await AntigravityCLIHTTPSFetchStrategy.waitForSnapshot(
+                pid: 123,
+                deadline: start.addingTimeInterval(30),
+                expectedAccountEmail: "selected@example.com",
+                dependencies: makeAntigravitySnapshotDependencies(
+                    pollIntervalNanoseconds: 0,
+                    listeningPorts: { _, _ in [50080] },
+                    drainOutput: { Data() },
+                    fetchSnapshot: { _ in
+                        attempts.increment()
+                        return AntigravityStatusSnapshot(
+                            modelQuotas: [AntigravityModelQuota(
+                                label: "Claude Sonnet",
+                                modelId: "claude-sonnet",
+                                remainingFraction: 0.5,
+                                resetTime: nil,
+                                resetDescription: nil)],
+                            accountEmail: "ambient@example.com",
+                            accountPlan: "Pro",
+                            source: .local)
+                    },
+                    now: { clock.now() }))
+        }
+        #expect(attempts.value == 1)
+    }
+}

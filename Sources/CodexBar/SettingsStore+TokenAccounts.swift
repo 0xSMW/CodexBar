@@ -66,14 +66,6 @@ extension SettingsStore {
         let trimmedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedToken.isEmpty else { return }
         let trimmedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedIdentifier = externalIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalisedIdentifier = (trimmedIdentifier?.isEmpty ?? true) ? nil : trimmedIdentifier
-        let trimmedUsageScope = usageScope?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalisedUsageScope = (trimmedUsageScope?.isEmpty ?? true) ? nil : trimmedUsageScope
-        let trimmedOrganizationID = organizationID?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalisedOrganizationID = (trimmedOrganizationID?.isEmpty ?? true) ? nil : trimmedOrganizationID
-        let trimmedWorkspaceID = workspaceID?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalisedWorkspaceID = (trimmedWorkspaceID?.isEmpty ?? true) ? nil : trimmedWorkspaceID
         let existing = self.tokenAccountsData(for: provider)
         let accounts = existing?.accounts ?? []
         let fallbackLabel = trimmedLabel.isEmpty ? "Account \(accounts.count + 1)" : trimmedLabel
@@ -83,10 +75,10 @@ extension SettingsStore {
             token: trimmedToken,
             addedAt: Date().timeIntervalSince1970,
             lastUsed: nil,
-            externalIdentifier: normalisedIdentifier,
-            usageScope: normalisedUsageScope,
-            organizationID: normalisedOrganizationID,
-            workspaceID: normalisedWorkspaceID)
+            externalIdentifier: Self.normalizedTokenAccountField(externalIdentifier),
+            usageScope: Self.normalizedTokenAccountField(usageScope),
+            organizationID: Self.normalizedTokenAccountField(organizationID),
+            workspaceID: Self.normalizedTokenAccountField(workspaceID))
         let updated = ProviderTokenAccountData(
             version: existing?.version ?? 1,
             accounts: accounts + [account],
@@ -127,52 +119,18 @@ extension SettingsStore {
         }
 
         let existing = data.accounts[index]
-        let resolvedIdentifier: String?
-        if let externalIdentifier {
-            let trimmed = externalIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
-            resolvedIdentifier = (trimmed?.isEmpty ?? true) ? nil : trimmed
-        } else {
-            resolvedIdentifier = existing.externalIdentifier
-        }
-        let resolvedUsageScope: String?
-        if let usageScope {
-            let trimmed = usageScope?.trimmingCharacters(in: .whitespacesAndNewlines)
-            resolvedUsageScope = (trimmed?.isEmpty ?? true) ? nil : trimmed
-        } else {
-            resolvedUsageScope = existing.usageScope
-        }
-        let resolvedOrganizationID: String?
-        if let organizationID {
-            let trimmed = organizationID?.trimmingCharacters(in: .whitespacesAndNewlines)
-            resolvedOrganizationID = (trimmed?.isEmpty ?? true) ? nil : trimmed
-        } else {
-            resolvedOrganizationID = existing.organizationID
-        }
-        let resolvedWorkspaceID: String?
-        if let workspaceID {
-            let trimmed = workspaceID?.trimmingCharacters(in: .whitespacesAndNewlines)
-            resolvedWorkspaceID = (trimmed?.isEmpty ?? true) ? nil : trimmed
-        } else {
-            resolvedWorkspaceID = existing.workspaceID
-        }
-        let resolvedSeatCreditEntitlement: String?
-        if let seatCreditEntitlement {
-            let trimmed = seatCreditEntitlement?.trimmingCharacters(in: .whitespacesAndNewlines)
-            resolvedSeatCreditEntitlement = (trimmed?.isEmpty ?? true) ? nil : trimmed
-        } else {
-            resolvedSeatCreditEntitlement = existing.seatCreditEntitlement
-        }
         let updatedAccount = ProviderTokenAccount(
             id: existing.id,
             label: (trimmedLabel?.isEmpty == false) ? trimmedLabel! : existing.label,
             token: trimmedToken ?? existing.token,
             addedAt: existing.addedAt,
             lastUsed: existing.lastUsed,
-            externalIdentifier: resolvedIdentifier,
-            usageScope: resolvedUsageScope,
-            organizationID: resolvedOrganizationID,
-            workspaceID: resolvedWorkspaceID,
-            seatCreditEntitlement: resolvedSeatCreditEntitlement)
+            externalIdentifier: externalIdentifier.map(Self.normalizedTokenAccountField) ?? existing.externalIdentifier,
+            usageScope: usageScope.map(Self.normalizedTokenAccountField) ?? existing.usageScope,
+            organizationID: organizationID.map(Self.normalizedTokenAccountField) ?? existing.organizationID,
+            workspaceID: workspaceID.map(Self.normalizedTokenAccountField) ?? existing.workspaceID,
+            seatCreditEntitlement: seatCreditEntitlement.map(Self.normalizedTokenAccountField)
+                ?? existing.seatCreditEntitlement)
 
         var accounts = data.accounts
         accounts[index] = updatedAccount
@@ -318,20 +276,20 @@ extension SettingsStore {
         _ shared: AntigravityOAuthCredentials,
         _ removed: AntigravityOAuthCredentials) -> Bool
     {
-        if let sharedRefreshToken = self.normalizedAntigravityCredentialToken(shared.refreshToken),
-           let removedRefreshToken = self.normalizedAntigravityCredentialToken(removed.refreshToken)
+        if let sharedRefreshToken = self.normalizedTokenAccountField(shared.refreshToken),
+           let removedRefreshToken = self.normalizedTokenAccountField(removed.refreshToken)
         {
             return sharedRefreshToken == removedRefreshToken
         }
-        if let sharedAccessToken = self.normalizedAntigravityCredentialToken(shared.accessToken),
-           let removedAccessToken = self.normalizedAntigravityCredentialToken(removed.accessToken)
+        if let sharedAccessToken = self.normalizedTokenAccountField(shared.accessToken),
+           let removedAccessToken = self.normalizedTokenAccountField(removed.accessToken)
         {
             return sharedAccessToken == removedAccessToken
         }
-        guard self.normalizedAntigravityCredentialToken(shared.refreshToken) == nil,
-              self.normalizedAntigravityCredentialToken(removed.refreshToken) == nil,
-              self.normalizedAntigravityCredentialToken(shared.accessToken) == nil,
-              self.normalizedAntigravityCredentialToken(removed.accessToken) == nil
+        guard self.normalizedTokenAccountField(shared.refreshToken) == nil,
+              self.normalizedTokenAccountField(removed.refreshToken) == nil,
+              self.normalizedTokenAccountField(shared.accessToken) == nil,
+              self.normalizedTokenAccountField(removed.accessToken) == nil
         else {
             return false
         }
@@ -348,13 +306,13 @@ extension SettingsStore {
         {
             return lhsEmail == rhsEmail
         }
-        if let lhsRefreshToken = self.normalizedAntigravityCredentialToken(lhs.refreshToken),
-           let rhsRefreshToken = self.normalizedAntigravityCredentialToken(rhs.refreshToken)
+        if let lhsRefreshToken = self.normalizedTokenAccountField(lhs.refreshToken),
+           let rhsRefreshToken = self.normalizedTokenAccountField(rhs.refreshToken)
         {
             return lhsRefreshToken == rhsRefreshToken
         }
-        if let lhsAccessToken = self.normalizedAntigravityCredentialToken(lhs.accessToken),
-           let rhsAccessToken = self.normalizedAntigravityCredentialToken(rhs.accessToken)
+        if let lhsAccessToken = self.normalizedTokenAccountField(lhs.accessToken),
+           let rhsAccessToken = self.normalizedTokenAccountField(rhs.accessToken)
         {
             return lhsAccessToken == rhsAccessToken
         }
@@ -362,15 +320,10 @@ extension SettingsStore {
     }
 
     private nonisolated static func normalizedAntigravityAccountEmail(_ email: String?) -> String? {
-        guard let value = email?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              !value.isEmpty
-        else {
-            return nil
-        }
-        return value
+        self.normalizedTokenAccountField(email)?.lowercased()
     }
 
-    private nonisolated static func normalizedAntigravityCredentialToken(_ token: String?) -> String? {
+    private nonisolated static func normalizedTokenAccountField(_ token: String?) -> String? {
         guard let value = token?.trimmingCharacters(in: .whitespacesAndNewlines),
               !value.isEmpty
         else {

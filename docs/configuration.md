@@ -8,6 +8,8 @@ read_when:
 
 # Configuration
 
+The app's **Help → CodexBar Help** command opens the [README](https://github.com/steipete/CodexBar/blob/main/README.md), including setup instructions and links to provider documentation.
+
 CodexBar reads a single JSON config file for CLI and app provider settings.
 The running app observes external in-place edits and atomic replacements, including rapid replacements and restoring older contents. Successful app writes update the observed baseline without being reported as external edits.
 API keys, manual cookie headers, source selection, ordering, and token accounts live here. Keychain is still used for runtime cookie caches, browser Safe Storage access, and provider OAuth/device-flow credentials where those flows require it.

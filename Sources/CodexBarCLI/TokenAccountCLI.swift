@@ -34,6 +34,7 @@ enum TokenAccountCLIError: LocalizedError {
     case noAccounts(UsageProvider)
     case accountNotFound(UsageProvider, String)
     case indexOutOfRange(UsageProvider, Int, Int)
+    case antigravityCLIAccountSelectionUnsupported
 
     var errorDescription: String? {
         switch self {
@@ -43,6 +44,9 @@ enum TokenAccountCLIError: LocalizedError {
             "No token account labeled '\(label)' for \(provider.rawValue)."
         case let .indexOutOfRange(provider, index, count):
             "Token account index \(index) out of range for \(provider.rawValue) (1-\(count))."
+        case .antigravityCLIAccountSelectionUnsupported:
+            "Antigravity CLI uses its local login and cannot select saved Google accounts. " +
+                "Use --source auto or --source oauth with account selection."
         }
     }
 }
@@ -83,8 +87,13 @@ struct TokenAccountCLIContext {
         for provider: UsageProvider, sourceMode: ProviderSourceMode? = nil) throws -> [ProviderTokenAccount]
     {
         guard let support = TokenAccountSupportCatalog.support(for: provider) else { return [] }
+        let effectiveSourceMode = sourceMode ?? self.preferredSourceMode(for: provider)
+        // Provider-specific by design: agy owns its login; saved Google accounts cannot select its local identity.
+        if provider == .antigravity, effectiveSourceMode == .cli, self.selection.usesOverride {
+            throw TokenAccountCLIError.antigravityCLIAccountSelectionUnsupported
+        }
         if !self.selection.usesOverride,
-           support.passiveSourceModes.contains(sourceMode ?? self.preferredSourceMode(for: provider))
+           support.passiveSourceModes.contains(effectiveSourceMode)
         {
             return []
         }

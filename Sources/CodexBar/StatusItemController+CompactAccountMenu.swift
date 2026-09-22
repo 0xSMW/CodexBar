@@ -321,10 +321,9 @@ extension StatusItemController {
         self.invalidateMenus(refreshOpenMenus: true)
     }
 
-    /// Compact-layout expansion is per-open transient UI state; reset when the last menu closes.
+    /// The healthy-tail reveal is transient; explicit account-card expansion is persisted in settings.
     func resetCompactAccountMenuExpansionStateIfIdle() {
         guard self.openMenus.isEmpty else { return }
-        self.compactAccountExpandedIDs.removeAll()
         self.compactAccountExpandedHealthyTailProviders.removeAll()
     }
 }

@@ -214,8 +214,9 @@ The accepted multi-account design in
   accounts the stacked menu switches to a compact layout (`AccountMenuLayoutPlanner`): the active account keeps its full
   card, inactive accounts become one-line rows sorted by remaining headroom (most constrained first, red/amber below
   50%/10% left, a star on the healthiest activatable account), and healthy rows fold behind a "N more accounts ready"
-  summary row. Clicking a compact row expands that account's full card for the current menu session; the summary row
-  reveals the hidden rows. `codexbar cards` keeps the full per-account output. The same compact layout applies to
+  summary row. Clicking a compact row expands that account's full card; clicking an inactive card collapses it again.
+  This choice is remembered locally across menu opens and app restarts. The summary row reveals the hidden rows for
+  the current menu session. `codexbar cards` keeps the full per-account output. The same compact layout applies to
   every stacked multi-account list (token accounts on any provider, and flat Codex account lists; workspace-grouped
   Codex lists keep their sectioned stacked layout). To use this
   presentation with one account, enable “Show account card when only one account is available” or set

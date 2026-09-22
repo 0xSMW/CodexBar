@@ -289,8 +289,12 @@ final class StatusItemController: NSObject, NSMenuDelegate, StatusItemControllin
     /// Debounced pre-build of sibling switcher tabs for flicker-free tab switches.
     /// A common-modes Timer (not a Task) so it fires during NSMenu tracking.
     var mergedSwitcherWarmupTimer: Timer?
-    /// Compact multi-account layout: accounts the user expanded to full cards this menu session.
-    var compactAccountExpandedIDs: Set<ProviderAccountIdentity> = []
+    /// Compact multi-account layout: remember explicit card expansion across menu opens and app launches.
+    var compactAccountExpandedIDs: Set<ProviderAccountIdentity> {
+        get { self.settings.compactAccountExpandedIDs }
+        set { self.settings.compactAccountExpandedIDs = newValue }
+    }
+
     var claudeSwapInspectedAccountID: ProviderAccountIdentity?
     /// Compact multi-account layout: providers whose collapsed healthy tail is revealed this menu session.
     var compactAccountExpandedHealthyTailProviders: Set<ProviderInstanceID> = []

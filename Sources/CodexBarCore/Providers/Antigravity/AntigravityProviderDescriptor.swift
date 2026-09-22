@@ -8,7 +8,8 @@ public enum AntigravityProviderDescriptor {
         placeholder: "Antigravity OAuth credentials JSON",
         injection: .environment(key: AntigravityOAuthCredentialsStore.environmentCredentialsKey),
         requiresManualCookieSource: false,
-        cookieName: nil))
+        cookieName: nil,
+        passiveSourceModes: [.cli]))
 
     static func makeDescriptor() -> ProviderDescriptor {
         ProviderDescriptor(
@@ -803,9 +804,13 @@ struct AntigravityCLIHTTPSFetchStrategy: ProviderFetchStrategy {
                     // Fresh `agy` processes can answer quota endpoints before the
                     // signed-in account email is available; keep polling so the
                     // account guard does not reject the cold-start snapshot.
-                    lastFetchError = AntigravityStatusProbeError.accountMismatch(
+                    let mismatch = AntigravityStatusProbeError.accountMismatch(
                         expected: expectedAccountEmail,
                         found: readySnapshot.accountEmail)
+                    if readySnapshot.accountEmail?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+                        throw mismatch
+                    }
+                    lastFetchError = mismatch
                     Self.log.debug(
                         "Antigravity CLI HTTPS snapshot account not ready yet",
                         metadata: [
