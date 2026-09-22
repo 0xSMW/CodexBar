@@ -352,12 +352,11 @@ struct LiteLLMUsageFetcherTests {
             #expect(error.kind == .authenticationExpired)
             let message = error.message
             #expect(message.contains("HTTP 401"))
-            #expect(message.contains("Unauthorized"))
         } catch {
             Issue.record("expected authentication failure, got \(error)")
         }
 
         let requests = await transport.requests()
-        #expect(requests.count == 1)
+        #expect(requests.compactMap { $0.url?.path } == ["/key/info", "/key/spend/report", "/user/spend/report"])
     }
 }

@@ -16,81 +16,105 @@ defineProvider({
       if (!value || typeof value !== "object" || Array.isArray(value)) return fail("expected an object");
       return value as Record<string, unknown>;
     };
-    const text = (value: unknown): string | undefined => {
+    const scalar = <T>(value: unknown, valid: boolean): T | undefined => {
       if (value == null) return undefined;
-      if (typeof value !== "string") return fail("invalid string");
-      return value;
+      if (!valid) return fail("invalid scalar");
+      return value as T;
     };
-    const number = (value: unknown): number | undefined => {
-      if (value == null) return undefined;
-      if (typeof value !== "number" || !Number.isFinite(value)) return fail("invalid number");
-      return value;
-    };
+    const text = (value: unknown) => scalar<string>(value, typeof value === "string");
+    const number = (value: unknown) => scalar<number>(value, typeof value === "number" && Number.isFinite(value));
     const date = (value: unknown): Date | undefined => {
       const string = text(value);
-      if (!string) return undefined;
       try {
-        return ctx.date.iso(string);
+        return string ? ctx.date.iso(string) : undefined;
       } catch (error) {
         void error;
         return undefined;
       }
     };
     const nonempty = (value: unknown) => text(value)?.trim() || undefined;
-    const rawBase = ctx.settings.get("LITELLM_BASE_URL") || "";
-    const [basePath, suffix = ""] = rawBase.split(/(?=[?#])/u, 2);
+    const [basePath, suffix = ""] = (ctx.settings.get("LITELLM_BASE_URL") || "").split(/(?=[?#])/u, 2);
     let base = basePath.replace(/\/+$/u, "");
     if (decodeURIComponent(base).endsWith("/v1")) base = base.slice(0, base.lastIndexOf("/"));
-    const request = async (path: string, query?: string) => {
-      let response;
-      try {
-        response = await ctx.http.get(`${base}/${path}${query ?? suffix}`);
-      } catch (error) {
+    const request = async (path: string, query = suffix, allowUnavailable = false): Promise<unknown> => {
+      const response = await ctx.http.get(`${base}/${path}${query}`).catch((error: unknown) => {
         throw ctx.fail.networkFailure(`LiteLLM network error: ${String(error)}`);
-      }
+      });
       if (response.status < 200 || response.status >= 300) {
-        const message = `LiteLLM API error: HTTP ${response.status}: ${response.bodyText.slice(0, 500).trim()}`;
+        if (allowUnavailable && [401, 403, 404].includes(response.status)) return undefined;
+        const detail = path.endsWith("/report") ? "" : `: ${response.bodyText.slice(0, 500).trim()}`;
+        const message = `LiteLLM API error: HTTP ${response.status}${detail}`;
         if (response.status === 401) throw ctx.fail.authenticationExpired(message);
         if (response.status === 403) throw ctx.fail.permissionDenied(message);
         if (response.status === 429) throw ctx.fail.rateLimited(message);
         if (response.status >= 500) throw ctx.fail.providerUnavailable(message);
         throw ctx.fail.apiFailure(message);
       }
-      let decoded;
       try {
-        decoded = JSON.parse(response.bodyText);
+        return JSON.parse(response.bodyText);
       } catch (error) {
         void error;
         return fail("invalid JSON");
       }
-      return object(decoded);
     };
-    const key = object((await request("key/info")).info);
+    const keyRoot = await request("key/info", suffix, true);
+    if (keyRoot === undefined) {
+      const end = ctx.date.now().toISOString().slice(0, 10),
+        start = `${end.slice(0, 7)}-01`;
+      const query = `?start_date=${start}&end_date=${end}`;
+      let scope = "Key",
+        rows = await request("key/spend/report", query, true);
+      if (rows === undefined) {
+        scope = "User";
+        rows = await request("user/spend/report", query);
+      }
+      if (!Array.isArray(rows) || !rows.length) return fail("empty or invalid spend report");
+      let used = 0;
+      for (const row of rows) {
+        const cost = number(object(row).total_cost);
+        if (cost === undefined || cost < 0) return fail("invalid total_cost");
+        used += cost;
+      }
+      number(used);
+      return { cost: { used, currency: "USD", period: `${scope} spend only (${start}–${end} UTC)` } };
+    }
+    const key = object(object(keyRoot).info);
     const userID = nonempty(key.user_id),
       teamID = nonempty(key.team_id);
     text(key.key_name);
     number(key.spend);
     const expires = date(key.expires);
     if (!userID && !teamID) return fail("LiteLLM key info did not include a user_id or team_id.");
-    const budget = (value: unknown, requireID = false) => {
+    const budget = (value: unknown, scope: "Personal" | "Team", requireID = false) => {
       const info = object(value);
-      const id = text(info.team_id);
+      const id = scope === "Team" ? text(info.team_id) : undefined;
       if (requireID && id === undefined) return fail("missing team_id");
-      text(info.budget_duration);
+      if (scope === "Team") text(info.budget_duration);
+      const alias = scope === "Team" ? text(info.team_alias) : undefined;
+      const used = number(info.spend) ?? 0,
+        limit = Math.max(0, number(info.max_budget) ?? 0);
+      const resetsAt = date(info.budget_reset_at);
+      const label = scope === "Personal" ? "" : `Team${alias === undefined ? "" : ` ${alias}`}: `;
       return {
         id,
-        alias: text(info.team_alias),
-        spend: number(info.spend) ?? 0,
-        limit: number(info.max_budget),
-        reset: date(info.budget_reset_at),
+        alias,
+        window:
+          limit > 0
+            ? {
+                usedPercent: Math.min(100, Math.max(0, (used / limit) * 100)),
+                resetsAt,
+                resetDescription: `${label}${ctx.format.usd(used)} / ${ctx.format.usd(limit)}`,
+              }
+            : null,
+        cost:
+          used > 0 || limit > 0
+            ? { used, limit, currency: "USD", period: `${scope} ${limit > 0 ? "budget" : "spend"}`, resetsAt }
+            : null,
       };
     };
-    let personalSpend = 0,
-      personalBudget: number | undefined,
-      personalReset: Date | undefined;
-    let email: string | undefined, team: ReturnType<typeof budget> | undefined;
+    let email: string | undefined, personal: ReturnType<typeof budget> | undefined, team: typeof personal;
     if (userID) {
-      const root = await request("user/info", `?user_id=${encodeURIComponent(userID)}`);
+      const root = object(await request("user/info", `?user_id=${encodeURIComponent(userID)}`));
       const user = object(root.user_info);
       const rootID = text(root.user_id),
         responseID = text(user.user_id) ?? rootID;
@@ -100,46 +124,22 @@ defineProvider({
       const metadata = user.metadata == null ? {} : object(user.metadata);
       const preferred =
         typeof metadata.preferred_username === "string" ? nonempty(metadata.preferred_username) : undefined;
-      email = userEmail ?? alias ?? preferred;
-      personalSpend = number(user.spend) ?? 0;
-      personalBudget = number(user.max_budget);
-      personalReset = date(user.budget_reset_at);
+      email = userEmail || alias || preferred;
+      personal = budget(user, "Personal");
       if (root.teams != null && !Array.isArray(root.teams)) return fail("invalid teams");
-      const teams = ((root.teams ?? []) as unknown[]).map((value) => budget(value, true));
+      const teams = ((root.teams ?? []) as unknown[]).map((value) => budget(value, "Team", true));
       team = teamID ? teams.find((value) => value.id === teamID) : undefined;
     } else {
-      const root = await request("team/info", `?team_id=${encodeURIComponent(teamID!)}`);
+      const root = object(await request("team/info", `?team_id=${encodeURIComponent(teamID!)}`));
       const rootID = nonempty(root.team_id);
-      team = budget(root.team_info);
-      const responseID = team.id?.trim() || rootID;
+      team = budget(root.team_info, "Team");
+      const responseID = nonempty(team.id) || rootID;
       if (responseID !== undefined && responseID !== teamID) return fail("team_id did not match /key/info");
     }
-    const window = (spend: number, limit: number | undefined, reset: Date | undefined, label?: string) =>
-      limit !== undefined && limit > 0
-        ? {
-            usedPercent: Math.min(100, Math.max(0, (spend / limit) * 100)),
-            resetsAt: reset,
-            resetDescription: `${label === undefined ? "" : `${label}: `}${ctx.format.usd(spend)} / ${ctx.format.usd(limit)}`,
-          }
-        : null;
-    const spend = userID ? personalSpend : team!.spend;
-    const limit = userID ? personalBudget : team!.limit;
-    const reset = userID ? personalReset : team!.reset;
     return {
-      primary: window(personalSpend, personalBudget, personalReset),
-      secondary: team
-        ? window(team.spend, team.limit, team.reset, team.alias === undefined ? "Team" : `Team ${team.alias}`)
-        : null,
-      cost:
-        spend > 0 || (limit ?? 0) > 0
-          ? {
-              used: spend,
-              limit: Math.max(0, limit ?? 0),
-              currency: "USD",
-              period: `${userID ? "Personal" : "Team"} ${(limit ?? 0) > 0 ? "budget" : "spend"}`,
-              resetsAt: reset,
-            }
-          : null,
+      primary: personal?.window,
+      secondary: team?.window,
+      cost: (personal ?? team)!.cost,
       subscriptionExpiresAt: expires,
       identity: { email, organization: team?.alias, loginMethod: "api" },
     };

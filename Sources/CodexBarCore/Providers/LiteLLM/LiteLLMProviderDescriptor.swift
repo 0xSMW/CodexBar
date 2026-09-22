@@ -52,10 +52,15 @@ public enum LiteLLMProviderDescriptor {
                 noDataMessage: { "LiteLLM spend is reported by the provider API." }),
             presentation: ProviderUsagePresentation(
                 costPresenter: { snapshot in
-                    let style: ProviderCostMenuCardStyle = (snapshot.providerCost?.limit ?? 1) <= 0
-                        ? .apiSpend
-                        : .hidden
-                    return ProviderCostPresentation(menuCardStyle: style)
+                    guard let cost = snapshot.providerCost,
+                          cost.limit <= 0 else { return .init(menuCardStyle: .hidden) }
+                    return .init(
+                        showsGenericFallback: false,
+                        balances: [.init(
+                            label: cost.period ?? "Spend",
+                            amount: cost.used,
+                            currencyCode: cost.currencyCode)],
+                        menuCardStyle: .apiSpend)
                 },
                 menuBarWindowResolver: { context in
                     guard context.metric == .automatic else { return .unhandled }
