@@ -1,6 +1,14 @@
 # Changelog
 
-## 0.64.2 — Unreleased
+## 0.65.0 — 2026-09-22
+
+### Highlights
+
+- **Three new providers:** track Charm Hyper credits, GitKraken AI weekly credits, and Bifrost gateway budgets and rate limits, bringing the catalog to 80 providers.
+- **More flexible accounts:** save labeled Kimi web sessions and Doubao Ark API keys, and use per-account OpenCode Go API keys without changing cookie preferences.
+- **Zed spending:** opt in to browser billing for token spend and remaining budget while keeping the editor login as the default.
+- **Faster, more accurate history:** reuse quota charts and Codex scans, include claude-swap homes without duplicates, and preserve Linux Priority pricing.
+- **More reliable refreshes:** preserve Claude quotas through CLI redraws, confirm Codex weekly resets, and explain Antigravity offline fallbacks.
 
 ### Added
 
