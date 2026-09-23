@@ -119,6 +119,7 @@ check_app_locales() {
 }
 
 check_site_locales() {
+  node --test "${ROOT_DIR}/Scripts/test_social_card.mjs"
   node "${ROOT_DIR}/Scripts/check-site-locales.mjs"
   node --check "${ROOT_DIR}/docs/site.js"
 }

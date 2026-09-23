@@ -2,6 +2,10 @@
 
 ## 0.65.1 — Unreleased
 
+### Fixed
+
+- Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.
+
 ## 0.65.0 — 2026-09-22
 
 ### Highlights

@@ -4,8 +4,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { localeCatalog, localeMessages } from "../docs/site-locales.mjs";
+import { checkSocialCard } from "./social-card.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+checkSocialCard(repoRoot);
 const indexHtml = fs.readFileSync(path.join(repoRoot, "docs/index.html"), "utf8");
 const providerSource = fs.readFileSync(path.join(repoRoot, "Sources/CodexBarCore/Providers/Providers.swift"), "utf8");
 const providerEnumBody = providerSource.match(/public enum UsageProvider:[^{]+\{([\s\S]*?)\n\}/)?.[1];
