@@ -19,9 +19,11 @@ muse login
 
 CodexBar reads the same Keychain item the CLI stores (`ai.meta.dev.credentials` / `meta`) and sends only the device-code `dca:` access token to `POST https://api.meta.ai/muse-code/key`. Meta dashboard `LLM_` keys and Muse-minted `LLM|` inference keys cannot read this quota (they 401 on that mint endpoint).
 
-Credential precedence: when `providers.meta.access_token` is present inline in the CLI metadata file `~/.config/muse/auth.json`, that token selects the account queried and takes precedence over Keychain. Otherwise CodexBar reads the device-code token from the CLI's Keychain item. An `auth.json` with `"mechanism": "oauth"` but no inline token still counts as a login; the token then comes from Keychain. Override the file path with `MUSE_AUTH_PATH` if needed. CodexBar never prompts Keychain.
+Credential precedence: when `providers.meta.access_token` is present inline in the CLI metadata file `~/.config/muse/auth.json`, that token selects the account queried and takes precedence over Keychain. Otherwise CodexBar reads the device-code token from the CLI's Keychain item. An `auth.json` with `"mechanism": "oauth"` but no inline token still counts as a login; the token then comes from Keychain. Override the file path with `MUSE_AUTH_PATH` if needed.
 
-When a Keychain-only login cannot be read because Keychain access is disabled, the diagnostic names **Disable Keychain access** in **Settings → Advanced**. Inline CLI tokens still work with Keychain access disabled. CodexBar continues to read Keychain without prompts.
+The Keychain item belongs to the Muse CLI, so its access list may not include CodexBar. CodexBar checks that access list without requesting the token. If access would require a prompt or the check cannot complete, refreshes fail promptly without reading the token. This applies to background refreshes, manual app refreshes, and the `codexbar` CLI: CodexBar never prompts Keychain for Muse. Detecting whether a Muse login exists never requests its secret. A Keychain-only item detected as requiring interaction keeps the access diagnostic even when the CLI metadata file is absent.
+
+When a Keychain-only login cannot be read because Keychain access is disabled, the diagnostic names **Disable Keychain access** in **Settings → Advanced**. Inline CLI tokens still work with Keychain access disabled.
 
 ## Data shown
 
