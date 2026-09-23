@@ -9,6 +9,28 @@ import Testing
 @Suite(.serialized)
 struct ProviderSettingsDescriptorTests {
     @Test
+    func `Zed browser billing is opt in and manual cookies stay in Zed settings`() throws {
+        let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-zed")
+        let implementation = ZedProviderImplementation()
+        let context = fixture.settingsContext(provider: .zed)
+        let picker = try #require(implementation.settingsPickers(context: context).first)
+        let field = try #require(implementation.settingsFields(context: context).first)
+        #expect(picker.binding.wrappedValue == "off")
+        #expect(field.isVisible?() == false)
+        let snapshotContext = ProviderSettingsSnapshotContext(settings: fixture.settings, tokenOverride: nil)
+        let defaultContribution = try #require(implementation.settingsSnapshot(context: snapshotContext))
+        let defaults = ProviderSettingsSnapshot(contributions: [defaultContribution])
+        #expect(defaults[ZedProviderSettingsKey.self]?.cookieSource == .off)
+        picker.binding.wrappedValue = "manual"
+        field.binding.wrappedValue = "zed.session=fixture-session"
+        #expect(field.isVisible?() == true)
+        let manualContribution = try #require(implementation.settingsSnapshot(context: snapshotContext))
+        let manual = ProviderSettingsSnapshot(contributions: [manualContribution])
+        #expect(manual[ZedProviderSettingsKey.self]?.cookieSource == .manual)
+        #expect(manual[ZedProviderSettingsKey.self]?.manualCookieHeader == "zed.session=fixture-session")
+    }
+
+    @Test
     func `OpenCode Go can add API accounts while automatic cookies are selected`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-opencodego-accounts")
         fixture.settings.opencodegoCookieSource = .auto

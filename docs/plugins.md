@@ -320,3 +320,8 @@ organization scope and generic weekly windows/details. Swift supplies only regis
 [Charm Hyper](hyper.md) uses declared-domain cookies or a secure API key against its fixed credits endpoint.
 The bundled TypeScript owns session preference, API fallback, error classification, and HC balance parsing;
 Swift supplies registration and the shared settings surface.
+
+## Zed bundled provider
+
+[Zed](zed.md) uses its bundled script for editor API and opt-in browser billing requests. Swift retains editor settings
+and Keychain credential discovery; browser mode uses a declared `zed.dev` cookie session and never reads editor credentials.
