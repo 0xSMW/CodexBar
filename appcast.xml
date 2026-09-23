@@ -3,6 +3,62 @@
     <channel>
         <title>CodexBar</title>
         <item>
+            <title>0.65.0</title>
+            <pubDate>Tue, 22 Sep 2026 22:54:58 -0700</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
+            <sparkle:version>154</sparkle:version>
+            <sparkle:shortVersionString>0.65.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>CodexBar 0.65.0</h2>
+<h3>Highlights</h3>
+<ul>
+<li><strong>Three new providers:</strong> track Charm Hyper credits, GitKraken AI weekly credits, and Bifrost gateway budgets and rate limits, bringing the catalog to 80 providers.</li>
+<li><strong>More flexible accounts:</strong> save labeled Kimi web sessions and Doubao Ark API keys, and use per-account OpenCode Go API keys without changing cookie preferences.</li>
+<li><strong>Zed spending:</strong> opt in to browser billing for token spend and remaining budget while keeping the editor login as the default.</li>
+<li><strong>Faster, more accurate history:</strong> reuse quota charts and Codex scans, include claude-swap homes without duplicates, and preserve Linux Priority pricing.</li>
+<li><strong>More reliable refreshes:</strong> preserve Claude quotas through CLI redraws, confirm Codex weekly resets, and explain Antigravity offline fallbacks.</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Doubao: save labeled Ark API-key accounts in the shared account editor and select them in the app or CLI without inheriting another account&#x27;s credentials (#3192).</li>
+<li>Zed: opt in to browser-session billing for token spend, limits, and remaining budget while keeping the editor login as the default (#3172). Thanks @shuuul!</li>
+<li>Kimi: save labeled web accounts in the shared account editor, with isolated cookies and region-aware app and CLI usage (including Linux) while preserving source preferences (#2937). Thanks @jky1314!</li>
+<li>Charm Hyper: track Hypercredit balance with a bundled provider plugin, Chrome/manual sessions, and API-key fallback (#2502, #2318). Thanks @steipete, @JavaGT, and @akshayprabhu200!</li>
+<li>Omarchy: identify providers with theme-tinted logos in the compact bar, retaining text fallback for missing logos and older backends (#3795). Thanks @jsonMartin!</li>
+<li>GitKraken AI: track personal weekly credits and organization pool sharing through a bundled provider plugin (#3842). Thanks @RyanTheTechMan!</li>
+<li>Bifrost: track self-hosted gateway budgets, rate limits, and model spend using a virtual key and a bundled provider plugin (#3843). Thanks @diegocuehdz-lab49!</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Menu bar: keep layout palette token names readable by wrapping natural-width chips instead of truncating them into equal-width columns (#3782). Thanks @mattab178!</li>
+<li>Browser sessions: discover Devin sessions in Brave, Edge, Arc, and other supported Chromium browsers, and keep Windsurf localStorage discovery aligned with the shared browser catalog (#3862).</li>
+<li>Help: open the CodexBar documentation from the Help menu (#3878). Thanks @elijahfriedman!</li>
+<li>Antigravity: keep saved Google accounts passive in Local API / agy CLI mode, reject incompatible CLI account selectors, and skip the readiness wait for a different identified account (#3873). Thanks @oldcai!</li>
+<li>Accounts: remember expanded compact account cards across menu opens and app restarts (#3870). Thanks @clain23!</li>
+<li>Claude: preserve model-specific weekly quotas and account identity when CLI panels redraw with cursor jumps (#3822, fixes #3746). Thanks @fanwenlin!</li>
+<li>Moonshot: use the bundled provider plugin on both engines while preserving regional API-key binding, USD/CNY balances, and deficit formatting (#3836).</li>
+<li>Antigravity: explain failed live fetches when falling back to offline history, keep diagnostics free of raw process and account details, and show the active source in settings instead of misleading detection warnings (#3865, fixes #3861). Thanks @vincent-peng!</li>
+<li>Bifrost: preserve component rate-limit usage without duplicating the aggregate or showing unconfigured token/request windows (#3843).</li>
+<li>Provider plugins: preserve unknown usage on named quota windows and numeric progress in detail rows.</li>
+<li>Claude: dismiss open CLI panels before reading account identity or refreshing usage in a reused session (#3821). Thanks @sczhui!</li>
+<li>Performance: coalesce concurrent code-signature checks across browser-cookie preflights and cache confirmed rejections, while revalidating completed successes so sealed-resource changes preserve no-UI Keychain protection (#3837, #3838). Thanks @jeffloo886!</li>
+<li>Cost history: reuse quota-week projections across menu card builds and warm them off the main thread (#3831, fixes #3827). Thanks @giuseppebisemi!</li>
+<li>Codex costs: reuse decoded scan baselines while the local database is unchanged, avoiding repeated usage-row decoding on warm refreshes (#3840). Thanks @CodingCanuck!</li>
+<li>Antigravity: retain account-scoped quota observations without a reset duration, including replenishment within an hour, and avoid assuming a five-hour pace (#3619). Thanks @hhh2210!</li>
+<li>Antigravity: honor unusable <code>ANTIGRAVITY_CLI_PATH</code> overrides instead of discovering another CLI that could start interactive login during background refresh (#3689). Thanks @hhh2210!</li>
+<li>Claude: respect read-only account adapters, preserving usage and account details while hiding switching and re-authentication actions (#3658). Thanks @benedictfrancis!</li>
+<li>OpenCode Go: use per-account API keys for multi-account usage, preserving Cookie accounts and saved cookie-source preferences while isolating selected credentials from provider-wide keys (#3841).</li>
+<li>Claude: include claude-swap session homes in local Usage &amp; Spend totals without counting shared or copied history twice (#2954). Thanks @Newarr!</li>
+<li>LiteLLM: show clearly scoped month-to-date spend when management routes are disabled, without inventing budgets or account identity (#3834). Thanks @xiaoxianma!</li>
+<li>Codex: confirm unused weekly resets across normal refresh intervals when the provider advances the reset date with each zero-use observation, preventing stale pre-reset usage from persisting (#3248). Thanks @kcharlan!</li>
+<li>Codex costs: read local Priority/Fast trace evidence on Linux so supported usage retains Priority pricing, including after refreshing existing history (#3820). Thanks @A-l-an!</li>
+<li>CLI: keep <code>last30DaysTokens</code> and <code>last30DaysCostUSD</code> scoped to 30 local calendar days when requesting longer cost histories, while retaining full-window totals (#3824). Thanks @tillstriegel!</li>
+</ul>
+<p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.65.0/CodexBar-macos-universal-0.65.0.zip" length="74615596" type="application/octet-stream" sparkle:edSignature="CLsGkS94jFtbtYRO4POaR05maFn9v1iRCtuPumpyWHCWPZNGyn+frHG9ydY+eejYFcjJZfPSlaNF3RWFhi1aDA=="/>
+        </item>
+        <item>
             <title>0.64.1</title>
             <pubDate>Tue, 22 Sep 2026 00:45:20 -0700</pubDate>
             <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
@@ -104,55 +160,6 @@
 <p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.64.0/CodexBar-macos-universal-0.64.0.zip" length="74534604" type="application/octet-stream" sparkle:edSignature="3bxOjsp2g/UHfzLqdk2p+bcvngDWf627ttjAl82lRFo0DTpLejRDtqi+gjbI7aslqq8RMC0Nd9ssE+gdiBARDw=="/>
-        </item>
-        <item>
-            <title>0.63.0</title>
-            <pubDate>Sun, 20 Sep 2026 14:16:29 -0700</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/CodexBar/main/appcast.xml</link>
-            <sparkle:version>151</sparkle:version>
-            <sparkle:shortVersionString>0.63.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>CodexBar 0.63.0</h2>
-<h3>Highlights</h3>
-<ul>
-<li><strong>Pi and OMP history:</strong> track local tokens and estimated costs across the app, CLI, and widgets without double-counting Claude or Codex usage.</li>
-<li><strong>More complete spending displays:</strong> add DeepSeek and OpenRouter widget balances and provider-reported spending in the web dashboard.</li>
-<li><strong>More reliable refreshes:</strong> correct paginated Codex costs, recover transient credential-access failures, and prevent crashes from oversized provider values.</li>
-</ul>
-<h3>Added</h3>
-<ul>
-<li>Pi: track local Pi/OMP tokens and estimated costs in the app, CLI, Overview, Usage &amp; Spend, and widgets, preserving incomplete history and preventing duplicate Claude/Codex totals (#3246). Thanks @Yuxin-Qiao!</li>
-<li>Dashboard: include provider-reported 30-day USD spend when no local cost row exists, preserving OpenRouter&#x27;s completed UTC history without inventing a local Today total (#3748). Thanks @Chipagosfinest!</li>
-<li>Widgets: select DeepSeek and OpenRouter, see their balances, and keep live update ages visible in small widgets (#3743). Thanks @brzvsk!</li>
-</ul>
-<h3>Improved</h3>
-<ul>
-<li>Settings: simplify Homebrew update instructions in About with a selectable command row, an integrated copy control, and brief copy confirmation (#3759).</li>
-</ul>
-<h3>Fixed</h3>
-<ul>
-<li>Plugins: reject obsolete refresh results after configuration, enablement, or runtime changes, and keep activity indicators correct across replacement refreshes (#3773).</li>
-<li>Providers: prevent crashes from oversized LongCat, Kilo, Kimi, Chutes, MiniMax, and Perplexity usage values or durations, retain usable Amp quota data, and safely handle unrepresentable timestamps (#3758, #3764).</li>
-<li>Kilo: discard obsolete organization refreshes after credentials or selections change, including external CLI sign-ins, preventing old results from replacing the catalog or pruning current selections (#3778).</li>
-<li>Menu bar: assign each status item&#x27;s stable identity before provider registration, preserving item reuse during reentrant updates (#3665). Thanks @Borisserz!</li>
-<li>Keychain: retry transient no-UI preflight failures within a bounded budget, recovering already-authorized reads without relaxing prompt or denial policies (#3630). Thanks @ysyyork!</li>
-<li>Codex costs: count only a paginated session&#x27;s new usage, repairing inflated cached totals while preserving validated historical pricing across appends and interrupted scans (#3753). Thanks @anon5376!</li>
-<li>Codex: keep credits and history refreshes reliable when a cancelled request finishes after its replacement (#3775).</li>
-<li>Kimi: retain nonzero weekly and five-hour counts when a mixed legacy response includes conflicting zero ratios for the same quota windows (#3755, fixes #3754). Thanks @mudrii!</li>
-<li>StepFun: label credit balances as Credit even without a reset timestamp, omit invented reset dates, and preserve Coding Plan window labels (#3771, fixes #3768). Thanks @BUKOWSKIREAL!</li>
-<li>Devin: keep organization names and internal IDs paired during browser import, avoiding requests for unrelated cached organizations (#3760).</li>
-<li>Claude: require matching account emails for CLI Web enrichment instead of trusting organization display names alone (#3760).</li>
-<li>Configuration: continue detecting config-file changes after editors or sync tools replace the file (#3763).</li>
-<li>Augment: cancel all keepalive work when disabled, reject retired recovery and notification work after restart, and omit cookie values from keepalive diagnostics (#3779).</li>
-<li>Claude: prevent credential diagnostics from crashing on oversized expiry timestamps while preserving authentication and refresh behavior (#3767).</li>
-</ul>
-<h3>Development</h3>
-<ul>
-<li>Debug Workspaces: reduce peak memory when reading large Codex histories without changing totals or pricing (#3761).</li>
-</ul>
-<p><a href="https://github.com/steipete/CodexBar/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/CodexBar/releases/download/v0.63.0/CodexBar-macos-universal-0.63.0.zip" length="74335541" type="application/octet-stream" sparkle:edSignature="wTFGIMx10uxJN/4cmqu/V8TBprLa2HN5sgNwHryWh2e+jR9H20LyrTl6P8F3VWBaY3GqYnlYQuSbWbhknibvCg=="/>
         </item>
         <item>
             <title>0.14.0</title>
