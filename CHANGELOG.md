@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Menu bar: keep layout palette token names readable by wrapping natural-width chips instead of truncating them into equal-width columns (#3782). Thanks @mattab178!
 - Browser sessions: discover Devin sessions in Brave, Edge, Arc, and other supported Chromium browsers, and keep Windsurf localStorage discovery aligned with the shared browser catalog (#3862).
 - Help: open the CodexBar documentation from the Help menu (#3878). Thanks @elijahfriedman!
 - Antigravity: keep saved Google accounts passive in Local API / agy CLI mode, reject incompatible CLI account selectors, and skip the readiness wait for a different identified account (#3873). Thanks @oldcai!

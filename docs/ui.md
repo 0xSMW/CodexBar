@@ -39,6 +39,7 @@ read_when:
 - Display → Menu Bar → Layout provides presets plus a token editor. Tokens can be clicked to append, dragged from the
   palette, reordered between one or two lines, dragged out, or removed with Delete. Layouts can be global or overridden
   per provider. Manual edits select the Custom preset.
+- Layout palette chips use their natural label widths and wrap into rows instead of squeezing longer token names into equal-width columns.
 - Time tokens offer Session and Weekly variants of Resets in and Reset at, including in conditional branches.
   The original unqualified reset tokens continue to follow the automatic window. A selected window that is
   unavailable displays a dash rather than substituting another window. Cursor also exposes **Grok Bot %**
