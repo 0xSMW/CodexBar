@@ -2,6 +2,10 @@
 
 ## 0.65.1 — Unreleased
 
+### Added
+
+- DevPass: track plan credits, premium weekly usage and resets, and API-key spending through the documented LLM Gateway API (#3433). Thanks @MichelKerkmeester!
+
 ### Fixed
 
 - Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.

@@ -230,6 +230,9 @@ displayable usage or identity remains invalid unless `empty: true` is explicitly
 
 ## TypeScript
 
+DevPass's bundled `devpass.ts` reads the documented LLM Gateway key-status API for billing-cycle and premium weekly
+credits. Swift only registers the provider and its API-key setting. See [DevPass](devpass.md).
+
 Moonshot's bundled `moonshot.ts` runs on both engines. Its Swift descriptor resolves the regional credential and passes
 the selected origin as `BASE_URL`; the plugin validates the fixed International/China origins and uses
 `ctx.format.currency` for identity-only balance and deficit text. See [Moonshot](moonshot.md).

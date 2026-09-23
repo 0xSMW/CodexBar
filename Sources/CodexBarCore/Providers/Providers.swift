@@ -99,6 +99,7 @@ public enum UsageProvider: String, CaseIterable, Sendable, Codable {
     case typesafe
     case hyper
     case gitkraken
+    case devpass
 }
 
 // swiftformat:enable sortDeclarations

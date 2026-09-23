@@ -9,6 +9,17 @@ import Testing
 @Suite(.serialized)
 struct ProviderSettingsDescriptorTests {
     @Test
+    func `DevPass exposes a regular API key stored in provider config`() throws {
+        let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-devpass")
+        let fields = DevPassProviderImplementation()
+            .settingsFields(context: fixture.settingsContext(provider: .devpass))
+        #expect(fields.map(\.id) == ["devpass-api-key"])
+        #expect(fields.map(\.kind) == [.secure])
+        fields[0].binding.wrappedValue = "fixture-key"
+        #expect(fixture.settings.providerConfig(for: .devpass)?.apiKey == "fixture-key")
+    }
+
+    @Test
     func `Zed browser billing is opt in and manual cookies stay in Zed settings`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-zed")
         let implementation = ZedProviderImplementation()
