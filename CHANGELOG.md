@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- Codex costs: avoid rewriting unchanged retained file state when another session or scan metadata changes, reducing local history disk writes (#3882).
 - Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.
 
 ## 0.65.0 — 2026-09-22
