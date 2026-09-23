@@ -8,6 +8,18 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ProviderSettingsDescriptorTests {
+    @Test(arguments: [UsageProvider.atlascloud, .vercel])
+    func `balance providers keep API keys in their own config`(provider: UsageProvider) throws {
+        let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-\(provider.rawValue)")
+        let implementation: any ProviderImplementation = provider == .atlascloud
+            ? AtlasCloudProviderImplementation() : VercelProviderImplementation()
+        let fields = implementation.settingsFields(context: fixture.settingsContext(provider: provider))
+        #expect(fields.map(\.id) == ["\(provider.rawValue)-api-key"])
+        #expect(fields.map(\.kind) == [.secure])
+        fields[0].binding.wrappedValue = "fixture-key"
+        #expect(fixture.settings.providerConfig(for: provider)?.apiKey == "fixture-key")
+    }
+
     @Test
     func `DevPass exposes a regular API key stored in provider config`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-devpass")

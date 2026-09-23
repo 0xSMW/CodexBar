@@ -84,6 +84,8 @@ extension ProviderInstanceID {
     public static let hyper = UsageProvider.hyper.instanceID
     public static let gitkraken = UsageProvider.gitkraken.instanceID
     public static let devpass = UsageProvider.devpass.instanceID
+    public static let atlascloud = UsageProvider.atlascloud.instanceID
+    public static let vercel = UsageProvider.vercel.instanceID
 }
 
 // swiftformat:enable sortDeclarations

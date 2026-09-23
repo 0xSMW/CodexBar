@@ -214,6 +214,8 @@ struct SettingsStoreAdditionalTests {
             .replicate: [.automatic],
             .typesafe: [.automatic],
             .hyper: [.automatic],
+            .atlascloud: [.automatic],
+            .vercel: [.automatic],
             .huggingface: [.automatic, .secondary],
             .deepseek: [.automatic],
             .deepinfra: [.automatic],

@@ -313,6 +313,12 @@ Call `ctx.browser.rejectCookie(domain)` after the server rejects a session. The 
 evicts only the cached entry observed by that fetch (each domain is pinned for the fetch lifetime); a newer session and other domains remain intact. Manual headers
 are never erased. User plugins have no persistent cookie cache, so rejection is a validated no-op for them.
 
+## API balance bundled providers
+
+[Atlas Cloud](atlascloud.md) and [Vercel AI Gateway](vercel.md) use fixed-origin bearer GETs for documented
+account/team balances. Their bundled JavaScript returns generic details without fabricated quota windows;
+Swift provides registration and the shared API-key settings field. Scripts classify HTTP failures and the host bounds retries.
+
 ## GitKraken AI bundled provider
 
 [GitKraken AI](gitkraken.md) uses bearer GET against its declared first-party API origin, with optional

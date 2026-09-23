@@ -100,6 +100,8 @@ public enum UsageProvider: String, CaseIterable, Sendable, Codable {
     case hyper
     case gitkraken
     case devpass
+    case atlascloud
+    case vercel
 }
 
 // swiftformat:enable sortDeclarations

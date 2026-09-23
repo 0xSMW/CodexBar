@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-6e5aff?style=flat-square)](LICENSE)
 [![Site](https://img.shields.io/badge/site-codexbar.app-16d3b4?style=flat-square)](https://codexbar.app)
 
-<a href="https://codexbar.app"><img src="docs/social.png?v=f69f5ddbccef7fcf" alt="CodexBar — every AI coding limit in your menu bar. 81 providers." width="100%" /></a>
+<a href="https://codexbar.app"><img src="docs/social.png?v=63fe81e4b7182b76" alt="CodexBar — every AI coding limit in your menu bar. 83 providers." width="100%" /></a>
 
 Tiny macOS 14+ menu bar app that keeps **AI coding-provider limits visible** and shows when each window resets. Codex, OpenAI, Claude, Cursor, Gemini, Copilot, Grok, GroqCloud, ElevenLabs, Deepgram, z.ai, MiniMax, Kiro, Zed, Vertex AI, Augment, OpenRouter, LiteLLM, LLM Proxy, Codebuff, Command Code, ClinePass, AWS Bedrock, and many newer coding providers. One status item per provider, or Merge Icons mode with a provider switcher. No Dock icon, minimal UI, dynamic bar icons.
 
@@ -173,6 +173,8 @@ See [CLI configuration](docs/cli-configuration.md) for the full flow.
 - [TypeSafe](docs/typesafe.md) — Chrome or manual console cookies for billing spend, balance, and credit expirations.
 - [GitKraken AI](docs/gitkraken.md) — Account access token for personal weekly credits, reset time, and organization pool sharing.
 - [DevPass](docs/devpass.md) — API key for plan credits, premium weekly allowances, and key-scoped spending.
+- [Atlas Cloud](docs/atlascloud.md) — API key for the account's available USD balance.
+- [Vercel AI Gateway](docs/vercel.md) — API key for the team's USD balance and lifetime spend.
 - Open to new providers: [provider authoring guide](docs/provider.md).
 
 ## Icon & Screenshot

@@ -155,8 +155,8 @@ struct ProviderArchitectureGatekeeperTests {
             Self.hash(descriptor.branding.burnDownWidgetColor, into: &burnDownFingerprint)
         }
 
-        #expect(widgetFingerprint == 15_921_123_943_769_872_217)
-        #expect(burnDownFingerprint == 15_947_023_879_266_919_979)
+        #expect(widgetFingerprint == 6_965_627_062_143_617_264)
+        #expect(burnDownFingerprint == 260_968_863_559_490_048)
     }
 
     @Test
@@ -195,7 +195,7 @@ struct ProviderArchitectureGatekeeperTests {
     func `small provider capabilities preserve legacy registries`() {
         let descriptors = ProviderDescriptorRegistry.all
         #expect(Set(descriptors.filter(\.metadata.balanceOnly).map(\.id)) == [
-            .deepseek, .deepinfra, .moonshot, .poe, .hyper,
+            .deepseek, .deepinfra, .moonshot, .poe, .hyper, .atlascloud, .vercel,
         ])
         #expect(Set(descriptors.filter(\.metadata.usesDetailBackedWindow).map(\.id)) == [
             .perplexity,
