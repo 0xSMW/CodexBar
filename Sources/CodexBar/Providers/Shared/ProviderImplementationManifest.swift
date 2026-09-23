@@ -83,6 +83,7 @@ enum ProviderImplementationManifest {
         PiProviderImplementation(),
         V0ProviderImplementation(),
         TypeSafeProviderImplementation(),
+        HyperProviderImplementation(),
         GitKrakenProviderImplementation(),
     ]
 }

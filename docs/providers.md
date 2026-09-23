@@ -8,7 +8,7 @@ read_when:
 
 # Providers
 
-CodexBar currently registers 79 provider IDs. Some companies expose multiple surfaces, such as Codex vs OpenAI API or
+CodexBar currently registers 80 provider IDs. Some companies expose multiple surfaces, such as Codex vs OpenAI API or
 OpenCode vs OpenCode Go, because the auth source and quota shape differ.
 
 ## Fetch strategies (current)
@@ -112,6 +112,7 @@ complete when the available scan window covers fewer days.
 | Mistral | Console billing, credit balance, and Vibe subscription usage via browser cookies (`web`). |
 | DeepSeek | API key from env or token accounts → balance endpoint (`api`). |
 | [Fireworks](fireworks.md) | API key + account slug → 30-day spend from the billing summary API (`api`). |
+| [Charm Hyper](hyper.md) | Bundled plugin: Chrome/manual session → API key from config or `HYPER_API_KEY` → native HC balance; no inferred quota or reset (`auto`, `web`, `api`). |
 | DeepInfra | API key from env or token accounts → billing checklist + monthly usage endpoints (`api`). |
 | Moonshot | API key from config/env → balance endpoint (`api`). |
 | Codebuff | API token from config/env or `codebuff login` credentials → usage API (`api`). |

@@ -97,6 +97,7 @@ public enum UsageProvider: String, CaseIterable, Sendable, Codable {
     case pi
     case v0
     case typesafe
+    case hyper
     case gitkraken
 }
 

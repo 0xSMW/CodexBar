@@ -314,3 +314,9 @@ are never erased. User plugins have no persistent cookie cache, so rejection is 
 
 [GitKraken AI](gitkraken.md) uses bearer GET against its declared first-party API origin, with optional
 organization scope and generic weekly windows/details. Swift supplies only registration and config projection.
+
+## Charm Hyper bundled provider
+
+[Charm Hyper](hyper.md) uses declared-domain cookies or a secure API key against its fixed credits endpoint.
+The bundled TypeScript owns session preference, API fallback, error classification, and HC balance parsing;
+Swift supplies registration and the shared settings surface.

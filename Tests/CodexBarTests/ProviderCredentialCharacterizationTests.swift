@@ -46,6 +46,7 @@ struct ProviderCredentialCharacterizationTests {
             .init(provider: .neuralwatt, environmentKey: "NEURALWATT_API_KEY"),
             .init(provider: .zenmux, environmentKey: "ZENMUX_MANAGEMENT_API_KEY"),
             .init(provider: .deepinfra, environmentKey: "DEEPINFRA_API_KEY"),
+            .init(provider: .hyper, environmentKey: "HYPER_API_KEY"),
             .init(provider: .aiand, environmentKey: "AIAND_API_KEY"),
             .init(provider: .xai, environmentKey: "XAI_MANAGEMENT_API_KEY"),
             .init(provider: .copilot, environmentKey: "COPILOT_API_TOKEN"),
@@ -201,6 +202,7 @@ struct ProviderCredentialCharacterizationTests {
             (.openrouter, "OPENROUTER_API_KEY"),
             (.deepseek, "DEEPSEEK_API_KEY"),
             (.deepinfra, "DEEPINFRA_API_KEY"),
+            (.hyper, "HYPER_API_KEY"),
             (.antigravity, "ANTIGRAVITY_OAUTH_CREDENTIALS_JSON"),
             (.zai, "Z_AI_API_KEY"),
             (.copilot, "COPILOT_API_TOKEN"),
@@ -284,6 +286,7 @@ struct ProviderCredentialCharacterizationTests {
         let fixtures: [(UsageProvider, String)] = [
             (.openai, "OPENAI_ADMIN_KEY"), (.openrouter, "OPENROUTER_API_KEY"),
             (.deepseek, "DEEPSEEK_API_KEY"), (.deepinfra, "DEEPINFRA_API_KEY"),
+            (.hyper, "HYPER_API_KEY"),
             (.zai, "Z_AI_API_KEY"), (.copilot, "COPILOT_API_TOKEN"),
             (.venice, "VENICE_API_KEY"), (.elevenlabs, "ELEVENLABS_API_KEY"),
             (.neuralwatt, "NEURALWATT_API_KEY"), (.groq, "GROQ_API_KEY"),
@@ -303,6 +306,10 @@ struct ProviderCredentialCharacterizationTests {
                 selectedAccount: account)
             #expect(environment[key] == "account-token", Comment(rawValue: provider.rawValue))
         }
+        let hyper = HyperProviderDescriptor.descriptor.credentials
+        #expect(hyper?.selectedAccountSourceMode(base: .auto, account: nil, config: nil) == .auto)
+        #expect(hyper?.selectedAccountSourceMode(base: .auto, account: account, config: nil) == .api)
+        #expect(hyper?.selectedAccountSourceMode(base: .web, account: account, config: nil) == .web)
     }
 
     @Test

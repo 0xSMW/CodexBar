@@ -19,6 +19,30 @@ struct ProviderSettingsDescriptorTests {
     }
 
     @Test
+    func `Hyper exposes session controls and an independent API key`() throws {
+        let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-hyper")
+        let context = fixture.settingsContext(provider: .hyper)
+        let implementation = HyperProviderImplementation()
+        let fields = implementation.settingsFields(context: context)
+        let picker = try #require(implementation.settingsPickers(context: context).first)
+        #expect(fields.map(\.id) == ["hyper-cookie", "hyper-api-key"])
+        #expect(fields.map(\.kind) == [.secure, .secure])
+        #expect(picker.options.map(\.id) == ["auto", "manual", "off"])
+        picker.binding.wrappedValue = "manual"
+        #expect(fields[0].isVisible?() == true)
+        fields[0].binding.wrappedValue = "session=fixture"
+        fields[1].binding.wrappedValue = "fixture-key"
+        #expect(fixture.settings.providerConfig(for: .hyper)?.cookieHeader == "session=fixture")
+        #expect(fixture.settings.providerConfig(for: .hyper)?.apiKey == "fixture-key")
+        picker.binding.wrappedValue = "off"
+        #expect(fields[0].isVisible?() == false)
+        let contribution = try #require(implementation.settingsSnapshot(context: .init(
+            settings: fixture.settings, tokenOverride: nil)))
+        let snapshot = ProviderSettingsSnapshot(contributions: [contribution])
+        #expect(snapshot[HyperProviderSettingsKey.self]?.cookieSource == .off)
+    }
+
+    @Test
     func `bifrost exposes only a virtual key and a configured gateway URL`() throws {
         let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-bifrost")
         let fields = BifrostProviderImplementation()

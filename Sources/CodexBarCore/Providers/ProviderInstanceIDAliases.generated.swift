@@ -81,6 +81,7 @@ extension ProviderInstanceID {
     public static let pi = UsageProvider.pi.instanceID
     public static let v0 = UsageProvider.v0.instanceID
     public static let typesafe = UsageProvider.typesafe.instanceID
+    public static let hyper = UsageProvider.hyper.instanceID
     public static let gitkraken = UsageProvider.gitkraken.instanceID
 }
 
