@@ -745,24 +745,16 @@ extension CostUsageScanner {
             $0.reportKey.scanConfiguration != reportKey.scanConfiguration
         } ?? false
         let sourceIdentitiesChanged = artifact.sourceFileIDs != sourceInventory.mapValues(\.fileID)
-        let shouldRefresh = options.forceRescan
+        let shouldMutateCache = options.forceRescan
             || sourceIdentitiesChanged
             || windowExpanded
             || needsWindowScopedRebuild
             || sourceInventoryChanged
             || cacheArtifactChanged
             || scanConfigurationChanged
-            || refreshMs == 0
-            || cache.lastScanUnixMs == 0
-            || nowMs - cache.lastScanUnixMs > refreshMs
+            || (priorMemo == nil && (
+                refreshMs == 0 || cache.lastScanUnixMs == 0 || nowMs - cache.lastScanUnixMs > refreshMs))
         let providerFilter = options.claudeLogProviderFilter
-        let hasStableProcessBaseline = priorMemo != nil
-            && !sourceIdentitiesChanged
-            && !sourceInventoryChanged
-            && !cacheArtifactChanged
-            && !scanConfigurationChanged
-        let shouldMutateCache = shouldRefresh && (
-            !hasStableProcessBaseline || options.forceRescan || windowExpanded || needsWindowScopedRebuild)
         let forceFullScan = options
             .forceRescan || windowExpanded || scanConfigurationChanged || needsWindowScopedRebuild
         let pricingResolver = CostUsagePricing.ClaudeResolver(now: now, cacheRoot: options.cacheRoot)
@@ -770,7 +762,10 @@ extension CostUsageScanner {
         if shouldMutateCache {
             try checkCancellation?()
             if options.forceRescan {
-                cache = CostUsageCache()
+                cache = CostUsageCache(
+                    version: cache.version,
+                    lastScanUnixMs: cache.lastScanUnixMs,
+                    timeZoneIdentifier: cache.timeZoneIdentifier)
                 artifact.sourceFileIDs = [:]
             }
             let changedPaths: Set<String> = if let priorMemo {
@@ -808,7 +803,10 @@ extension CostUsageScanner {
             Self.pruneDays(cache: &cache, sinceKey: range.scanSinceKey, untilKey: range.scanUntilKey)
             cache.scanSinceKey = range.scanSinceKey
             cache.scanUntilKey = range.scanUntilKey
-            cache.lastScanUnixMs = nowMs
+            // A scan timestamp alone must not replace the complete cache and invalidate its report memo.
+            if cache != artifact.usage {
+                cache.lastScanUnixMs = nowMs
+            }
         }
 
         let report = Self.buildClaudeReportFromCache(

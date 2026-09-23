@@ -212,18 +212,7 @@ final class CostUsageClaudeReportMemo: @unchecked Sendable {
             hourly: entry.report.hourly.map(CostUsageCodexPreviousReport.HourlyEntry.init),
             quotaSlices: entry.report.quotaSlices.map(CostUsageCodexPreviousReport.QuotaSlice.init),
             hasWindowScopedRows: entry.hasWindowScopedRows)
-        guard let data = try? JSONEncoder().encode(envelope) else { return }
-        let directory = url.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let temporaryURL = directory.appendingPathComponent(".claude-report-memo-\(UUID().uuidString).tmp")
-        do {
-            try data.write(to: temporaryURL)
-            if rename(temporaryURL.path, url.path) != 0 {
-                try? FileManager.default.removeItem(at: temporaryURL)
-            }
-        } catch {
-            try? FileManager.default.removeItem(at: temporaryURL)
-        }
+        _ = try? CostUsageClaudeCacheIO.write(envelope, to: url)
     }
 }
 
@@ -346,7 +335,7 @@ struct CostUsageClaudeCache: Codable {
     }
 }
 
-/// Claude and Vertex retain their small transcript cache. Codex deliberately has no route
+/// Claude and Vertex retain their transcript cache. Codex deliberately has no route
 /// through this JSON I/O boundary; its only persistence authority is `CostUsageStore`.
 enum CostUsageClaudeCacheIO {
     /// Reparse records written before proxy completion metadata was retained.
@@ -410,25 +399,36 @@ enum CostUsageClaudeCacheIO {
         #if DEBUG
         CostUsageScanner.recordClaudeScanWork(.cacheEncode)
         #endif
-        guard let data = try? JSONEncoder().encode(cache) else { return nil }
+        return try self.write(cache, to: url, checkCancellation: checkCancellation)
+    }
+
+    fileprivate static func write(
+        _ value: some Encodable,
+        to url: URL,
+        checkCancellation: CostUsageScanner.CancellationCheck? = nil) throws -> CostUsageClaudeFileStamp?
+    {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard let data = try? encoder.encode(value) else { return nil }
         try checkCancellation?()
+        if let stamp = CostUsageClaudeFileStamp.read(at: url), stamp.size == Int64(data.count),
+           (try? Data(contentsOf: url)) == data,
+           CostUsageClaudeFileStamp.read(at: url) == stamp
+        {
+            return stamp
+        }
         let directory = url.deletingLastPathComponent()
         try? FileManager.default.createDirectory(
             at: directory,
             withIntermediateDirectories: true)
         let temporaryURL = directory.appendingPathComponent(".claude-cache-\(UUID().uuidString).tmp")
-        do {
-            try data.write(to: temporaryURL)
-            guard let stamp = CostUsageClaudeFileStamp.read(at: temporaryURL),
-                  rename(temporaryURL.path, url.path) == 0
-            else {
-                try? FileManager.default.removeItem(at: temporaryURL)
-                return nil
-            }
-            return stamp
-        } catch {
-            try? FileManager.default.removeItem(at: temporaryURL)
+        defer { try? FileManager.default.removeItem(at: temporaryURL) }
+        guard (try? data.write(to: temporaryURL)) != nil,
+              let stamp = CostUsageClaudeFileStamp.read(at: temporaryURL),
+              rename(temporaryURL.path, url.path) == 0
+        else {
             return nil
         }
+        return stamp
     }
 }
