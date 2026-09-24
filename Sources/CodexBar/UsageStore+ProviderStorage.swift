@@ -9,10 +9,12 @@ extension UsageStore {
         let signature: String
     }
 
+    /// Storage footprints walk whole provider homes (a large Codex home holds ~1M entries), and sizes move
+    /// slowly, so automatic rescans stay hourly. Explicit refreshes still force a scan.
     nonisolated static func automaticStorageRefreshInterval(lowPowerModeEnabled: Bool) -> TimeInterval {
         BackgroundWorkPowerPolicy.automaticInterval(
-            5 * 60,
-            lowPowerModeEnabled: lowPowerModeEnabled) ?? 5 * 60
+            60 * 60,
+            lowPowerModeEnabled: lowPowerModeEnabled) ?? 60 * 60
     }
 
     var isStorageRefreshInFlight: Bool {

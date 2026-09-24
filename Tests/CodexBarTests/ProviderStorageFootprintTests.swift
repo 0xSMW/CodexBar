@@ -24,9 +24,9 @@ struct ProviderStorageFootprintTests {
     }
 
     @Test
-    func `global low power mode clamps automatic storage scans to thirty minutes`() {
-        #expect(UsageStore.automaticStorageRefreshInterval(lowPowerModeEnabled: false) == 5 * 60)
-        #expect(UsageStore.automaticStorageRefreshInterval(lowPowerModeEnabled: true) == 30 * 60)
+    func `automatic storage scans run hourly with or without low power mode`() {
+        #expect(UsageStore.automaticStorageRefreshInterval(lowPowerModeEnabled: false) == 60 * 60)
+        #expect(UsageStore.automaticStorageRefreshInterval(lowPowerModeEnabled: true) == 60 * 60)
     }
 
     @Test
@@ -53,6 +53,31 @@ struct ProviderStorageFootprintTests {
         #expect(footprint.missingPaths.isEmpty)
         #expect(footprint.components.map(\.name) == ["nested", "a.jsonl"])
         #expect(footprint.components.map(\.totalBytes) == [7, 5])
+    }
+
+    @Test
+    func `scanner attributes deeply nested files to their top level component`() throws {
+        let root = try Self.makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let deep = root.appendingPathComponent("sessions/2026/09", isDirectory: true)
+        let other = root.appendingPathComponent("worktrees/abc/repo", isDirectory: true)
+        try FileManager.default.createDirectory(at: deep, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
+        try Data(repeating: 1, count: 3).write(to: deep.appendingPathComponent("a.jsonl"))
+        try Data(repeating: 1, count: 4).write(to: root.appendingPathComponent("sessions/b.jsonl"))
+        try Data(repeating: 1, count: 10).write(to: other.appendingPathComponent("c.bin"))
+        try Data(repeating: 1, count: 1).write(to: root.appendingPathComponent("config.toml"))
+
+        let footprint = ProviderStorageScanner().scan(provider: .codex, candidatePaths: [root.path])
+        let rootPath = URL(fileURLWithPath: root.path, isDirectory: true).standardizedFileURL.path
+
+        #expect(footprint.totalBytes == 18)
+        #expect(footprint.components.map(\.name) == ["worktrees", "sessions", "config.toml"])
+        #expect(footprint.components.map(\.totalBytes) == [10, 7, 1])
+        #expect(footprint.components.map(\.path) == ["worktrees", "sessions", "config.toml"].map {
+            URL(fileURLWithPath: rootPath, isDirectory: true).appendingPathComponent($0).path
+        })
     }
 
     @Test

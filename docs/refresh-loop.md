@@ -21,7 +21,7 @@ read_when:
 - Stale/error states dim the icon and surface status in-menu.
 - Optional provider-storage scans run only when “Show provider storage usage” is enabled. They are scheduled in the
   background, coalesced/throttled during automatic refreshes, and forced by manual refresh without blocking the usage
-  refresh path.
+  refresh path. Automatic rescans run at most hourly, since a large provider home can hold about a million entries.
 - Transient Codex OAuth transport failures preserve prior usage and widget entries for the same account, including
   their original update time. Classification uses the underlying transport code, so localized error messages behave
   consistently. Startup connectivity retries and refresh-failure hook statuses use the same transport identity;

@@ -483,11 +483,17 @@ public struct ProviderStorageScanner: @unchecked Sendable {
         }
 
         var result = DirectoryScanResult()
-        let rootPath = url.standardizedFileURL.path
+        let componentRoot = URL(fileURLWithPath: url.standardizedFileURL.path, isDirectory: true)
+        var componentPath: String?
         for case let itemURL as URL in enumerator {
             if Task.isCancelled {
                 enumerator.skipDescendants()
                 break
+            }
+            // The enumerator is depth-first, so every deeper item belongs to the latest top-level entry.
+            // Tracking it by level avoids per-file path standardization, which costs extra syscalls.
+            if enumerator.level == 1 {
+                componentPath = componentRoot.appendingPathComponent(itemURL.lastPathComponent).path
             }
             guard let itemValues = try? itemURL.resourceValues(forKeys: keys) else {
                 unreadableCollector.append(itemURL.path)
@@ -502,27 +508,13 @@ public struct ProviderStorageScanner: @unchecked Sendable {
             if itemValues.isRegularFile == true {
                 let bytes = Int64(itemValues.fileSize ?? 0)
                 result.bytes += bytes
-                if bytes > 0, let componentPath = self.topLevelComponentPath(for: itemURL, rootPath: rootPath) {
+                if bytes > 0, let componentPath {
                     result.componentBytes[componentPath, default: 0] += bytes
                 }
             }
         }
         result.unreadablePaths = unreadableCollector.paths
         return result
-    }
-
-    private func topLevelComponentPath(for url: URL, rootPath: String) -> String? {
-        let itemPath = url.standardizedFileURL.path
-        let pathPrefix = rootPath.hasSuffix("/") ? rootPath : "\(rootPath)/"
-        guard itemPath.hasPrefix(pathPrefix) else { return nil }
-        let suffix = itemPath.dropFirst(pathPrefix.count)
-        let relative = suffix.drop { $0 == "/" }
-        guard let first = relative.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: true).first else {
-            return nil
-        }
-        return URL(fileURLWithPath: rootPath, isDirectory: true)
-            .appendingPathComponent(String(first))
-            .path
     }
 }
 
