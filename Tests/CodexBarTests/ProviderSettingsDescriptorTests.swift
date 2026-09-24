@@ -319,6 +319,7 @@ struct ProviderSettingsDescriptorTests {
         fields[1].binding.wrappedValue = "192.168.1.10:17434"
         #expect(fixture.settings.providerConfig(for: .llmman)?.apiKey == "fixture-key")
         #expect(fixture.settings.providerConfig(for: .llmman)?.enterpriseHost == "192.168.1.10:17434")
+    }
 
     @Test
     func `empty Ollama manual cookies offer an explicit automatic recovery action`() async throws {
