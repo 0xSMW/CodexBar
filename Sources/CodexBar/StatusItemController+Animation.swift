@@ -898,17 +898,13 @@ extension StatusItemController {
         // Provider-specific by design: legacy preferences select balance text before quota and display modes.
         let usesBalance = switch provider {
         case .openrouter: preference == .automatic
+        case .mimo: snapshot?.primary == nil || preference == .secondary
+        case .opencodego, .devpass: snapshot?.primary == nil && snapshot?.secondary == nil
         case .mistral: self.menuBarMetricWindow(for: provider, snapshot: snapshot, now: now) == nil
         default: true
         }
-        if usesBalance, let balance = Self.menuBarBalanceDisplayText(provider: provider, snapshot: snapshot) {
+        if usesBalance, let balance = MenuBarLayoutBalanceResolver.balance(provider: provider, snapshot: snapshot) {
             return balance
-        }
-        if provider == .mimo, let snapshot,
-           snapshot.primary == nil || preference == .secondary,
-           let detail = snapshot.detailRow(label: "Balance")?.value
-        {
-            return detail.components(separatedBy: " (Paid:").first
         }
         if provider == .kiro {
             return Self.kiroDisplayText(
@@ -924,7 +920,7 @@ extension StatusItemController {
             return spend
         }
 
-        let percentWindow = self.menuBarPercentWindow(for: provider, snapshot: snapshot, now: now)
+        let percentWindow = self.menuBarMetricWindow(for: provider, snapshot: snapshot, now: now)
         let codexProjection = self.store.codexConsumerProjectionIfNeeded(
             for: provider,
             surface: .menuBar,
@@ -1001,43 +997,6 @@ extension StatusItemController {
             now: now)
     }
 
-    nonisolated static func menuBarBalanceDisplayText(
-        provider: UsageProvider,
-        snapshot: UsageSnapshot?) -> String?
-    {
-        // Provider-specific by design: balance/spend values live in distinct provider payload fields.
-        switch provider {
-        case .deepseek:
-            return MenuBarDisplayText.deepSeekBalanceText(snapshot: snapshot)
-        case .deepinfra:
-            guard let detail = snapshot?.primary?.resetDescription?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  let balanceDetail = detail.components(separatedBy: " · ").dropLast().last?
-                      .trimmingCharacters(in: .whitespacesAndNewlines),
-                      balanceDetail.hasPrefix("$"),
-                      let value = balanceDetail.split(separator: " ", maxSplits: 1).first
-            else { return nil }
-            return (balanceDetail.contains(" owed") ? "-" : "") + String(value)
-        case .moonshot, .poe:
-            let value = self.displayValue(
-                from: snapshot?.loginMethod(for: provider), prefix: "Balance:", removingSuffix: "")
-            return provider == .moonshot
-                ? value?.split(separator: "·", maxSplits: 1).first?.trimmingCharacters(in: .whitespacesAndNewlines)
-                : value
-        case .mistral:
-            return self.displayValue(
-                from: snapshot?.identity?.loginMethod, prefix: "API spend:", removingSuffix: " this month")
-        case .opencodego:
-            guard snapshot?.primary == nil, snapshot?.secondary == nil,
-                  let cost = snapshot?.providerCost, cost.period == "Zen balance"
-            else { return nil }
-            return UsageFormatter.currencyString(cost.used, currencyCode: cost.currencyCode)
-        case .openrouter:
-            return snapshot?.detailRow(label: "Remaining")?.value
-        default:
-            return nil
-        }
-    }
-
     nonisolated static func menuBarLayoutAutomaticText(
         provider: UsageProvider,
         snapshot: UsageSnapshot?,
@@ -1047,7 +1006,7 @@ extension StatusItemController {
         let balanceOnly = provider == .deepseek
             || (provider == .deepinfra && automatic?.resetDescription != nil && automatic?.resetsAt == nil)
         guard automatic == nil || balanceOnly else { return nil }
-        return self.menuBarBalanceDisplayText(provider: provider, snapshot: snapshot)
+        return MenuBarLayoutBalanceResolver.balance(provider: provider, snapshot: snapshot)
     }
 
     nonisolated static func extraUsageSpendDisplayText(snapshot: UsageSnapshot?) -> String? {
@@ -1160,32 +1119,6 @@ extension StatusItemController {
             }
             return credits ?? cost ?? fallback
         }
-    }
-
-    private nonisolated static func displayValue(
-        from text: String?,
-        prefix: String,
-        removingSuffix suffix: String)
-        -> String?
-    {
-        guard let rawValue = text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              rawValue.hasPrefix(prefix)
-        else {
-            return nil
-        }
-        let valueStart = rawValue.index(rawValue.startIndex, offsetBy: prefix.count)
-        var value = rawValue[valueStart...].trimmingCharacters(in: .whitespacesAndNewlines)
-        if !suffix.isEmpty, value.hasSuffix(suffix) {
-            value = String(value.dropLast(suffix.count)).trimmingCharacters(
-                in: .whitespacesAndNewlines)
-        }
-        return value.isEmpty ? nil : value
-    }
-
-    private func menuBarPercentWindow(for provider: UsageProvider, snapshot: UsageSnapshot?, now: Date)
-        -> RateWindow?
-    {
-        self.menuBarMetricWindow(for: provider, snapshot: snapshot, now: now)
     }
 
     /// Resolves the session (5h) and weekly (7d) lanes for the combined "Session + Weekly" menu-bar

@@ -1822,7 +1822,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact shared renderer maps provider-owned presentation data into the generic UI model."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/MenuBarLayout.swift",
-            line: 871,
+            line: 919,
             anchor: "ProviderDescriptorRegistry.descriptor(for: provider ?? .codex).presentation.primarySemanticWindow)",
             expectedProviderIDs: ["codex"],
             expectedReferenceCount: 2,
@@ -2571,11 +2571,19 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+Animation.swift",
-            line: 913,
+            line: 909,
             anchor: "if provider == .kiro {",
-            expectedProviderIDs: ["cursor", "kiro", "mimo", "mistral", "openrouter"],
-            expectedReferenceCount: 5,
-            expectedReferenceFingerprint: ["openrouter@0", "mistral@1", "mimo@7", "kiro@13", "cursor@21"],
+            expectedProviderIDs: ["cursor", "devpass", "kiro", "mimo", "mistral", "opencodego", "openrouter"],
+            expectedReferenceCount: 7,
+            expectedReferenceFingerprint: [
+                "openrouter@0",
+                "mimo@1",
+                "devpass@2",
+                "opencodego@2",
+                "mistral@3",
+                "kiro@9",
+                "cursor@17",
+            ],
             reason: "This exact app-runtime bridge coordinates provider-owned state through the shared controller."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/StatusItemController+CostMenuCard.swift",

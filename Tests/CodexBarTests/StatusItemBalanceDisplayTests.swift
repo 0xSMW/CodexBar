@@ -413,7 +413,7 @@ struct StatusItemBalanceDisplayTests {
             updatedAt: Date())
             .toUsageSnapshot()
 
-        #expect(StatusItemController.menuBarBalanceDisplayText(provider: .deepinfra, snapshot: snapshot) == "-$2.75")
+        #expect(MenuBarLayoutBalanceResolver.balance(provider: .deepinfra, snapshot: snapshot) == "-$2.75")
     }
 
     @Test
@@ -429,7 +429,7 @@ struct StatusItemBalanceDisplayTests {
             updatedAt: Date())
             .toUsageSnapshot()
 
-        #expect(StatusItemController.menuBarBalanceDisplayText(provider: .deepinfra, snapshot: snapshot) == "$4.00")
+        #expect(MenuBarLayoutBalanceResolver.balance(provider: .deepinfra, snapshot: snapshot) == "$4.00")
     }
 
     @Test

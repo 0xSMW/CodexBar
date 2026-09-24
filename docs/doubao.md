@@ -36,6 +36,7 @@ windows; valid keys without reliable request-limit headers still show limits as 
 - Auto mode honors configured API credentials first so an ambient arkcli SSO session cannot silently switch accounts. Without configured credentials, it uses `arkcli usage plan --format json`.
 - CLI mode uses only `arkcli`; API mode uses only configured AK/SK or Ark API-key credentials.
 - `arkcli` output provides distinct personal and team Coding Plan and Agent Plan 5-hour, weekly, and monthly windows when those subscriptions are present.
+- The menu bar icon uses personal Agent Plan 5-hour and weekly quotas when the corresponding Coding Plan lanes are absent. Coding Plan lanes keep priority; named Agent Plan windows remain separate in the card.
 - Volcengine AK/SK mode checks Coding Plan and Agent Plan independently, so accounts subscribed to both show both sets of windows.
 - Ark API-key endpoint: `POST https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions`
 - Probe models: `doubao-seed-2.0-code`, `doubao-1.5-pro-32k`, `doubao-lite-32k`
