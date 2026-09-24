@@ -52,18 +52,39 @@ public enum ChutesProviderDescriptor {
                 menu: ProviderMenuDescriptorPresentation(
                     primaryDescriptionIsDetail: { _ in true },
                     secondaryDescriptionMode: .detailWhenResetDatePresent)),
-            fetchPlan: .apiToken(
-                strategyID: "chutes.api",
-                resolveToken: ChutesSettingsReader.apiKey,
-                missingCredentialsError: { ChutesSettingsError.missingToken },
-                loadUsage: { apiKey, context in
-                    try await ChutesUsageFetcher.fetchUsage(
-                        apiKey: apiKey,
-                        environment: context.env).toUsageSnapshot()
-                }),
+            fetchPlan: ProviderFetchPlan(
+                sourceModes: [.auto, .api],
+                pipeline: ProviderFetchPipeline(resolveStrategies: { _ in [Self.scriptStrategy()] })),
             cli: ProviderCLIConfig(
                 name: "chutes",
                 aliases: ["chutes.ai"],
                 versionDetector: nil))
+    }
+
+    static func scriptStrategy(
+        transport: any ProviderHTTPTransport = ProviderHTTPClient.shared) -> ScriptFetchStrategy
+    {
+        ScriptFetchStrategy(
+            id: "chutes.js",
+            provider: .chutes,
+            bundledPlugin: "chutes",
+            secretKey: ChutesSettingsReader.apiKeyEnvironmentKey,
+            sourceLabel: "api",
+            transport: transport,
+            validateContext: { context in
+                guard ChutesSettingsReader.apiKey(environment: context.env) != nil else {
+                    throw ProviderFetchClassifiedError(
+                        kind: .missingCredential,
+                        message: ChutesSettingsError.missingToken.localizedDescription)
+                }
+                try ChutesSettingsReader.validateEndpointOverrides(environment: context.env)
+            },
+            resolveValues: { context in
+                guard let token = ChutesSettingsReader.apiKey(environment: context.env) else { return nil }
+                return .init(
+                    settings: ["BASE_URL": ChutesSettingsReader.apiURL(environment: context.env).absoluteString],
+                    secrets: [ChutesSettingsReader.apiKeyEnvironmentKey: token])
+            },
+            isEnabled: { _ in true })
     }
 }

@@ -18,6 +18,7 @@
 - Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.
 - Muse Code: check the CLI-owned Keychain item's access list before requesting its token, so refreshes fail promptly when access would require a prompt, and discover logins without reading secrets (#3916). Thanks @audreyt!
 - Cost history: back off forbidden Cursor cost requests for six hours, honor timeout cooldowns without cached data, and preserve quota refreshes and manual recovery (#3910, #3918). Thanks @harjothkhara and @Sogl!
+- Chutes: refresh subscription and pay-as-you-go quotas through the bundled plugin on both engines, preserving empty usage responses and best-effort quota details.
 
 ## 0.65.0 — 2026-09-22
 

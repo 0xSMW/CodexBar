@@ -28,9 +28,9 @@ weakening the plugin network policy.
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 17 |
+| `cut-over` | 19 |
 | `converted` | 5 |
-| `convertible-now` | 4 |
+| `convertible-now` | 3 |
 | `needs-cookie-import` | 19 |
 | `needs-files/subprocess/oauth-broker` | 14 |
 | `needs-pty/webview/native` | 8 |
@@ -98,7 +98,7 @@ weakening the plugin network policy.
 | bifrost | `cut-over` | Yes | Bundled TypeScript on both engines: configured HTTPS/private-network HTTP, virtual-key header auth, budget overrides, reset-only rate limits, and numeric model/budget details. Swift owns registration and settings only. |
 | deepgram | `cut-over` | Yes | Cut over on JavaScriptCore: project discovery, aggregation, configured origins, numeric validation, and classified auth/permission/rate/network/API/parse failures match native behavior; the native fetch core is Linux-only. |
 | poe | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET balance/history pagination with daily points and model/type summaries; the native fetch twins are deleted. |
-| chutes | `convertible-now` | No | Tolerant no-usage payloads can return an API identity without inventing quota data. |
+| chutes | `cut-over` | Yes | Both engines use the bundled TypeScript plugin for subscription usage and best-effort quota enrichment, preserving empty snapshots and subscription context; the native fetcher is deleted. |
 | helmcode | `cut-over` | Yes | Both tenant HTTP flows and quota projection live in the bundled TypeScript plugin, using domain-scoped cookies and policy-only availability. Swift supplies registration, settings, and dashboard routing. No native fetcher or cURL-capture fallback. |
 | neuralwatt | `cut-over` | Yes | Cut over on both engines: validated configured HTTPS, subscription kWh, prepaid balance, key allowances, and exact confidence; the host preserves selective single retries, capped Retry-After, and cancellation. The native fetch twin is deleted. |
 | clawrouter | `cut-over` | Yes | Cut over on JavaScriptCore: validated configured origins, classified failures, exact confidence, budget/ledger details, and provider charts match native behavior; the native fetch core is Linux-only. |

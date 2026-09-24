@@ -233,6 +233,10 @@ displayable usage or identity remains invalid unless `empty: true` is explicitly
 llmman's bundled `llmman.ts` reads a local `llmman serve` daemon's node report for loaded-model memory. Its API key is
 optional, so the plugin sends it itself instead of declaring host-owned `auth`. See [llmman](llmman.md).
 
+Chutes' bundled `chutes.ts` owns subscription usage and best-effort quota detail requests on both engines. It preserves
+subscription context and explicitly permits empty usage responses. Swift supplies credentials and validated API origins.
+See [Chutes](chutes.md).
+
 DevPass's bundled `devpass.ts` reads the documented LLM Gateway key-status API for billing-cycle and premium weekly
 credits. Swift only registers the provider and its API-key setting. See [DevPass](devpass.md).
 
