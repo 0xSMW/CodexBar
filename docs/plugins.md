@@ -330,6 +330,10 @@ are never erased. User plugins have no persistent cookie cache, so rejection is 
 prepaid-balance deductions and monthly cents conversion, and retries transient failures once. The Swift fetcher and
 parser have been removed.
 
+[ZenMux](zenmux.md) uses its bundled script on both engines. It requires subscription quotas and optionally enriches
+them with USD PAYG balance; failed enrichment preserves quotas except for rejected credentials and cancellation. The
+Swift fetcher and parser have been removed.
+
 [Atlas Cloud](atlascloud.md) and [Vercel AI Gateway](vercel.md) use fixed-origin bearer GETs for documented
 account/team balances. Their bundled JavaScript returns generic details without fabricated quota windows;
 Swift provides registration and the shared API-key settings field. Scripts classify HTTP failures and the host bounds retries.

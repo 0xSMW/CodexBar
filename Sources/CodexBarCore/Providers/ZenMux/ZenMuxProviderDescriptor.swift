@@ -44,22 +44,30 @@ public enum ZenMuxProviderDescriptor {
                 menuCard: ProviderMenuCardPresentation(
                     primaryDescriptionPlacement: .detailLeft,
                     hidesPrimaryResetWithoutDate: true)),
-            fetchPlan: .apiToken(
-                strategyID: "zenmux.api",
-                resolveToken: ZenMuxSettingsReader.managementAPIKey,
-                missingCredentialsError: { ZenMuxUsageError.notConfigured },
-                loadUsage: { credential, context in
-                    let shouldFetchCredits = context.runtime == .app
-                        ? context.includeOptionalUsage
-                        : context.includeCredits
-                    let result = try await ZenMuxUsageFetcher.fetchUsage(
-                        credential,
-                        includePaygBalance: shouldFetchCredits)
-                    return result.usage.toUsageSnapshot(paygBalanceUSD: result.paygBalanceUSD)
-                }),
+            fetchPlan: ProviderFetchPlan(
+                sourceModes: [.auto, .api],
+                pipeline: ProviderFetchPipeline(resolveStrategies: { _ in
+                    [ScriptFetchStrategy(
+                        id: "zenmux.js",
+                        provider: .zenmux,
+                        bundledPlugin: "zenmux",
+                        secretKey: ZenMuxSettingsReader.managementAPIKeyEnvironmentKey,
+                        sourceLabel: "api",
+                        timeout: 35,
+                        resolveValues: Self.scriptValues,
+                        isEnabled: { _ in true })]
+                })),
             cli: ProviderCLIConfig(
                 name: "zenmux",
                 aliases: ["zen-mux"],
                 versionDetector: nil))
+    }
+
+    static func scriptValues(_ context: ProviderFetchContext) -> ScriptFetchStrategy.Values? {
+        guard let key = ZenMuxSettingsReader.managementAPIKey(environment: context.env) else { return nil }
+        let includePayg = context.runtime == .app ? context.includeOptionalUsage : context.includeCredits
+        return .init(
+            settings: ["INCLUDE_PAYG": includePayg ? "1" : "0"],
+            secrets: [ZenMuxSettingsReader.managementAPIKeyEnvironmentKey: key])
     }
 }
