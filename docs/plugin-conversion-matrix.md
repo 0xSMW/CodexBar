@@ -30,9 +30,9 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 20 |
+| `cut-over` | 22 |
 | `converted` | 5 |
-| `convertible-now` | 3 |
+| `convertible-now` | 1 |
 | `needs-cookie-import` | 7 |
 | `needs-files/subprocess/oauth-broker` | 20 |
 | `needs-pty/webview/native` | 8 |
@@ -107,7 +107,7 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 | longcat | `needs-cookie-import` | No | Still needs path/domain-aware cookie selection and retries across imported profiles; per-domain cache isolation does not expose those candidates. |
 | sub2api | `cut-over` | Yes | Cut over on JavaScriptCore: configured HTTPS/loopback origins, a hard 15-second request deadline, strict parsing, exact confidence, and classified failures match native behavior; the native fetch core is Linux-only. |
 | wayfinder | `needs-pty/webview/native` | No | The local unauthenticated HTTP gateway, metrics text, and routing/savings model violate HTTPS-only generic scope. |
-| zenmux | `convertible-now` | No | Verified fixed-origin bearer GET pair; subscription and optional PAYG balance map generically. |
+| zenmux | `cut-over` | Yes | Both engines use fixed-origin bearer GETs for required subscription quotas and optional USD PAYG balance. Auth failures and cancellation remain fatal during enrichment; the native fetcher and parser are deleted. |
 | aiand | `cut-over` | Yes | Both engines use the bundled TypeScript plugin for paired-cursor log pagination, exact decimal sums, partial confidence, and explicit empty windows without a guessed currency; the native fetcher is deleted. |
 | zoommate | `needs-cookie-import` | No | Domain-scoped bootstrap GET/JWT exchange and history pagination fit scripts, but rejected sessions advance to the next browser profile in the same refresh. |
 | xai | `cut-over` | Yes | Cut over on both engines: bearer GET balance plus best-effort JSON POST history and billing details; the native fetch twins are deleted. |
