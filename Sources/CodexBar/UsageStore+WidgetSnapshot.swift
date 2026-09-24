@@ -231,9 +231,20 @@ extension UsageStore {
         now: Date,
         previousEntry: WidgetSnapshot.ProviderEntry?) -> WidgetSnapshot.ProviderEntry?
     {
-        let snapshot = self.snapshots[provider.instanceID]
+        // The ambient probe can still hold another account's quota while claude-swap owns the menu.
+        let swapOwnsClaude = self.settings.claudeSwapEnabled && ClaudeSwapMenuPrecedence.prefersClaudeSwap(
+            provider: provider,
+            accountCount: self.claudeSwapAccountSnapshots.count,
+            showSingleAccount: self.settings.claudeSwapShowSingleAccount)
+        let activeSwapAccount = swapOwnsClaude ? self.claudeSwapAccountSnapshots.first(where: \.isActive) : nil
+        let snapshot = swapOwnsClaude ? activeSwapAccount?.snapshot : self.snapshots[provider.instanceID]
         let tokenSnapshot = self.tokenSnapshotForCurrentProviderConfig(for: provider)?.snapshot
-        let claudeQuotaOwnerKey: String? = if provider == .claude {
+        let claudeQuotaOwnerKey: String? = if swapOwnsClaude {
+            activeSwapAccount.flatMap { account in
+                ClaudeSwapRetainedUsageStore.ownershipFingerprint(for: account)
+                    .map { "claude/swap:\(account.id.opaqueID):\($0)" }
+            }
+        } else if provider == .claude {
             self.claudeWidgetQuotaOwnerKey()
         } else {
             nil
@@ -293,11 +304,6 @@ extension UsageStore {
         } else {
             nil
         }
-        let quotaOwnerKey: String? = if provider == .claude {
-            snapshot != nil ? claudeQuotaOwnerKey : preservedClaudeUsage?.quotaOwnerKey
-        } else {
-            nil
-        }
         // Provider-specific by design: DeepSeek and OpenRouter expose their widget value as balance text.
         let balanceText: String? = switch provider {
         case .deepseek, .openrouter:
@@ -321,7 +327,7 @@ extension UsageStore {
             tokenUsage: tokenUsage,
             dailyUsage: dailyUsage,
             providerCost: providerCost,
-            quotaOwnerKey: quotaOwnerKey,
+            quotaOwnerKey: snapshot != nil ? claudeQuotaOwnerKey : preservedClaudeUsage?.quotaOwnerKey,
             balanceText: balanceText)
     }
 
@@ -395,37 +401,23 @@ extension UsageStore {
         provider: UsageProvider) -> WidgetSnapshot.TokenUsageSummary?
     {
         guard let snapshot else { return nil }
-        let fallbackTokens: Int? = {
-            var sum = 0
-            for t in snapshot.daily.compactMap(\.totalTokens) {
-                let (res, of) = sum.addingReportingOverflow(t)
-                if of { return nil }
-                sum = res
-            }
-            return sum > 0 ? sum : nil
-        }()
-        let monthTokensValue = snapshot.last30DaysTokens ?? fallbackTokens
-        let sessionLabel = if provider == .bedrock || provider == .mistral {
-            "Latest billing day"
-        } else if provider == .codex {
-            "Today API est. · not billed"
-        } else {
-            "Today"
+        let fallbackTokens = CheckedSum.integers(snapshot.daily.compactMap(\.totalTokens))
+            .flatMap { $0 > 0 ? $0 : nil }
+        let sessionLabel = switch provider {
+        case .bedrock, .mistral: "Latest billing day"
+        default: "Today"
         }
         let defaultMonthLabel = snapshot.historyDays == 1 ? "Today" : "\(snapshot.historyDays)d"
-        let monthLabel = if provider == .codex {
-            "\(snapshot.historyLabel ?? defaultMonthLabel) API est. · not billed"
-        } else {
-            snapshot.historyLabel ?? defaultMonthLabel
-        }
+        let monthLabel = snapshot.historyLabel ?? defaultMonthLabel
+        let estimateSuffix = provider == .codex ? " API est. · not billed" : ""
         return WidgetSnapshot.TokenUsageSummary(
             sessionCostUSD: snapshot.sessionCostUSD,
             sessionTokens: snapshot.sessionTokens,
             last30DaysCostUSD: snapshot.last30DaysCostUSD,
-            last30DaysTokens: monthTokensValue,
+            last30DaysTokens: snapshot.last30DaysTokens ?? fallbackTokens,
             currencyCode: snapshot.currencyCode,
-            sessionLabel: sessionLabel,
-            last30DaysLabel: monthLabel,
+            sessionLabel: sessionLabel + estimateSuffix,
+            last30DaysLabel: monthLabel + estimateSuffix,
             updatedAt: snapshot.updatedAt)
     }
 

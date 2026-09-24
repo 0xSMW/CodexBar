@@ -15,6 +15,10 @@ read_when:
 - WidgetKit owns the outer margins. Small, medium, and large tiles share the same rendering and quota-selection rules; overflow labels disclose omitted detail rows. Snapshot and reset dates remain live relative text between timeline updates.
 - Snapshot age labels use WidgetKit's native relative-date text to advance between timeline reloads, including on small widgets. Stale token-cost rows track their own saved timestamp once they lag quota data by more than ten minutes. Fetching new usage still depends on app refresh and WidgetKit accepting a timeline.
 - The app writes snapshots after the main refresh pipeline and token-usage refreshes; narrow single-provider refresh paths may wait for the next snapshot write.
+- Claude-swap refreshes and cleared adapter state also publish snapshots, even when account widgets are off. When
+  the adapter owns Claude account presentation, provider widgets follow its active slot and source measurement time.
+  Unavailable quota can retain only the same slot owner's saved measurement; a different or missing active account
+  cannot inherit ambient Claude quota or another slot's quota. Local cost history remains provider-wide.
 - If every provider entry disappears during a failed refresh, the writer can retain its last queued entries while their providers remain enabled and preservation has not been invalidated. Measurement timestamps stay unchanged, so the widgets show the data's original age. Account invalidation keeps a queued publication retired until valid replacement usage is published. This fallback is limited to the current app session; it does not restore generic provider entries from disk across account changes or restarts. Claude keeps its existing ownership-checked preservation path.
 - Scheduled provider refreshes trigger regular token/cost refreshes; the token/cost TTL determines eligibility when
   that refresh runs. Timer-driven local-history refreshes have a 15-minute minimum (30 minutes in low-power mode).

@@ -224,6 +224,10 @@ The accepted multi-account design in
   `~/.config/codexbar/config.json`; legacy installs may use `~/.codexbar/config.json`). The option defaults off,
   zero accounts still use the ambient presentation, and account identity is `claude-swap:<slot>`, never the display
   email.
+- Provider widgets follow the active claude-swap account under the same multiple-account/single-account presentation
+  rule. Successful list refreshes and clearing the adapter publish a widget snapshot even with account widgets off.
+  Retained quota keeps its original measurement time and is bound to the slot's opaque owner fingerprint; unavailable
+  or replaced accounts never borrow another account's quota. Local cost history remains combined across Claude homes.
 - Terminal scope: this automatic precedence is cards-only and works on every supported CLI platform. An explicit
   Claude provider or `--source auto` remains eligible, while `--account`, `--account-index`, `--all-accounts`, and
   explicit non-auto source flags bypass the adapter. `codexbar usage` and serve `/usage`/`/cost` remain unchanged,
