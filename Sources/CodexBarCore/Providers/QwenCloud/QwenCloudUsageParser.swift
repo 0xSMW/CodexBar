@@ -10,11 +10,12 @@ enum QwenCloudUsageParser {
         quotaConfigData: Data?,
         now: Date) throws -> QwenCloudUsageSnapshot
     {
-        if let snapshot = try self.parseCurrentTokenPlanUsage(
-            from: usageData,
-            subscriptionData: subscriptionData,
-            quotaConfigData: quotaConfigData,
-            now: now)
+        if let raw = try? JSONSerialization.jsonObject(with: usageData),
+           let snapshot = QwenCloudUsageSnapshot.personalUsage(
+               in: OneConsoleJSON.expandEmbeddedJSON(raw),
+               subscriptionData: subscriptionData,
+               quotaConfigData: quotaConfigData,
+               now: now)
         {
             return snapshot
         }
@@ -28,25 +29,6 @@ enum QwenCloudUsageParser {
 
     static func parseUsageSnapshot(from data: Data, now: Date = Date()) throws -> QwenCloudUsageSnapshot {
         try self.parse(from: data, subscriptionData: nil, quotaConfigData: nil, now: now)
-    }
-
-    private static func parseCurrentTokenPlanUsage(
-        from data: Data,
-        subscriptionData: Data?,
-        quotaConfigData: Data?,
-        now: Date) throws -> QwenCloudUsageSnapshot?
-    {
-        let raw: Any
-        do {
-            raw = try JSONSerialization.jsonObject(with: data)
-        } catch {
-            return nil
-        }
-        return QwenCloudUsageSnapshot.personalUsage(
-            in: OneConsoleJSON.expandEmbeddedJSON(raw),
-            subscriptionData: subscriptionData,
-            quotaConfigData: quotaConfigData,
-            now: now)
     }
 
     private static func map(_ error: AlibabaTokenPlanUsageError) -> QwenCloudUsageError {

@@ -12,6 +12,7 @@ public struct AlibabaTokenPlanUsageSnapshot: Sendable, OneConsoleTokenPlanSnapsh
     public let weeklyUsedPercent: Double?
     public let weeklyTotalQuota: Double?
     public let weeklyResetsAt: Date?
+    public let monthlyWindow: RateWindow?
     public let updatedAt: Date
 
     public init(
@@ -26,6 +27,7 @@ public struct AlibabaTokenPlanUsageSnapshot: Sendable, OneConsoleTokenPlanSnapsh
         weeklyUsedPercent: Double? = nil,
         weeklyTotalQuota: Double? = nil,
         weeklyResetsAt: Date? = nil,
+        monthlyWindow: RateWindow? = nil,
         updatedAt: Date)
     {
         self.planName = planName
@@ -39,6 +41,7 @@ public struct AlibabaTokenPlanUsageSnapshot: Sendable, OneConsoleTokenPlanSnapsh
         self.weeklyUsedPercent = weeklyUsedPercent
         self.weeklyTotalQuota = weeklyTotalQuota
         self.weeklyResetsAt = weeklyResetsAt
+        self.monthlyWindow = monthlyWindow
         self.updatedAt = updatedAt
     }
 }

@@ -12,6 +12,7 @@ protocol OneConsoleTokenPlanSnapshot {
     var weeklyUsedPercent: Double? { get }
     var weeklyTotalQuota: Double? { get }
     var weeklyResetsAt: Date? { get }
+    var monthlyWindow: RateWindow? { get }
     var updatedAt: Date { get }
 
     init(
@@ -26,6 +27,7 @@ protocol OneConsoleTokenPlanSnapshot {
         weeklyUsedPercent: Double?,
         weeklyTotalQuota: Double?,
         weeklyResetsAt: Date?,
+        monthlyWindow: RateWindow?,
         updatedAt: Date)
 }
 
@@ -62,6 +64,7 @@ extension OneConsoleTokenPlanSnapshot {
 
         let planName = self.planName?.trimmingCharacters(in: .whitespacesAndNewlines)
         let loginMethod = (planName?.isEmpty ?? true) ? nil : planName
+        let monthlyIsPrimary = primary == nil && secondary == nil
         let identity = ProviderIdentitySnapshot(
             providerID: provider.instanceID,
             accountEmail: nil,
@@ -69,9 +72,12 @@ extension OneConsoleTokenPlanSnapshot {
             loginMethod: loginMethod)
 
         return UsageSnapshot(
-            primary: primary,
+            primary: primary ?? (monthlyIsPrimary ? self.monthlyWindow : nil),
             secondary: secondary,
             tertiary: nil,
+            extraRateWindows: monthlyIsPrimary ? nil : self.monthlyWindow.map {
+                [NamedRateWindow(id: "monthly", title: "Monthly", window: $0)]
+            },
             providerCost: nil,
             updatedAt: self.updatedAt,
             identity: identity)
@@ -79,14 +85,7 @@ extension OneConsoleTokenPlanSnapshot {
 
     private static func usedPercent(used: Double?, total: Double?, remaining: Double?) -> Double? {
         guard let total, total > 0 else { return nil }
-        let usedValue: Double? = if let used {
-            used
-        } else if let remaining {
-            total - remaining
-        } else {
-            nil
-        }
-        guard let usedValue else { return nil }
+        guard let usedValue = used ?? remaining.map({ total - $0 }) else { return nil }
         let normalizedUsed = max(0, min(usedValue, total))
         return normalizedUsed / total * 100
     }
@@ -126,21 +125,29 @@ extension OneConsoleTokenPlanSnapshot {
         subscriptionData: Data?,
         quotaConfigData: Data?,
         defaultPlanName: String? = nil,
-        now: Date) -> Self?
+        now: Date,
+        ratio: (Any?) -> Double? = OneConsoleJSON.number,
+        resetDate: (Any?) -> Date? = OneConsoleJSON.date,
+        requiresUsageForReset: Bool = false) -> Self?
     {
         guard let usage = OneConsoleJSON.findObject(
-            containingAnyOf: ["per5HourPercentage", "per1WeekPercentage"],
+            containingAnyOf: ["per5HourPercentage", "per1WeekPercentage", "per1MonthPercentage"],
             in: expanded)
         else {
             return nil
         }
 
         let fiveHourPercent = OneConsoleJSON.percentagePoints(
-            fromRatio: OneConsoleJSON.number(usage["per5HourPercentage"]))
+            fromRatio: ratio(usage["per5HourPercentage"]))
         let weeklyPercent = OneConsoleJSON.percentagePoints(
-            fromRatio: OneConsoleJSON.number(usage["per1WeekPercentage"]))
-        guard fiveHourPercent != nil || weeklyPercent != nil else {
+            fromRatio: ratio(usage["per1WeekPercentage"]))
+        let monthlyPercent = OneConsoleJSON.percentagePoints(fromRatio: ratio(usage["per1MonthPercentage"]))
+        guard fiveHourPercent != nil || weeklyPercent != nil || monthlyPercent != nil else {
             return nil
+        }
+
+        func reset(_ key: String, percent: Double?) -> Date? {
+            requiresUsageForReset && percent == nil ? nil : resetDate(usage[key])
         }
 
         let planCode = subscriptionData.flatMap(self.planCode)
@@ -155,10 +162,17 @@ extension OneConsoleTokenPlanSnapshot {
             resetsAt: nil,
             fiveHourUsedPercent: fiveHourPercent,
             fiveHourTotalQuota: quota?.fiveHour,
-            fiveHourResetsAt: OneConsoleJSON.date(usage["per5HourResetTime"]),
+            fiveHourResetsAt: reset("per5HourResetTime", percent: fiveHourPercent),
             weeklyUsedPercent: weeklyPercent,
             weeklyTotalQuota: quota?.weekly,
-            weeklyResetsAt: OneConsoleJSON.date(usage["per1WeekResetTime"]),
+            weeklyResetsAt: reset("per1WeekResetTime", percent: weeklyPercent),
+            monthlyWindow: monthlyPercent.map {
+                RateWindow(
+                    usedPercent: $0,
+                    windowMinutes: 30 * 24 * 60,
+                    resetsAt: resetDate(usage["per1MonthResetTime"]),
+                    resetDescription: Self.quotaDetail(usedPercent: $0, total: quota?.monthly))
+            },
             updatedAt: now)
     }
 
@@ -180,18 +194,12 @@ extension OneConsoleTokenPlanSnapshot {
     }
 
     private static func displayPlanName(_ planCode: String) -> String {
-        switch planCode {
-        case "lite": "Lite"
-        case "standard": "Standard"
-        case "pro": "Pro"
-        case "max": "Max"
-        default: planCode
-        }
+        ["lite", "standard", "pro", "max"].contains(planCode) ? planCode.capitalized : planCode
     }
 
     private static func quotaTotals(
         from data: Data,
-        planCode: String?) -> (fiveHour: Double?, weekly: Double?)?
+        planCode: String?) -> (fiveHour: Double?, weekly: Double?, monthly: Double?)?
     {
         guard let planCode,
               let raw = try? JSONSerialization.jsonObject(with: data)
@@ -206,7 +214,8 @@ extension OneConsoleTokenPlanSnapshot {
         }
         let fiveHour = OneConsoleJSON.number(quota["five_hour"] ?? quota["fiveHour"])
         let weekly = OneConsoleJSON.number(quota["weekly"])
-        guard fiveHour != nil || weekly != nil else { return nil }
-        return (fiveHour, weekly)
+        let monthly = OneConsoleJSON.number(quota["monthly"])
+        guard fiveHour != nil || weekly != nil || monthly != nil else { return nil }
+        return (fiveHour, weekly, monthly)
     }
 }
