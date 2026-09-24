@@ -128,20 +128,23 @@ public struct ProviderSettingsSectionRegistration: Sendable {
             cookieSettings: { settings in
                 CookieProviderSettings(
                     cookieSource: settings.cookieSource,
-                    manualCookieHeader: settings.manualCookieHeader)
+                    manualCookieHeader: settings.manualCookieHeader,
+                    manualCookieOrigin: settings.manualCookieOrigin)
             },
             credentialSettings: { context in
                 guard let provider = key.providerID.firstPartyProvider else { return nil }
                 let settings = context.cookieSettings(for: provider)
                 return Key.Section(
                     cookieSource: settings.cookieSource,
-                    manualCookieHeader: settings.manualCookieHeader)
+                    manualCookieHeader: settings.manualCookieHeader,
+                    manualCookieOrigin: settings.manualCookieOrigin)
             })
         self.cookieContribution = { settings in
             ProviderSettingsSnapshotContribution(
                 Key.Section(
                     cookieSource: settings.cookieSource,
-                    manualCookieHeader: settings.manualCookieHeader),
+                    manualCookieHeader: settings.manualCookieHeader,
+                    manualCookieOrigin: settings.manualCookieOrigin),
                 for: key)
         }
     }

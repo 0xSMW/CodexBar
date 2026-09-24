@@ -40,7 +40,14 @@ struct QoderProviderImplementation: ProviderImplementation {
                         off: L("%@ cookies are disabled.", "Qoder"))
                 },
                 trailingText: {
-                    ProviderCookieSourceUI.cachedTrailingText(provider: .qoder)
+                    let entries = [nil, "qoder.com", "qoder.com.cn"].compactMap { domain in
+                        CookieHeaderCache.loadForDisplay(provider: .qoder, scope: domain.map {
+                            .providerVariant($0)
+                        })
+                    }
+                    return entries.max(by: { $0.storedAt < $1.storedAt }).map {
+                        ProviderCookieSourceUI.cachedTrailingText(entry: $0)
+                    }
                 }),
         ]
     }

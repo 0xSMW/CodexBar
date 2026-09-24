@@ -23,6 +23,8 @@ struct ProviderPluginParityTests {
             (.synthetic, "SYNTHETIC_API_KEY"),
             (.xai, "XAI_MANAGEMENT_API_KEY"),
             (.zai, "Z_AI_API_KEY"),
+            (.perplexity, "PERPLEXITY_SESSION_TOKEN"),
+            (.qoder, "FIXTURE_COOKIE"),
         ] {
             let descriptor = ProviderDescriptorRegistry.descriptor(for: provider)
             var environment = [key: "fixture-key"]

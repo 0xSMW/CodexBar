@@ -12,7 +12,7 @@ struct PerplexityUsageFetcherTests {
     // MARK: - JSON Parsing
 
     @Test(arguments: ["recurring", "promotional", "purchased"])
-    func `large credit pools retain their percentage and whole count description`(_ type: String) throws {
+    func `large credit pools retain their percentage and whole count description`(_ type: String) async throws {
         let json = """
         {
           "balance_cents": 1e20,
@@ -22,7 +22,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 1e20
         }
         """
-        let usage = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let usage = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
         let window = switch type {
         case "recurring": usage.primary
@@ -36,7 +36,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test(arguments: [(1.6, "2/10 credits"), (-0.25, "0/10 credits")])
-    func `credit descriptions preserve rounding and unsigned zero`(used: Double, expected: String) throws {
+    func `credit descriptions preserve rounding and unsigned zero`(used: Double, expected: String) async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -46,14 +46,14 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": \(used)
         }
         """
-        let usage = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let usage = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
 
         #expect(usage.primary?.resetDescription == expected)
     }
 
     @Test
-    func `overflowing credit sums omit nonfinite count descriptions`() throws {
+    func `overflowing credit sums omit nonfinite count descriptions`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -66,7 +66,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 1
         }
         """
-        let usage = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let usage = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
 
         #expect(usage.primary != nil)
@@ -74,7 +74,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `parses full response with recurring and promotional credits`() throws {
+    func `parses full response with recurring and promotional credits`() async throws {
         let json = """
         {
           "balance_cents": 7250,
@@ -87,7 +87,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 2750
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         #expect(snapshot.recurringTotal == 10000)
         #expect(snapshot.recurringUsed == 2750)
@@ -101,7 +101,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `waterfall attribution recurring then purchased then promo`() throws {
+    func `waterfall attribution recurring then purchased then promo`() async throws {
         // Usage exceeds recurring, spills into purchased, then promo
         let json = """
         {
@@ -115,7 +115,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 9000
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         #expect(snapshot.recurringUsed == 5000) // recurring fully consumed
         #expect(snapshot.purchasedUsed == 3000) // purchased fully consumed
@@ -123,7 +123,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `expired promotional grants are excluded`() throws {
+    func `expired promotional grants are excluded`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -136,7 +136,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 1000
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         #expect(snapshot.promoTotal == 0) // expired grant excluded
         #expect(snapshot.promoUsed == 0)
@@ -144,7 +144,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `empty credit grants produces zero recurring`() throws {
+    func `empty credit grants produces zero recurring`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -154,7 +154,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 0
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         #expect(snapshot.recurringTotal == 0)
         #expect(snapshot.promoTotal == 0)
@@ -163,12 +163,12 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `malformed JSON throws parse failed`() {
+    func `malformed JSON throws parse failed`() async {
         let json = """
         { "balance_cents": "not a number", "credit_grants": null }
         """
-        #expect {
-            _ = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        await #expect {
+            _ = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
         } throws: { error in
             guard case PerplexityAPIError.parseFailed = error else { return false }
             return true
@@ -178,8 +178,8 @@ struct PerplexityUsageFetcherTests {
     // MARK: - Plan Name Inference
 
     @Test
-    func `plan name inference`() throws {
-        func makeSnapshot(recurringCents: Double) throws -> PerplexityUsageSnapshot {
+    func `plan name inference`() async throws {
+        func makeSnapshot(recurringCents: Double) async throws -> PerplexityUsageSnapshot {
             let json = """
             {
               "balance_cents": 0,
@@ -191,19 +191,19 @@ struct PerplexityUsageFetcherTests {
               "total_usage_cents": 0
             }
             """
-            return try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+            return try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
         }
 
-        #expect(try makeSnapshot(recurringCents: 0).planName == nil)
-        #expect(try makeSnapshot(recurringCents: 500).planName == "Pro")
-        #expect(try makeSnapshot(recurringCents: 1000).planName == "Pro")
-        #expect(try makeSnapshot(recurringCents: 10000).planName == "Max")
+        #expect(try await makeSnapshot(recurringCents: 0).planName == nil)
+        #expect(try await makeSnapshot(recurringCents: 500).planName == "Pro")
+        #expect(try await makeSnapshot(recurringCents: 1000).planName == "Pro")
+        #expect(try await makeSnapshot(recurringCents: 10000).planName == "Max")
     }
 
     // MARK: - toUsageSnapshot
 
     @Test
-    func `to usage snapshot always has secondary and tertiary`() throws {
+    func `to usage snapshot always has secondary and tertiary`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -215,7 +215,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 0
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
 
         // secondary and tertiary always present even when no promo/purchased credits
@@ -224,7 +224,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `to usage snapshot zero recurring bar is fully depleted`() throws {
+    func `to usage snapshot zero recurring bar is fully depleted`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -234,7 +234,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 0
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
         let primary = try #require(snapshot.primary)
 
@@ -243,7 +243,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `to usage snapshot omits primary when only fallback credits remain`() throws {
+    func `to usage snapshot omits primary when only fallback credits remain`() async throws {
         let json = """
         {
           "balance_cents": 6000,
@@ -255,7 +255,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 0
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
 
         #expect(snapshot.primary == nil)
@@ -264,7 +264,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `to usage snapshot empty pools bars are fully depleted`() throws {
+    func `to usage snapshot empty pools bars are fully depleted`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -276,7 +276,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 0
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
         let secondary = try #require(snapshot.secondary)
         let tertiary = try #require(snapshot.tertiary)
@@ -289,7 +289,7 @@ struct PerplexityUsageFetcherTests {
     // MARK: - Purchased credits from credit_grants
 
     @Test
-    func `purchased credits from credit grants array`() throws {
+    func `purchased credits from credit grants array`() async throws {
         // Purchased credits appear as credit_grant type="purchased" instead of
         // current_period_purchased_cents. The snapshot should pick them up.
         let json = """
@@ -305,7 +305,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 81935
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         #expect(snapshot.recurringTotal == 10000)
         #expect(snapshot.purchasedTotal == 40000)
@@ -318,7 +318,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `purchased credits prefer grants over field when both present`() throws {
+    func `purchased credits prefer grants over field when both present`() async throws {
         // When both current_period_purchased_cents AND credit_grants type="purchased"
         // are provided, the larger value wins.
         let json = """
@@ -334,7 +334,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 14000
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         // Purchased should use max(8000, 3000) = 8000
         #expect(snapshot.purchasedTotal == 8000)
@@ -345,7 +345,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `purchased credits from field when no grant type`() throws {
+    func `purchased credits from field when no grant type`() async throws {
         // Legacy path: current_period_purchased_cents is set but no "purchased" grant
         let json = """
         {
@@ -359,7 +359,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 9000
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
 
         // Still picks up purchased from the top-level field
         #expect(snapshot.purchasedTotal == 3000)
@@ -369,7 +369,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `real world max plan with all three pools`() throws {
+    func `real world max plan with all three pools`() async throws {
         // Real-world scenario: Max plan, 10k recurring + 40k purchased + 55k bonus
         // Total 105,000 available, 23,065 remaining → 81,935 used
         let json = """
@@ -385,7 +385,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 81935
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
         let usage = snapshot.toUsageSnapshot()
 
         // Primary (recurring): fully consumed → 100%
@@ -403,7 +403,7 @@ struct PerplexityUsageFetcherTests {
     }
 
     @Test
-    func `to usage snapshot primary percent matches usage`() throws {
+    func `to usage snapshot primary percent matches usage`() async throws {
         let json = """
         {
           "balance_cents": 0,
@@ -415,7 +415,7 @@ struct PerplexityUsageFetcherTests {
           "total_usage_cents": 2500
         }
         """
-        let snapshot = try PerplexityUsageFetcher._parseResponseForTesting(Data(json.utf8), now: Self.now)
+        let snapshot = try await CookiePluginFixtures.perplexity(Data(json.utf8), now: Self.now)
             .toUsageSnapshot()
         let primary = try #require(snapshot.primary)
 
