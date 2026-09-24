@@ -18,6 +18,7 @@
 - Codex costs: include local session history in Usage & Spend when CLI credentials are stored in the OS keyring instead of `auth.json` (#3922).
 - Claude widgets: refresh after claude-swap account updates and follow the active account without requiring account widgets, preserving quota ownership and measurement age (#3920, #3921). Thanks @aledeul!
 - Ollama: explain empty Manual cookie configuration and offer a single action to use automatic cookies (#3891). Thanks @giovanninibarbosa!
+- DeepInfra: use the bundled provider plugin on both engines while preserving prepaid balances, monthly spend, suspension details, and billing-cycle limits.
 - Claude costs: skip identical cache and report-memo writes after rescans, reducing local history disk writes (#3882).
 - Codex costs: avoid rewriting unchanged retained file state when another session or scan metadata changes, reducing local history disk writes (#3882).
 - Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.

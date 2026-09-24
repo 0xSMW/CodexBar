@@ -326,6 +326,10 @@ are never erased. User plugins have no persistent cookie cache, so rejection is 
 
 ## API balance bundled providers
 
+[DeepInfra](deepinfra.md) uses its bundled script on both engines. It requires both billing GETs, preserves
+prepaid-balance deductions and monthly cents conversion, and retries transient failures once. The Swift fetcher and
+parser have been removed.
+
 [Atlas Cloud](atlascloud.md) and [Vercel AI Gateway](vercel.md) use fixed-origin bearer GETs for documented
 account/team balances. Their bundled JavaScript returns generic details without fabricated quota windows;
 Swift provides registration and the shared API-key settings field. Scripts classify HTTP failures and the host bounds retries.
