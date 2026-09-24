@@ -299,7 +299,7 @@ struct ProviderSettingsDescriptorTests {
 
         fixture.settings.ollamaCookieSource = .manual
         #expect(action.isVisible?() == false)
-        #expect(picker.trailingText?() == nil)
+        #expect(picker.trailingText?() == "No cookie header pasted.")
 
         fixture.settings.ollamaCookieSource = .auto
         fixture.settings.ollamaUsageDataSource = .api
@@ -319,6 +319,47 @@ struct ProviderSettingsDescriptorTests {
         fields[1].binding.wrappedValue = "192.168.1.10:17434"
         #expect(fixture.settings.providerConfig(for: .llmman)?.apiKey == "fixture-key")
         #expect(fixture.settings.providerConfig(for: .llmman)?.enterpriseHost == "192.168.1.10:17434")
+
+    @Test
+    func `empty Ollama manual cookies offer an explicit automatic recovery action`() async throws {
+        let fixture = try self.makeSettingsFixture(suite: "ProviderSettingsDescriptorTests-ollama-manual-empty")
+        let picker = try #require(OllamaProviderImplementation()
+            .settingsPickers(context: fixture.settingsContext(provider: .ollama))
+            .first { $0.id == "ollama-cookie-source" })
+        let action = try #require(picker.trailingActions.first { $0.id == "ollama-use-auto-cookie" })
+        #expect(action.title == "Use automatic cookies")
+        #expect(action.isVisible?() == false)
+
+        fixture.settings.ollamaCookieSource = .manual
+        fixture.settings.ollamaCookieHeader = " \n\t"
+        #expect(picker.trailingText?() == "No cookie header pasted.")
+        #expect(action.isVisible?() == true)
+        #expect(fixture.settings.ollamaCookieSource == .manual)
+
+        fixture.settings.ollamaUsageDataSource = .api
+        #expect(action.isVisible?() == false)
+        #expect(picker.trailingText?() == nil)
+        fixture.settings.ollamaUsageDataSource = .web
+        fixture.settings.debugDisableKeychainAccess = true
+        #expect(action.isVisible?() == false)
+        fixture.settings.debugDisableKeychainAccess = false
+
+        fixture.settings.ollamaCookieHeader = "wos-session=fixture"
+        #expect(action.isVisible?() == false)
+        #expect(picker.trailingText?() == nil)
+        fixture.settings.ollamaCookieHeader = ""
+        fixture.settings.addTokenAccount(provider: .ollama, label: "Fixture", token: "wos-session=fixture")
+        #expect(action.isVisible?() == false)
+        #expect(picker.trailingText?() == nil)
+        let account = try #require(fixture.settings.tokenAccounts(for: .ollama).first)
+        fixture.settings.removeTokenAccount(provider: .ollama, accountID: account.id)
+        #expect(action.isVisible?() == true)
+
+        await action.perform()
+        #expect(fixture.settings.ollamaCookieSource == .auto)
+        #expect(fixture.settings.ollamaUsageDataSource == .web)
+        #expect(fixture.settings.ollamaCookieHeader.isEmpty)
+        #expect(action.isVisible?() == false)
     }
 
     @Test

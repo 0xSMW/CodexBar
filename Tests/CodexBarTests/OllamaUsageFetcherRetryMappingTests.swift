@@ -905,6 +905,45 @@ struct OllamaUsageFetcherRetryMappingTests {
     }
 }
 
+extension OllamaUsageFetcherRetryMappingTests {
+    @Test(arguments: [nil, "", " \n\t"] as [String?])
+    func `empty manual fetch and debug probe stop before any request`(header: String?) async {
+        defer { OllamaRetryMappingStubURLProtocol.handler = nil }
+        OllamaRetryMappingStubURLProtocol.handler = { _ in
+            Issue.record("Empty Manual configuration must not make a network request")
+            throw URLError(.badServerResponse)
+        }
+        let fetcher = self.makeCookieFetcher()
+        do {
+            _ = try await fetcher.fetch(cookieHeaderOverride: header, manualCookieMode: true)
+            Issue.record("Expected manualCookieHeaderEmpty")
+        } catch OllamaUsageError.manualCookieHeaderEmpty {
+            // Expected before cookie import or HTTP.
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+        let dump = await fetcher.debugRawProbe(cookieHeaderOverride: header, manualCookieMode: true)
+        #expect(dump.contains(OllamaUsageError.manualCookieHeaderEmpty.localizedDescription))
+        #expect(!dump.contains("Fetch Success"))
+    }
+
+    @Test
+    func `debug probe uses the shared manual cookie candidate`() async {
+        defer { OllamaRetryMappingStubURLProtocol.handler = nil }
+        OllamaRetryMappingStubURLProtocol.handler = { request in
+            #expect(request.value(forHTTPHeaderField: "Cookie") == "session=fixture")
+            let url = try #require(request.url)
+            return Self.makeResponse(url: url, body: ollamaUsageHTML, statusCode: 200)
+        }
+        let dump = await self.makeCookieFetcher().debugRawProbe(
+            cookieHeaderOverride: "session=fixture", manualCookieMode: true)
+        #expect(dump.contains("Fetch Success"))
+        #expect(dump.contains("Session: 1.2%"))
+        #expect(dump.contains("Weekly: 3.4%"))
+        #expect(!dump.contains("session=fixture"))
+    }
+}
+
 private final class OllamaSessionFinishRecorder: @unchecked Sendable {
     private let lock = NSLock()
     private var sessions: [URLSession] = []
