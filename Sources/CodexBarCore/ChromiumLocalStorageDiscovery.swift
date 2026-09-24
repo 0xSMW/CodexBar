@@ -2,9 +2,31 @@
 import Foundation
 import SweetCookieKit
 
-/// Locates raw LevelDB sources; each caller supplies its own browser allowlist and origin decoder.
+/// Locates raw Chromium stores; each caller supplies its own browser allowlist and origin decoder.
 enum ChromiumLocalStorageDiscovery {
     static let defaultBrowsers = Browser.defaultImportOrder.filter(\.usesChromiumProfileStore)
+
+    enum Storage {
+        case localStorage
+        case sessionStorage
+        case indexedDB(originPrefixes: [String])
+
+        var path: String {
+            switch self {
+            case .localStorage: "Local Storage/leveldb"
+            case .sessionStorage: "Session Storage"
+            case .indexedDB: "IndexedDB"
+            }
+        }
+
+        var labelSuffix: String {
+            switch self {
+            case .localStorage: ""
+            case .sessionStorage: " (Session Storage)"
+            case .indexedDB: " (IndexedDB)"
+            }
+        }
+    }
 
     struct Candidate {
         let label: String
@@ -13,27 +35,38 @@ enum ChromiumLocalStorageDiscovery {
 
     static func candidates(
         browserDetection: BrowserDetection,
-        browsers: [Browser]) -> [Candidate]
+        browsers: [Browser],
+        storage: Storage = .localStorage,
+        homeDirectories: [URL]? = nil) -> [Candidate]
     {
         let installedBrowsers = browsers.browsersWithProfileData(using: browserDetection)
-        return self.candidates(browsers: installedBrowsers)
+        return self.candidates(browsers: installedBrowsers, storage: storage, homeDirectories: homeDirectories)
     }
 
-    static func candidates(browsers: [Browser]) -> [Candidate] {
+    static func candidates(
+        browsers: [Browser],
+        storage: Storage = .localStorage,
+        homeDirectories: [URL]? = nil) -> [Candidate]
+    {
         let roots = ChromiumProfileLocator
-            .roots(for: browsers, homeDirectories: BrowserCookieClient.defaultHomeDirectories())
+            .roots(for: browsers, homeDirectories: homeDirectories ?? BrowserCookieClient.defaultHomeDirectories())
             .map { (url: $0.url, labelPrefix: $0.labelPrefix) }
 
         var candidates: [Candidate] = []
         for root in roots {
             candidates.append(contentsOf: self.profileCandidates(
                 root: root.url,
-                labelPrefix: root.labelPrefix))
+                labelPrefix: root.labelPrefix,
+                storage: storage))
         }
         return candidates
     }
 
-    static func profileCandidates(root: URL, labelPrefix: String) -> [Candidate] {
+    static func profileCandidates(
+        root: URL,
+        labelPrefix: String,
+        storage: Storage = .localStorage) -> [Candidate]
+    {
         guard let entries = try? FileManager.default.contentsOfDirectory(
             at: root,
             includingPropertiesForKeys: [.isDirectoryKey],
@@ -49,11 +82,25 @@ enum ChromiumLocalStorageDiscovery {
         }
         .sorted { $0.lastPathComponent < $1.lastPathComponent }
 
-        return profileDirs.compactMap { dir in
-            let levelDBURL = dir.appendingPathComponent("Local Storage").appendingPathComponent("leveldb")
-            guard FileManager.default.fileExists(atPath: levelDBURL.path) else { return nil }
-            let label = "\(labelPrefix) \(dir.lastPathComponent)"
-            return Candidate(label: label, url: levelDBURL)
+        return profileDirs.flatMap { dir -> [Candidate] in
+            let storeURL = dir.appendingPathComponent(storage.path)
+            let label = "\(labelPrefix) \(dir.lastPathComponent)\(storage.labelSuffix)"
+            guard case let .indexedDB(originPrefixes) = storage else {
+                guard FileManager.default.fileExists(atPath: storeURL.path) else { return [] }
+                return [Candidate(label: label, url: storeURL)]
+            }
+            let databases = (try? FileManager.default.contentsOfDirectory(
+                at: storeURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles])) ?? []
+            return databases.compactMap { database in
+                let name = database.lastPathComponent
+                guard name.hasSuffix(".indexeddb.leveldb"),
+                      originPrefixes.contains(where: { name.hasPrefix($0) }),
+                      (try? database.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+                else { return nil }
+                return Candidate(label: label, url: database)
+            }
         }
     }
 }
