@@ -30,8 +30,8 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 22 |
-| `converted` | 5 |
+| `cut-over` | 24 |
+| `converted` | 3 |
 | `convertible-now` | 1 |
 | `needs-cookie-import` | 7 |
 | `needs-files/subprocess/oauth-broker` | 20 |
