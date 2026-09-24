@@ -11,6 +11,9 @@
 
 ### Fixed
 
+- Command Code: size monthly usage from the grant reported with credits, keeping the row available when the optional subscription lookup fails (#3939). Thanks @enieuwy!
+- Kimi: import web access tokens from Chromium local storage for the selected region, preserving manual and saved-account credential isolation (#3923). Thanks @kaishin!
+
 - Alibaba Token Plan / Qwen Cloud: parse monthly quota windows, retain rolling windows alongside monthly usage, and read Personal/Solo monthly usage through the Bailian CLI's raw usage endpoint (#3903). Thanks @Josephur!
 - Claude: document browser-session recovery and the explicit cookie-import retry when Claude works in Chrome but CodexBar cannot read the session (#3919). Thanks @PakAbhishek!
 - Perplexity and Qoder: use bundled providers on both JavaScript engines, retry rejected browser sessions safely, and keep Qoder China manual cookies bound to the China endpoint.

@@ -289,11 +289,11 @@ enum KimiWebEnrichmentTokenResolver {
         if let token = KimiCookieImporter.desktopAuthToken(region: context.settings?.kimi?.region ?? .china) {
             return token
         }
-        if let token = try? KimiCookieImporter.importSession(region: settings.region).authToken {
-            return token
-        }
-        #endif
+        return (try? KimiCookieImporter.importSession(region: settings.region).authToken)
+            ?? KimiCookieImporter.localStorageTokens(region: settings.region).first
+        #else
         return nil
+        #endif
     }
 }
 
@@ -335,7 +335,8 @@ struct KimiWebFetchStrategy: ProviderFetchStrategy {
         },
         browserTokens: @escaping @Sendable (KimiRegion) -> [String] = { region in
             #if os(macOS)
-            (try? KimiCookieImporter.importSessions(region: region).compactMap(\.authToken)) ?? []
+            ((try? KimiCookieImporter.importSessions(region: region).compactMap(\.authToken)) ?? []) +
+                KimiCookieImporter.localStorageTokens(region: region)
             #else
             []
             #endif

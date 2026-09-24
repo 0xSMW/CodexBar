@@ -64,24 +64,37 @@ public enum KimiCookieImporter {
             in: browserSource,
             logger: log)
 
-        var sessions: [SessionInfo] = []
-
-        for profile in BrowserCookieProfiles.merge(sources) {
-            let label = profile.label
-            let mergedRecords = profile.records
-            guard !mergedRecords.isEmpty else { continue }
-            let httpCookies = BrowserCookieClient.makeHTTPCookies(mergedRecords, origin: query.origin)
-            guard !httpCookies.isEmpty else { continue }
-
-            // Only include sessions that have the kimi-auth cookie
-            guard httpCookies.contains(where: { $0.name == "kimi-auth" }) else {
-                continue
-            }
-
-            log("Found kimi-auth cookie in \(label)")
-            sessions.append(SessionInfo(cookies: httpCookies, sourceLabel: label))
+        return BrowserCookieProfiles.merge(sources).compactMap { profile in
+            let cookies = BrowserCookieClient.makeHTTPCookies(profile.records, origin: query.origin)
+            guard cookies.contains(where: { $0.name == "kimi-auth" }) else { return nil }
+            log("Found kimi-auth cookie in \(profile.label)")
+            return SessionInfo(cookies: cookies, sourceLabel: profile.label)
         }
-        return sessions
+    }
+
+    static func localStorageTokens(
+        region: KimiRegion,
+        browserDetection: BrowserDetection = BrowserDetection(),
+        localStorage: BrowserLocalStorageAPI = .live,
+        now: Date = Date()) -> [String]
+    {
+        var seen = Set<String>()
+        return localStorage.profiles(
+            for: region.webBaseURL.absoluteString,
+            browsers: ChromiumLocalStorageDiscovery.defaultBrowsers,
+            using: browserDetection,
+            logger: { Self.log.debug($0) })
+            .flatMap(\.entries).compactMap { entry in
+                guard entry.key == "access_token" else { return nil }
+                let token = (try? JSONDecoder().decode(String.self, from: Data(entry.value.utf8)))
+                    ?? entry.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard token.split(separator: ".", omittingEmptySubsequences: false).count == 3,
+                      token.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || "-_.".contains($0)) }),
+                      let expiry = UsageFetcher.parseJWT(token)?["exp"] as? Double,
+                      expiry.isFinite, expiry > now.timeIntervalSince1970,
+                      seen.insert(token).inserted else { return nil }
+                return token
+            }
     }
 
     public static func importSession(

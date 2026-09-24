@@ -114,6 +114,12 @@ Cookies database is opened read-only: active WAL databases use SQLite's normal W
 WAL-mode databases with no sidecars use an immutable read-only fallback. CodexBar never creates or modifies
 Kimi Desktop database files.
 
+For the selected region, Automatic mode also reads `access_token` from Chromium browser local storage
+through the shared browser catalog after cookie discovery. Tokens stay bound to the selected Kimi origin;
+expired or malformed tokens are skipped. CodexBar never reads or refreshes browser refresh tokens. Open
+Kimi in your browser to renew an expired session, or use a Kimi Code API key for unattended use.
+Safari and Firefox local storage are not imported.
+
 ### Method 4: Manual Token Entry
 
 For advanced users or when automatic import fails:
@@ -123,7 +129,7 @@ For advanced users or when automatic import fails:
 3. Visit `https://www.kimi.com/code/console` in your browser
 4. Open Developer Tools (F12 or Cmd+Option+I)
 5. Go to **Application** → **Cookies**
-6. Copy the `kimi-auth` cookie value (JWT token)
+6. Copy the `kimi-auth` cookie value (JWT token). On kimi.ai, copy `access_token` from **Local Storage** instead.
 7. Paste it into the "Auth Token" field in CodexBar
 
 Manual mode never imports Desktop or browser credentials, including when the token field is empty or invalid.
@@ -165,8 +171,9 @@ When multiple sources are available, CodexBar uses this order:
 4. Cookie environment variable (`KIMI_AUTH_TOKEN`)
 5. Kimi Desktop `kimi-auth` cookie
 6. Browser cookies (Arc → Chrome → Safari → Edge → Brave → Chromium)
+7. Chromium local storage `access_token` for the selected region
 
-For Code API and CLI results, sources 3–6 are best-effort enrichment only: the required Code usage remains
+For Code API and CLI results, sources 3–7 are best-effort enrichment only: the required Code usage remains
 available if the membership request fails. Setting **Cookie source** to **Off** disables this enrichment and
 does not inspect Kimi Desktop or browser cookies.
 
