@@ -11,6 +11,7 @@
 
 ### Fixed
 
+- Claude: document browser-session recovery and the explicit cookie-import retry when Claude works in Chrome but CodexBar cannot read the session (#3919). Thanks @PakAbhishek!
 - Menu bar: resolve provider balances in stored layouts and show Doubao Agent Plan icon usage when Coding Plan lanes are absent (#3904, #3897, #3901, #3907, #3898, #3911). Thanks @vincent-peng, @mousebomb, and @harjothkhara!
 - MiniMax: discover browser session storage across the shared Chromium catalog, including Comet and Yandex (#3883).
 - Codex costs: include local session history in Usage & Spend when CLI credentials are stored in the OS keyring instead of `auth.json` (#3922).
