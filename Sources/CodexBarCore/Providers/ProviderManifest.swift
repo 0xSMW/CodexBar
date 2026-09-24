@@ -88,5 +88,6 @@ public enum ProviderManifest {
         DevPassProviderDescriptor.descriptor,
         AtlasCloudProviderDescriptor.descriptor,
         VercelProviderDescriptor.descriptor,
+        LLMManProviderDescriptor.descriptor,
     ]
 }

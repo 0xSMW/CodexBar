@@ -120,3 +120,4 @@ weakening the plugin network policy.
 | devpass | `cut-over` | QuickJS + JavaScriptCore | Documented bearer GET for billing-cycle and premium weekly credits plus separate all-time key spend; API-only. |
 | atlascloud | `cut-over` | QuickJS + JavaScriptCore | Public billing API bearer GET for the account-wide available USD balance; no invented quota or Coding Plan allowance. |
 | vercel | `cut-over` | QuickJS + JavaScriptCore | Public credits API bearer GET for team USD balance and lifetime spend; no CLI discovery or metered reporting. |
+| llmman | `cut-over` | QuickJS + JavaScriptCore | Configured loopback/private-network daemon origin with an optional bearer key; `/llmman/node` memory and model summaries, best-effort version. |

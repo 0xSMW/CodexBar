@@ -88,5 +88,6 @@ enum ProviderImplementationManifest {
         DevPassProviderImplementation(),
         AtlasCloudProviderImplementation(),
         VercelProviderImplementation(),
+        LLMManProviderImplementation(),
     ]
 }
