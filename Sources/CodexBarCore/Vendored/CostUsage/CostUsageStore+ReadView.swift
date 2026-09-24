@@ -75,11 +75,7 @@ struct CostUsageStoreReadView: Sendable {
 
         // Omitted day maps and unfinished or unowned work cannot prove absence from this window.
         guard scoped.purpose != .status,
-              scoped.cache.files.values.allSatisfy({ usage in
-                  usage.codexScanComplete == true && usage.codexCostCacheComplete == true
-                      && usage.hasCurrentCodexParser && !usage.hasBufferedCodexForkRetryLines
-                      && !CostUsageScanner.isUnresolvedMissingParentFork(usage)
-              })
+              scoped.cache.files.values.allSatisfy(Self.fileCoverageIsComplete)
         else { return false }
 
         guard let lookback = self.cache.codexActiveLookbackState,
@@ -121,6 +117,46 @@ struct CostUsageStoreReadView: Sendable {
         }
 
         return true
+    }
+
+    /// A negative proof a `.status` view can give without loading day maps or usage rows: every
+    /// check here reads state that each read purpose decodes identically (file rows, details,
+    /// lineage, retry presence, discovery, and metadata). `true` means no view of this snapshot can
+    /// establish coverage; `false` proves nothing, and callers must still ask a detailed view.
+    func historyCoverageIsProvablyIncomplete(
+        range: CostUsageScanner.CostUsageDayRange,
+        rootsFingerprint: [String: Int64]) -> Bool
+    {
+        guard self.lastScanUnixMs > 0,
+              self.timeZoneIdentifier == range.calendar.timeZone.identifier,
+              self.roots == rootsFingerprint,
+              !self.windowExpandsCache(range)
+        else { return true }
+
+        let roots = rootsFingerprint.keys.map { URL(fileURLWithPath: $0, isDirectory: true) }
+        let scoped = self.scoped(to: roots)
+        guard scoped.hasPendingScan else { return false }
+        if let discovery = scoped.cache.codexSessionDiscovery,
+           !discovery.isComplete, !discovery.pendingSessionIds.isEmpty || discovery.headScan != nil
+        {
+            return true
+        }
+        return !scoped.cache.files.values.allSatisfy(Self.fileCoverageIsComplete)
+    }
+
+    /// The stored previous report matching `range`, ignoring whether coverage is established.
+    /// It is scan metadata, so every read purpose returns the same value.
+    func storedPreviousReport(
+        range: CostUsageScanner.CostUsageDayRange,
+        rootsFingerprint: [String: Int64]) -> CostUsageCodexPreviousReport?
+    {
+        CostUsageScanner.codexPreviousReport(cache: self.cache, range: range, rootsFingerprint: rootsFingerprint)
+    }
+
+    private static func fileCoverageIsComplete(_ usage: CostUsageFileUsage) -> Bool {
+        usage.codexScanComplete == true && usage.codexCostCacheComplete == true
+            && usage.hasCurrentCodexParser && !usage.hasBufferedCodexForkRetryLines
+            && !CostUsageScanner.isUnresolvedMissingParentFork(usage)
     }
 
     func previousReport(

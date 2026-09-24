@@ -122,10 +122,13 @@ extension CostUsageStoreReadWorkTests {
         let unchanged = scan(day.addingTimeInterval(1))
         #expect(unchanged.data == original.data)
         #expect(unchanged.summary == original.summary)
+        // The first scan's save rebaselined the scanner, so the unchanged scan decodes nothing.
         #expect(recorder.snapshot().fullSnapshotReads == 0)
-        #expect(recorder.snapshot().scannerSnapshotReads == 1)
-        #expect(recorder.snapshot().cacheConversions == 1)
-        #expect(recorder.snapshot().usageRowDecodeAttempts == 1)
+        #expect(recorder.snapshot().scannerSnapshotReads == 0)
+        #expect(recorder.snapshot().cacheConversions == 0)
+        #expect(recorder.snapshot().usageRowDecodeAttempts == 0)
         #expect(recorder.snapshot().aggregateGroupingRowVisits == 0)
+        #expect(CostUsageStoreAccess.scanStore(cacheRoot: env.cacheRoot)
+            .syncRetainedCodexScanMatchesFreshReadForTesting() == true)
     }
 }

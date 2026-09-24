@@ -28,7 +28,12 @@ extension CostUsageStore {
             deletedFileDayAggregates: 0,
             deletedDayAggregates: 0)
         return self.withDatabase(default: fallback) { database in
-            try Self.prune(database, sinceDay: sinceDay, untilDay: untilDay, calendar: calendar)
+            try Self.prune(
+                database,
+                sinceDay: sinceDay,
+                untilDay: untilDay,
+                metadataWindow: (sinceDay: sinceDay, untilDay: untilDay),
+                calendar: calendar)
         }
     }
 
@@ -43,10 +48,14 @@ extension CostUsageStore {
         }
     }
 
+    /// Deletes files and aggregates outside `sinceDay...untilDay`; `metadataWindow` is the scan
+    /// window recorded in `scan_metadata`, which budget enforcement may keep narrower than the
+    /// protected range.
     private static func prune(
         _ database: OpaquePointer,
         sinceDay: String,
         untilDay: String,
+        metadataWindow: (sinceDay: String, untilDay: String),
         calendar: Calendar) throws -> CostUsageStoreRetentionResult
     {
         try self.inTransaction(database) {
@@ -99,9 +108,13 @@ extension CostUsageStore {
                 CostUsageStoreMetadata.self,
                 database: database,
                 table: "scan_metadata") ?? .empty
-            metadata.scanSinceDay = sinceDay
-            metadata.scanUntilDay = untilDay
-            try self.writeSingleton(metadata, database: database, table: "scan_metadata")
+            // An unchanged window must not count as a write: any row change invalidates every retained
+            // decoded baseline and forces the next save/load to re-decode the whole cache.
+            if metadata.scanSinceDay != metadataWindow.sinceDay || metadata.scanUntilDay != metadataWindow.untilDay {
+                metadata.scanSinceDay = metadataWindow.sinceDay
+                metadata.scanUntilDay = metadataWindow.untilDay
+                try self.writeSingleton(metadata, database: database, table: "scan_metadata")
+            }
 
             let afterFiles = try self.scalarInt(database, "SELECT COUNT(*) FROM files")
             let afterSnapshots = try self.scalarInt(database, "SELECT COUNT(*) FROM token_snapshots")
@@ -257,12 +270,17 @@ extension CostUsageStore {
     /// retained session file is one entry. Dependent token and usage rows are bounded by
     /// the independent 256 MiB database cap, so active append/fork state is not discarded
     /// merely because a single session contains many events.
+    ///
+    /// One cache serves every history window (30-day menu refreshes, 365-day Spend Dashboard catch-up).
+    /// A file evicted inside the longest supported history is rediscovered and re-parsed by the next
+    /// wider scan, so budgets never evict inside that horizon, whichever window this save requested.
     func enforceBudgets(
         maxRows: Int,
         maxFileBytes: Int64,
         requestedSinceDay: String? = nil,
         requestedUntilDay: String? = nil,
-        calendar: Calendar = .current) -> CostUsageStoreBudgetResult
+        calendar: Calendar = .current,
+        now: Date = Date()) -> CostUsageStoreBudgetResult
     {
         let fallback = CostUsageStoreBudgetResult(deletedRows: 0, rowCount: 0, fileBytes: 0)
         return self.withDatabase(default: fallback) { database in
@@ -272,14 +290,20 @@ extension CostUsageStore {
                 CostUsageStoreMetadata.self,
                 database: database,
                 table: "scan_metadata")
-            let sinceDay = requestedSinceDay ?? metadata?.scanSinceDay
+            let windowSinceDay = requestedSinceDay ?? metadata?.scanSinceDay
             let untilDay = requestedUntilDay ?? metadata?.scanUntilDay
+            let sinceDay = windowSinceDay.map { min($0, Self.historyHorizonSinceDay(now: now, calendar: calendar)) }
             let rowLimit = max(0, maxRows)
             let byteLimit = max(0, maxFileBytes)
             if initialRows > Int64(rowLimit) || initialBytes > byteLimit,
-               let sinceDay, let untilDay, sinceDay <= untilDay
+               let windowSinceDay, let sinceDay, let untilDay, windowSinceDay <= untilDay
             {
-                _ = try Self.prune(database, sinceDay: sinceDay, untilDay: untilDay, calendar: calendar)
+                _ = try Self.prune(
+                    database,
+                    sinceDay: sinceDay,
+                    untilDay: untilDay,
+                    metadataWindow: (sinceDay: windowSinceDay, untilDay: untilDay),
+                    calendar: calendar)
             }
 
             var catchUpRequired = false
@@ -380,6 +404,15 @@ extension CostUsageStore {
         guard result == SQLITE_DONE else { throw StoreError.sqlite(result) }
         return false
     }
+
+    /// Scan-window start of the longest history any caller requests (365 days, clamped in
+    /// `CostUsageFetcher`), including the scan's one-day margin.
+    static func historyHorizonSinceDay(now: Date, calendar: Calendar) -> String {
+        let since = calendar.date(byAdding: .day, value: -(Self.maximumHistoryDays - 1), to: now) ?? now
+        return CostUsageScanner.CostUsageDayRange(since: since, until: now, calendar: calendar).scanSinceKey
+    }
+
+    static let maximumHistoryDays = 365
 
     private static func rowCount(_ database: OpaquePointer) throws -> Int64 {
         try self.scalarInt(database, "SELECT COUNT(*) FROM files")

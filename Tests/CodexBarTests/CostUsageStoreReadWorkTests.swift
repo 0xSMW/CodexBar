@@ -64,7 +64,8 @@ struct CostUsageStoreReadWorkTests {
         #expect(snapshot.updatedAt == fixture.now.addingTimeInterval(retainedReport ? -60 : 0))
         #expect(work.scannerSnapshotReads == 1)
         #expect(work.tokenSnapshotRows == 0)
-        #expect(work.integrityChecks == 2)
+        // The scanner opens its own store; report reads reuse the already validated shared reader.
+        #expect(work.integrityChecks == 1)
         #expect(work.usageRowDecodeAttempts == fixture.rowCount * (retainedReport ? 1 : 2))
         print("[pending-report-read-proof] state=\(state) rows=\(fixture.rowCount) " +
             "cached_decoded=\(cachedWork.usageRowDecodeAttempts) cached_checks=\(cachedWork.integrityChecks) " +
@@ -259,8 +260,11 @@ struct CostUsageStoreReadWorkTests {
         #expect(partialSaveWork.scannerSnapshotReads == 0)
         #expect(partialSaveWork.fullSnapshotReads == 0)
         #expect(partialSaveWork.tokenSnapshotRows == 0)
-        #expect(partialSaveWork.usageRows == 0)
-        #expect(partialSaveWork.usageRowDecodeAttempts == 0)
+        // The hydrated file is rewritten, and the scanner rebaselines from that one file's rows
+        // instead of re-decoding every history on its next load.
+        #expect(partialSaveWork.usageRows == rowsPerFile)
+        #expect(partialSaveWork.usageRowDecodeAttempts == rowsPerFile)
+        #expect(reloaded.store.syncRetainedCodexScanMatchesFreshReadForTesting() == true)
 
         expected.lastScanUnixMs = partiallyHydrated.lastScanUnixMs
         #expect(reloaded.store.syncLoadCodexCache(calendar: fixture.calendar) == expected)
@@ -586,7 +590,8 @@ struct CostUsageStoreReadWorkTests {
 
         #expect(report.summary?.totalTokens == fixture.rowCount * 13)
         #expect(work.tokenSnapshotRows == rowsPerFile)
-        #expect(work.usageRows == fixture.rowCount)
+        // One full scanner read, then the rebaseline reads back only the renamed file's rows.
+        #expect(work.usageRows == fixture.rowCount + rowsPerFile)
         let persisted = fixture.store.syncLoadCodexCache(calendar: fixture.calendar)
         #expect(persisted.files[oldPath] == nil)
         #expect(persisted.files[newURL.path]?.codexTokenSnapshots?.count == rowsPerFile)
@@ -834,9 +839,10 @@ struct CostUsageStoreReadWorkTests {
         #expect(work.usageRows == fixture.rowCount)
         #expect(work.usageRowDecodeAttempts == fixture.rowCount)
         #expect(work.usagePayloadBytes > 0)
-        // One metadata precheck and one exact report read share the same validated connection.
-        #expect(work.retryPresenceRows == (incomplete ? 3 : 0))
-        #expect(work.readViewConversions == (incomplete ? 3 : 2))
+        // One metadata precheck and one exact report read share the same validated connection. A pending
+        // scan without a stored previous report skips the intermediate activity read.
+        #expect(work.retryPresenceRows == (incomplete ? 2 : 0))
+        #expect(work.readViewConversions == 2)
         #expect(work.integrityChecks == 1)
         #expect(work.readViewConversionsInTransaction == 0)
     }

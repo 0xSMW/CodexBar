@@ -538,7 +538,8 @@ struct CostUsagePerformanceGateTests {
             maxFileBytes: .max,
             requestedSinceDay: Self.dayKeyString(for: windowStart),
             requestedUntilDay: Self.dayKeyString(for: windowDay),
-            calendar: .current)
+            calendar: .current,
+            now: CostUsageStoreTests.pastHistoryHorizonNow)
         #expect(budget.rowCount == 1)
         let retained = try #require(await activeFile(store.readSnapshot().files))
         #expect(retained.scanState.isComplete)

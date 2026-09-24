@@ -80,6 +80,7 @@ actor CostUsageStore {
         parserHash: CodexParserHash.value)
     static let cacheGeneration = "sqlite:\(CostUsageStore.schemaVersion)"
     static let compatiblePredecessorParserHashes: Set<String> = [
+        "9972dad7f7aeff21", // 0.65.x; batched path resolution leaves parsing, rows, checkpoints, and reports unchanged.
         "4dd9e5769818370a", // Linux Priority trace support preserves native rows and checkpoints.
         "03e43d1217789d16", // Fork baseline corrections use bounded native parser-revision migration.
         "50813ce2a3edfdc7", // 0.63.0 native history is unchanged by Claude-only numeric guards.
@@ -277,10 +278,11 @@ extension CostUsageStore {
 
     nonisolated func syncLoadCodexReadView(
         calendar: Calendar,
-        purpose: CostUsageStoreReadPurpose) -> CostUsageStoreReadView
+        purpose: CostUsageStoreReadPurpose,
+        reportWindow: (sinceKey: String, untilKey: String)? = nil) -> CostUsageStoreReadView
     {
         self.syncWithStoreIsolation { store in
-            store.loadCodexReadView(calendar: calendar, purpose: purpose)
+            store.loadCodexReadView(calendar: calendar, purpose: purpose, reportWindow: reportWindow)
         }
     }
 
@@ -306,6 +308,12 @@ extension CostUsageStore {
                 unloadedTokenSnapshotPaths: unloadedTokenSnapshotPaths,
                 skipIdenticalContent: skipIdenticalContent,
                 receipt: receipt)
+        }
+    }
+
+    nonisolated func syncRetainedCodexScanMatchesFreshReadForTesting() -> Bool? {
+        self.syncWithStoreIsolation { store in
+            store.retainedCodexScanMatchesFreshRead()
         }
     }
 }
@@ -491,6 +499,13 @@ extension CostUsageStore {
             return nil
         }
         return stamp
+    }
+
+    /// Rows changed through this connection since it opened; unchanged across a span proves this
+    /// store wrote nothing in between.
+    func connectionTotalChanges() -> Int64? {
+        guard let database = self.connection?.handle else { return nil }
+        return sqlite3_total_changes64(database)
     }
 
     func currentDatabaseStamp() -> DatabaseStamp? {

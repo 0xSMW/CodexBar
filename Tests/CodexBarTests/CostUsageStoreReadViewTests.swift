@@ -47,8 +47,9 @@ extension CostUsageStoreReadWorkTests {
         #expect(result.snapshot.daily == expected.daily)
         #expect(result.snapshot.projects == expected.projects)
         #expect(result.snapshot.sessions == expected.sessions)
-        // The metadata precheck and detail fallback both inspect presence without loading replay bodies.
-        #expect(reportWork.retryPresenceRows == 3)
+        // The shared reader reuses the retained status view, and without a stored previous report the
+        // detail read follows directly; only that read inspects presence, never replay bodies.
+        #expect(reportWork.retryPresenceRows == 1)
         #expect(reportWork.usageRows == 8)
         #expect(reportWork.usageRowDecodeAttempts == 8)
         #expect(reportWork.usagePayloadBytes > 0)
@@ -56,8 +57,8 @@ extension CostUsageStoreReadWorkTests {
         #expect(reportWork.bufferedPayloadBytes == 0)
         #expect(reportWork.tokenSnapshotRows == 0)
         #expect(reportWork.accumulatorRows == 0)
-        #expect(reportWork.readViewConversions == 3)
-        #expect(reportWork.integrityChecks == 1)
+        #expect(reportWork.readViewConversions == 2)
+        #expect(reportWork.integrityChecks == 0)
         #expect(reportWork.readViewConversionsInTransaction == 0)
         print("[cost-store-read-proof] malformed-replay pending=\(status.pending) " +
             "coverage=\(result.snapshot.historyCoverageIsEstablished) " +

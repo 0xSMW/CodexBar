@@ -173,6 +173,122 @@ extension CostUsageStore {
             tokenSnapshotsLoaded: tokenSnapshotsLoaded)
     }
 
+    /// After an identical-content save committed only scan freshness and the priority-turn cursor
+    /// (`scan_metadata` fields that Codex's live logs advance on nearly every pass), keep the
+    /// scanner's decoded baseline instead of re-decoding the whole cache on the next pass.
+    /// The retained value must equal a fresh `readCodexBaseline()`: this connection's own commit
+    /// may move only `totalChanges`, and the stored metadata may differ only in those fields,
+    /// which are re-derived with the same decoding a full read uses.
+    func retainCodexScanAfterFreshnessOnlySave(_ baseline: CodexDecodedBaseline) {
+        guard let current = self.currentDatabaseStamp() else { return }
+        var expectedStamp = baseline.stamp
+        expectedStamp.totalChanges = current.totalChanges
+        // Any other connection's commit moves data_version; that content was never decoded here.
+        guard expectedStamp == current else { return }
+        let stored = self.fetchMetadata()
+        var expectedMetadata = baseline.persistence.metadata
+        expectedMetadata.lastScanUnixMs = stored.lastScanUnixMs
+        expectedMetadata.priorityTurnStatePayload = stored.priorityTurnStatePayload
+        guard expectedMetadata == stored else { return }
+        var retained = baseline
+        retained.decoded.lastScanUnixMs = stored.lastScanUnixMs
+        Self.applyPriorityTurnState(stored.priorityTurnStatePayload, to: &retained.decoded)
+        retained.persistence.metadata = stored
+        retained.stamp = current
+        // Hydration is per-receipt state; a fresh baseline starts without it.
+        retained.hydratedTokenSnapshots = [:]
+        self.retainedCodexScan = retained
+    }
+
+    /// After a changed save, rebuild the scanner's decoded baseline from the rows this save wrote
+    /// instead of re-decoding every file on the next pass. Decoding is per file, and globals come
+    /// from the same tables a full read uses, so the result equals a fresh `readCodexBaseline()`.
+    /// It declines whenever that cannot be proven: retention or any later write on this connection
+    /// (`expectedTotalChanges`), or another connection's commit (`data_version`).
+    func retainCodexScanAfterChangedSave(
+        _ baseline: CodexDecodedBaseline,
+        changedPaths: Set<String>,
+        rereadDiscovery: Bool,
+        rereadLookback: Bool,
+        expectedTotalChanges: Int64?)
+    {
+        guard !baseline.tokenSnapshotsLoaded,
+              let expectedTotalChanges,
+              self.connectionTotalChanges() == expectedTotalChanges,
+              let current = self.currentDatabaseStamp()
+        else { return }
+        var expectedStamp = baseline.stamp
+        expectedStamp.totalChanges = current.totalChanges
+        guard expectedStamp == current else { return }
+        let recorder = self.scopedReadWorkRecorderForTesting
+        let snapshot: CostUsageStoreSnapshot? = self.withDatabase(default: nil) { database in
+            let snapshot = try Self.inReadTransaction(database) {
+                try Self.readScannerSnapshot(
+                    database,
+                    paths: Array(changedPaths),
+                    includeDiscovery: rereadDiscovery,
+                    includeLookback: rereadLookback,
+                    recorder: recorder)
+            }
+            guard try self.databaseStamp(database) == current else { return nil }
+            return snapshot
+        }
+        guard let snapshot else { return }
+
+        var unloadedTokenSnapshotPaths = baseline.unloadedTokenSnapshotPaths.subtracting(changedPaths)
+        var decoded = Self.decodeCodexCache(
+            from: snapshot,
+            recorder: recorder,
+            tokenSnapshotsLoaded: false,
+            unloadedTokenSnapshotPathRecorder: { unloadedTokenSnapshotPaths.insert($0) })
+        decoded.files = baseline.decoded.files
+            .filter { !changedPaths.contains($0.key) }
+            .merging(decoded.files) { _, written in written }
+        // Unwritten singletons still hold the rows the baseline decoded.
+        if !rereadDiscovery {
+            decoded.codexSessionDiscovery = baseline.decoded.codexSessionDiscovery
+        }
+        if !rereadLookback {
+            decoded.codexActiveLookbackState = baseline.decoded.codexActiveLookbackState
+        }
+
+        let written = CodexPersistenceState(
+            snapshot: snapshot,
+            snapshotCounts: Dictionary(uniqueKeysWithValues: snapshot.accumulators.map { ($0.path, $0.eventCount) }))
+        var persistence = baseline.persistence
+        persistence.metadata = written.metadata
+        persistence.files = (persistence.files.filter { !changedPaths.contains($0.path) } + written.files)
+            .sorted { $0.path.utf8.lexicographicallyPrecedes($1.path.utf8) }
+        persistence.snapshotCounts = persistence.snapshotCounts
+            .filter { !changedPaths.contains($0.key) }
+            .merging(written.snapshotCounts) { _, new in new }
+        persistence.rowCounts = persistence.rowCounts
+            .filter { !changedPaths.contains($0.key) }
+            .merging(written.rowCounts) { _, new in new }
+
+        self.retainedCodexScan = CodexDecodedBaseline(
+            decoded: decoded,
+            persistence: persistence,
+            stamp: current,
+            unloadedTokenSnapshotPaths: unloadedTokenSnapshotPaths,
+            tokenSnapshotsLoaded: false)
+    }
+
+    /// Harness/test check that a retained scanner baseline equals a fresh full read of the current
+    /// database. `nil` when nothing current is retained or the fresh read fails.
+    func retainedCodexScanMatchesFreshRead() -> Bool? {
+        guard let retained = self.retainedCodexScan, retained.stamp == self.currentDatabaseStamp(),
+              let fresh = self.readCodexBaseline()
+        else { return nil }
+        return retained.decoded == fresh.decoded
+            && retained.persistence.metadata == fresh.persistence.metadata
+            && retained.persistence.files == fresh.persistence.files
+            && retained.persistence.snapshotCounts == fresh.persistence.snapshotCounts
+            && retained.persistence.rowCounts == fresh.persistence.rowCounts
+            && retained.unloadedTokenSnapshotPaths == fresh.unloadedTokenSnapshotPaths
+            && retained.tokenSnapshotsLoaded == fresh.tokenSnapshotsLoaded
+    }
+
     func codexBaselineIsCurrent(_ baseline: CodexDecodedBaseline) -> Bool {
         self.currentDatabaseStamp() == baseline.stamp
     }

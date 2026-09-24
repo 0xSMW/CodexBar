@@ -112,10 +112,11 @@ extension CostUsageStoreReadWorkTests {
         """)
         let loaded = fixture.store.syncLoadCodexScan(calendar: fixture.calendar)
         defer { loaded.release() }
+        // Retention skips identical metadata; a wider requested window makes it write, and that write fails.
         let saved = fixture.store.syncSaveCodexCache(
             loaded.cache,
             calendar: fixture.calendar,
-            requestedScanWindow: (sinceKey: ReadWorkFixture.day, untilKey: ReadWorkFixture.day),
+            requestedScanWindow: (sinceKey: "2026-07-01", untilKey: ReadWorkFixture.day),
             fileBudgetBytes: 1,
             skipIdenticalContent: true,
             receipt: loaded.receipt)

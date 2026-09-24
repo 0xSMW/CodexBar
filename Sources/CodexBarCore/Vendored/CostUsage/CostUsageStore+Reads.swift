@@ -237,6 +237,58 @@ extension CostUsageStore {
         return snapshot
     }
 
+    /// The rows a scanner snapshot (`loadTokenSnapshots: false`) holds for `paths`, plus every
+    /// global table, using the same readers and row order. Paths without a file row are absent.
+    /// Callers that already hold the decoded discovery/lookback state may skip those singletons.
+    static func readScannerSnapshot(
+        _ database: OpaquePointer,
+        paths: [String],
+        includeDiscovery: Bool = true,
+        includeLookback: Bool = true,
+        recorder: CostUsageStoreReadWorkRecorder?) throws -> CostUsageStoreSnapshot
+    {
+        // Match `ORDER BY path`, which compares UTF-8 bytes.
+        let orderedPaths = paths.sorted { $0.utf8.lexicographicallyPrecedes($1.utf8) }
+        let fileStatement = try self.prepare(database, self.fileSelectSQL + " WHERE path = ?")
+        defer { sqlite3_finalize(fileStatement) }
+        var files: [CostUsageStoreFile] = []
+        for path in orderedPaths {
+            sqlite3_reset(fileStatement)
+            sqlite3_clear_bindings(fileStatement)
+            self.bind(path, to: fileStatement, at: 1)
+            let result = sqlite3_step(fileStatement)
+            if result == SQLITE_ROW {
+                recorder?.recordFile()
+                try files.append(self.decodeFile(fileStatement))
+            } else if result != SQLITE_DONE {
+                throw StoreError.sqlite(result)
+            }
+        }
+        return try CostUsageStoreSnapshot(
+            metadata: self.readSingleton(
+                CostUsageStoreMetadata.self,
+                database: database,
+                table: "scan_metadata") ?? .empty,
+            files: files,
+            tokenSnapshots: [],
+            usageRows: orderedPaths.flatMap { try self.readUsageRows(database, path: $0, recorder: recorder) },
+            fileDayAggregates: orderedPaths.flatMap { try self.readFileDayAggregates(database, path: $0) },
+            dayAggregates: self.readDayAggregates(database, sinceDay: nil, untilDay: nil),
+            forkLineage: orderedPaths.flatMap { try self.readForkLineage(database, path: $0) },
+            bufferedLines: orderedPaths.flatMap {
+                try self.readBufferedLines(database, path: $0, kind: nil, recorder: recorder)
+            },
+            discoveryState: includeDiscovery ? self.readSingleton(
+                CostUsageStoreDiscoveryState.self,
+                database: database,
+                table: "discovery_state") : nil,
+            lookbackState: includeLookback ? self.readSingleton(
+                CostUsageStoreLookbackState.self,
+                database: database,
+                table: "lookback_state") : nil,
+            accumulators: orderedPaths.flatMap { try self.readAccumulators(database, path: $0, recorder: recorder) })
+    }
+
     private static let fileSelectSQL = """
     SELECT path, inode, mtime_ms, size, parsed_bytes, anchor_indexed_bytes,
            anchor_window_start, anchor_sha256, scan_state, scan_target_size,
@@ -336,16 +388,23 @@ extension CostUsageStore {
     static func readUsageRows(
         _ database: OpaquePointer,
         path: String?,
+        coveringWindow: (sinceKey: String, untilKey: String)? = nil,
         recorder: CostUsageStoreReadWorkRecorder? = nil) throws -> [CostUsageStoreUsageRow]
     {
         var values: [CostUsageStoreUsageRow] = []
-        try self.forEachUsageRow(database, path: path, recorder: recorder) { values.append($0) }
+        try self.forEachUsageRow(database, path: path, coveringWindow: coveringWindow, recorder: recorder) {
+            values.append($0)
+        }
         return values
     }
 
+    /// `coveringWindow` limits rows to files whose recorded day coverage overlaps it (plus files
+    /// with no recorded coverage). A file's rows fall inside its coverage, which is derived from the
+    /// same rows, so windowed report reads keep every row that can price a day in the window.
     static func forEachUsageRow(
         _ database: OpaquePointer,
         path: String?,
+        coveringWindow: (sinceKey: String, untilKey: String)? = nil,
         recorder: CostUsageStoreReadWorkRecorder? = nil,
         visit: (CostUsageStoreUsageRow) -> Void) throws
     {
@@ -353,14 +412,30 @@ extension CostUsageStore {
         SELECT f.path, r.row_index, r.payload
         FROM usage_rows r JOIN files f ON f.id = r.file_id
         """
+        var conditions: [String] = []
         if path != nil {
-            sql += " WHERE f.path = ?"
+            conditions.append("f.path = ?")
+        }
+        if coveringWindow != nil {
+            conditions.append("""
+            (f.coverage_since_day IS NULL OR f.coverage_until_day IS NULL
+             OR (f.coverage_until_day >= ? AND f.coverage_since_day <= ?))
+            """)
+        }
+        if !conditions.isEmpty {
+            sql += " WHERE " + conditions.joined(separator: " AND ")
         }
         sql += " ORDER BY f.path, r.row_index"
         let statement = try self.prepare(database, sql)
         defer { sqlite3_finalize(statement) }
+        var bindIndex: Int32 = 1
         if let path {
-            self.bind(path, to: statement, at: 1)
+            self.bind(path, to: statement, at: bindIndex)
+            bindIndex += 1
+        }
+        if let coveringWindow {
+            self.bind(coveringWindow.sinceKey, to: statement, at: bindIndex)
+            self.bind(coveringWindow.untilKey, to: statement, at: bindIndex + 1)
         }
         var result = sqlite3_step(statement)
         while result == SQLITE_ROW {

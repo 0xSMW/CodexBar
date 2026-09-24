@@ -309,6 +309,22 @@ the local result and returns a nonzero exit code. See [CLI host reporting](cli.m
   - Saves skip unchanged files using the transaction-validated scan baseline, so a changed session or scan metadata
     does not rewrite every retained file's metadata, aggregates, fork state, buffers, and accumulator. Changed files,
     parser/calendar migrations, and incomplete persisted row sets still take the normal persistence path.
+  - After a save, the scanner rebuilds its retained baseline from the rows that save wrote, plus scan metadata, day
+    aggregates, and any discovery or lookback state that changed, instead of decoding every file on its next pass. The
+    result equals a full read; retention changes or another connection's commit fall back to one. Saves that only
+    advance scan freshness or the priority-turn cursor keep the baseline too, and unchanged discovery or lookback state
+    is not rewritten.
+  - Budget retention never evicts sessions inside the 365-day history horizon, whichever window a save requested. One
+    cache serves 30-day refreshes and 365-day Usage & Spend catch-up, so evicting inside that horizon only made the
+    next wider scan reparse the same files. An unchanged window no longer rewrites scan metadata. Large histories can
+    stay above the best-effort 256 MiB file cap.
+  - Report reads load usage rows only for files whose recorded day coverage overlaps the scan window; daily, project,
+    and session output is unchanged. Complete-history publication skips detailed reads when status metadata already
+    shows unfinished work, and a pending scan without a stored previous report reads details directly instead of
+    decoding activity data first. Report reads reuse the shared validated reader.
+  - Path normalization and root checks resolve each directory once per pass, and canonical absolute paths skip URL
+    standardization. Stores from published parser fingerprint `9972dad7f7aeff21` (0.65.0) adopt the new generation
+    without rebuilding rows, checkpoints, or retained reports.
   - Excess cached request rows trigger bounded revalidation of readable, unchanged session files. Ordered source
     replay determines the request sequence; matching token totals alone cannot establish a request partition.
     Unanimous saved pricing survives partial scans and restarts. Files with authoritative monetary amounts, existing

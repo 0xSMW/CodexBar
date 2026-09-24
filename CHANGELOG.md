@@ -32,6 +32,8 @@
 - ZenMux: use the bundled provider plugin on both engines while preserving rolling quotas, plan expiry, optional PAYG balances, and authentication errors.
 - Claude costs: skip identical cache and report-memo writes after rescans, reducing local history disk writes (#3882).
 - Codex costs: avoid rewriting unchanged retained file state when another session or scan metadata changes, reducing local history disk writes (#3882).
+- Codex costs: stop sustained CPU use with large local histories. Refreshes and catch-up passes no longer decode the whole cost cache again, menu refreshes read only usage inside their date range, and 30-day refreshes no longer evict history that 365-day Usage & Spend catch-up then parses again (#3882).
+- Provider storage usage: rescan automatically at most hourly instead of every five minutes, with less file-system work per scanned file.
 - Website: refresh the social preview image for all 80 providers, include the newest integrations, and invalidate cached previews when the card changes.
 - Muse Code: check the CLI-owned Keychain item's access list before requesting its token, so refreshes fail promptly when access would require a prompt, and discover logins without reading secrets (#3916). Thanks @audreyt!
 - Cost history: back off forbidden Cursor cost requests for six hours, honor timeout cooldowns without cached data, and preserve quota refreshes and manual recovery (#3910, #3918). Thanks @harjothkhara and @Sogl!

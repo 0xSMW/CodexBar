@@ -12,6 +12,11 @@
 //   fdcycles <cacheRoot> [cycles]         repeatedly open/close the store and report descriptor counts
 //   memory <cacheRoot> [none|full|lean]    footprint of a codex cache read (see loadCodexCache)
 //   fixture <newRoot> [files] [rows]     isolated typed corpus for cache-read measurements
+//   catchup <cacheRoot> <codexHome> [passes] [historyDays]
+//                                         app-equivalent Codex catch-up passes with per-phase CPU and read work
+//   refresh <cacheRoot> <codexHome> [count] [historyDays]
+//                                         app-equivalent Codex token refreshes (scan + report read)
+//   reportcompare <cacheRoot> [historyDays] full vs windowed report reads must produce identical output
 
 import Foundation
 
@@ -381,6 +386,158 @@ func runIncremental(cacheRoot: URL, sessionsRoot: URL?) {
         + "catchUpPending=\(metadata.codexScanCatchUpPending == true)")
 }
 
+// MARK: - app-equivalent Codex catch-up
+
+func processCPUSeconds() -> Double {
+    var usage = rusage()
+    getrusage(RUSAGE_SELF, &usage)
+    let user = Double(usage.ru_utime.tv_sec) + Double(usage.ru_utime.tv_usec) / 1e6
+    let system = Double(usage.ru_stime.tv_sec) + Double(usage.ru_stime.tv_usec) / 1e6
+    return user + system
+}
+
+func measured<T>(_ label: String, recorder: CostUsageStoreReadWorkRecorder, _ body: () async throws -> T)
+    async rethrows -> T
+{
+    recorder.reset()
+    let cpuStart = processCPUSeconds()
+    let wallStart = DispatchTime.now()
+    let value = try await body()
+    let wall = Double(DispatchTime.now().uptimeNanoseconds - wallStart.uptimeNanoseconds) / 1e9
+    let cpu = processCPUSeconds() - cpuStart
+    let work = recorder.snapshot()
+    print(String(format: "  %@ wall=%.2fs cpu=%.2fs", label, wall, cpu)
+        + " scannerSnapshots=\(work.scannerSnapshotReads) fullSnapshots=\(work.fullSnapshotReads)"
+        + " fileRows=\(work.fileRows) usageRows=\(work.usageRows) rowDecodes=\(work.usageRowDecodeAttempts)"
+        + " tokenSnapshotRows=\(work.tokenSnapshotRows) cacheConversions=\(work.cacheConversions)"
+        + " readViewConversions=\(work.readViewConversions) integrityChecks=\(work.integrityChecks)")
+    return value
+}
+
+/// Mirrors one iteration of `UsageStore.runCodexCostCatchUp`: status read, one bounded pass, and the
+/// completed-history publish read. Only `cacheRoot` is written; `codexHome` is read.
+func runCatchUp(cacheRoot: URL, codexHome: String, passes: Int, historyDays: Int) async {
+    let fetcher = CostUsageFetcher(cacheRoot: cacheRoot)
+    let recorder = CostUsageStoreReadWorkRecorder(
+        databaseURL: cacheRoot
+            .appendingPathComponent("cost-usage", isDirectory: true)
+            .appendingPathComponent(CostUsageStore.databaseFilename, isDirectory: false))
+    CostUsageStore.readWorkRecorderForTesting = recorder
+    defer { CostUsageStore.readWorkRecorderForTesting = nil }
+
+    for pass in 1...max(1, passes) {
+        print("PASS \(pass)")
+        let before = await measured("status", recorder: recorder) {
+            await fetcher.codexScanCatchUpStatus(codexHomePath: codexHome)
+        }
+        print("    before pending=\(before.pending) completed=\(before.completedFiles)/\(before.totalFiles)"
+            + " bytes=\(before.processedBytes)/\(before.totalBytes) key=\(before.progressKey.prefix(60))")
+        let result: CostUsageScanExecutor.TimedResult<CostUsageFetcher.CodexScanCatchUpStatus>
+        do {
+            result = try await measured("advance", recorder: recorder) {
+                try await fetcher.advanceCodexScanCatchUp(codexHomePath: codexHome, historyDays: historyDays)
+            }
+        } catch {
+            fail("advance failed: \(error)")
+        }
+        let after = result.value
+        print(String(format: "    activeDuration=%.2fs", result.activeDuration)
+            + " after pending=\(after.pending) completed=\(after.completedFiles)/\(after.totalFiles)"
+            + " bytes=\(after.processedBytes)/\(after.totalBytes)")
+        if ProcessInfo.processInfo.environment["VERIFY"] == "1" {
+            // Proves the retained scanner baseline equals a full re-read (costs one full decode).
+            let matches = CostUsageStoreAccess.scanStore(cacheRoot: cacheRoot)
+                .syncRetainedCodexScanMatchesFreshReadForTesting()
+            print("    retainedScanMatchesFreshRead=\(matches.map(String.init(describing:)) ?? "none-retained")")
+        }
+        let snapshot = await measured("publishRead", recorder: recorder) {
+            await fetcher.loadCompletedCodexTokenSnapshotResult(
+                codexHomePath: codexHome,
+                historyDays: historyDays,
+                includePiSessions: false)
+        }
+        print("    published=\(snapshot != nil)")
+        if !after.pending { break }
+    }
+}
+
+/// Mirrors the app's regular Codex token refresh (`UsageStore.loadTokenUsageSnapshot`): a bounded
+/// scan plus the report read that feeds the menu. Pricing refresh and Pi sessions are off so the
+/// run stays local.
+func runRefresh(cacheRoot: URL, codexHome: String, count: Int, historyDays: Int) async {
+    let fetcher = CostUsageFetcher(cacheRoot: cacheRoot)
+    let recorder = CostUsageStoreReadWorkRecorder(
+        databaseURL: cacheRoot
+            .appendingPathComponent("cost-usage", isDirectory: true)
+            .appendingPathComponent(CostUsageStore.databaseFilename, isDirectory: false))
+    CostUsageStore.readWorkRecorderForTesting = recorder
+    defer { CostUsageStore.readWorkRecorderForTesting = nil }
+    for index in 1...max(1, count) {
+        let result = await measured("refresh \(index)", recorder: recorder) {
+            try? await fetcher.loadTokenResult(
+                provider: .codex,
+                forceRefresh: true,
+                codexHomePath: codexHome,
+                historyDays: historyDays,
+                allowPricingRefresh: false,
+                refreshPricingInBackground: false,
+                includePiSessions: false,
+                bypassScannerDebounce: true)
+        }
+        let snapshot = result?.snapshot
+        print("    days=\(snapshot?.daily.count ?? -1) last30Tokens=\(snapshot?.last30DaysTokens ?? -1)"
+            + " last30Cost=\(snapshot?.last30DaysCostUSD ?? -1)")
+    }
+}
+
+/// Proves a windowed `.report` read produces the same daily, project, and session output as a
+/// full `.report` read of the same database.
+func runReportCompare(cacheRoot: URL, historyDays: Int) {
+    let calendar = Calendar.current
+    let now = Date()
+    let since = calendar.date(byAdding: .day, value: -(max(1, historyDays) - 1), to: now) ?? now
+    let range = CostUsageScanner.CostUsageDayRange(since: since, until: now, calendar: calendar)
+    let options = CostUsageScanner.Options(cacheRoot: cacheRoot)
+    let roots = CostUsageScanner.codexSessionsRoots(options: options)
+    let store = CostUsageStore(cacheRoot: cacheRoot)
+    let fullStart = DispatchTime.now()
+    let full = store.syncLoadCodexReadView(calendar: calendar, purpose: .report).scoped(to: roots)
+    let fullWall = Double(DispatchTime.now().uptimeNanoseconds - fullStart.uptimeNanoseconds) / 1e9
+    let windowStart = DispatchTime.now()
+    let windowed = store.syncLoadCodexReadView(
+        calendar: calendar,
+        purpose: .report,
+        reportWindow: (sinceKey: range.scanSinceKey, untilKey: range.scanUntilKey)).scoped(to: roots)
+    let windowWall = Double(DispatchTime.now().uptimeNanoseconds - windowStart.uptimeNanoseconds) / 1e9
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys]
+    let fullDaily = try? encoder.encode(full.dailyReport(range: range, cacheRoot: cacheRoot))
+    let windowDaily = try? encoder.encode(windowed.dailyReport(range: range, cacheRoot: cacheRoot))
+    let dailyMatch = fullDaily != nil && fullDaily == windowDaily
+    // Project costs are Double sums accumulated in dictionary order, so repeated calls on one view
+    // differ in the last bits. Compare exact tokens and names, and costs to 1/100 of a cent.
+    func cents(_ value: Double?) -> String {
+        value.map { String(format: "%.4f", $0) } ?? "nil"
+    }
+    func projectKey(_ project: CostUsageProjectBreakdown) -> String {
+        let sources = project.sources
+            .map { "\($0.name)|\($0.path ?? "")|\($0.totalTokens ?? -1)|\(cents($0.totalCostUSD))|\($0.daily.count)" }
+            .sorted()
+            .joined(separator: ";")
+        return "\(project.name)|\(project.path ?? "")|\(project.totalTokens ?? -1)|\(cents(project.totalCostUSD))"
+            + "|\(project.daily.count)|\(sources)"
+    }
+    let fullProjects = full.projects(range: range, cacheRoot: cacheRoot).map(projectKey).sorted()
+    let projectsMatch = fullProjects == windowed.projects(range: range, cacheRoot: cacheRoot).map(projectKey).sorted()
+    print("    projects=\(fullProjects.count)")
+    let sessionsMatch = full.sessions(range: range, cacheRoot: cacheRoot, roots: roots)
+        == windowed.sessions(range: range, cacheRoot: cacheRoot, roots: roots)
+    print(String(format: "REPORTCOMPARE fullRead=%.2fs windowedRead=%.2fs", fullWall, windowWall)
+        + " dailyMatch=\(dailyMatch) projectsMatch=\(projectsMatch) sessionsMatch=\(sessionsMatch)"
+        + " dailyBytes=\(fullDaily?.count ?? -1)")
+    if !(dailyMatch && projectsMatch && sessionsMatch) { exit(1) }
+}
+
 // MARK: - descriptor hygiene
 
 func fileSize(atPath path: String) -> Int64 {
@@ -651,6 +808,24 @@ case "fixture":
     } catch {
         fail("fixture generation failed: \(error)")
     }
+case "catchup":
+    guard arguments.count > 3 else { fail("usage: storestress catchup <cacheRoot> <codexHome> [passes] [historyDays]") }
+    await runCatchUp(
+        cacheRoot: URL(fileURLWithPath: target),
+        codexHome: arguments[3],
+        passes: Int(arguments.count > 4 ? arguments[4] : "3") ?? 3,
+        historyDays: Int(arguments.count > 5 ? arguments[5] : "30") ?? 30)
+case "refresh":
+    guard arguments.count > 3 else { fail("usage: storestress refresh <cacheRoot> <codexHome> [count] [historyDays]") }
+    await runRefresh(
+        cacheRoot: URL(fileURLWithPath: target),
+        codexHome: arguments[3],
+        count: Int(arguments.count > 4 ? arguments[4] : "3") ?? 3,
+        historyDays: Int(arguments.count > 5 ? arguments[5] : "30") ?? 30)
+case "reportcompare":
+    runReportCompare(
+        cacheRoot: URL(fileURLWithPath: target),
+        historyDays: Int(arguments.count > 3 ? arguments[3] : "30") ?? 30)
 case "fdcycles":
     await runFDCycles(
         cacheRoot: URL(fileURLWithPath: target),

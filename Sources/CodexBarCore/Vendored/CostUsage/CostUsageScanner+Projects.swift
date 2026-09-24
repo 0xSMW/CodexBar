@@ -3,8 +3,9 @@ import Foundation
 extension CostUsageScanner {
     static func codexCache(_ cache: CostUsageCache, scopedTo roots: [URL]) -> CostUsageCache {
         var scoped = cache
+        let matcher = CodexRootMatcher(roots: roots)
         scoped.files = cache.files.filter { filePath, _ in
-            Self.isWithinCodexRoots(fileURL: URL(fileURLWithPath: filePath), roots: roots)
+            matcher.contains(path: filePath)
         }
         scoped.days = [:]
         for usage in scoped.files.values {
@@ -30,11 +31,10 @@ extension CostUsageScanner {
             ?? ModelsDevCatalog(providers: [:])
         let pricingResolver = CostUsagePricing.CodexResolver(catalog: resolvedModelsDevCatalog)
         var latestFileBySessionID: [String: (path: String, usage: CostUsageFileUsage)] = [:]
+        let sessionRootMatcher = sessionRoots.map(CodexRootMatcher.init(roots:))
 
         for (filePath, usage) in cache.files {
-            if let sessionRoots,
-               !Self.isWithinCodexRoots(fileURL: URL(fileURLWithPath: filePath), roots: sessionRoots)
-            {
+            if let sessionRootMatcher, !sessionRootMatcher.contains(path: filePath) {
                 continue
             }
             guard usage.touchesCodexScanWindow(

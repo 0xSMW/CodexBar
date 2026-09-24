@@ -986,18 +986,36 @@ public struct CostUsageFetcher: Sendable {
 
     private static func codexReportView(
         options: CostUsageScanner.Options,
-        range: CostUsageScanner.CostUsageDayRange) -> CostUsageStoreReadView
+        range: CostUsageScanner.CostUsageDayRange,
+        requireComplete: Bool = false) -> CostUsageStoreReadView
     {
         let roots = CostUsageScanner.codexSessionsRoots(options: options)
         let rootsFingerprint = CostUsageScanner.codexRootsFingerprint(options: options)
-        // Keep a fallback detail read on the same validated connection.
-        let store = CostUsageStore(cacheRoot: options.cacheRoot)
+        // Keep a fallback detail read on the same validated connection. The shared reader keeps
+        // its decoded status/activity view between refreshes instead of re-decoding every file.
+        let store = CostUsageStoreAccess.readStore(cacheRoot: options.cacheRoot)
         var view = store.syncLoadCodexReadView(calendar: options.calendar, purpose: .status).scoped(to: roots)
-        if view.hasPendingScan {
+        // Complete-history callers discard any view that cannot establish coverage. When the status
+        // view already proves that, skip the detailed reads, which decode every retained usage row.
+        if requireComplete,
+           view.historyCoverageIsProvablyIncomplete(range: range, rootsFingerprint: rootsFingerprint)
+        {
+            return view
+        }
+        // A pending scan needs the activity view only to serve a stored previous report. That report
+        // is metadata, identical in every purpose; without one the detailed read below follows anyway,
+        // so skip decoding every file an extra time.
+        if view.hasPendingScan,
+           view.storedPreviousReport(range: range, rootsFingerprint: rootsFingerprint) != nil
+        {
             view = store.syncLoadCodexReadView(calendar: options.calendar, purpose: .activity).scoped(to: roots)
         }
         if view.previousReport(range: range, rootsFingerprint: rootsFingerprint) == nil {
-            view = store.syncLoadCodexReadView(calendar: options.calendar, purpose: .report).scoped(to: roots)
+            // Every report consumer filters to the scan window, so only files covering it need rows.
+            view = store.syncLoadCodexReadView(
+                calendar: options.calendar,
+                purpose: .report,
+                reportWindow: (sinceKey: range.scanSinceKey, untilKey: range.scanUntilKey)).scoped(to: roots)
         }
         return view
     }
@@ -1302,7 +1320,7 @@ public struct CostUsageFetcher: Sendable {
                 calendar: options.calendar)
             let roots = CostUsageScanner.codexSessionsRoots(options: options)
             let rootsFingerprint = CostUsageScanner.codexRootsFingerprint(options: options)
-            let cache = Self.codexReportView(options: options, range: range)
+            let cache = Self.codexReportView(options: options, range: range, requireComplete: requireCompleteHistory)
             var reports: [CostUsageDailyReport] = []
             var projects: [CostUsageProjectBreakdown] = []
             var sessions: [CostUsageSessionBreakdown] = []

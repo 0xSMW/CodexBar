@@ -1,0 +1,61 @@
+# Codex cost cache CPU on a large local history
+#
+# Corpus: a copy of one real Codex cost cache (46,481 session files, 1,075,554 usage rows,
+# 959 MB SQLite) against the matching ~/.codex sessions (63 GB of JSONL, read-only).
+# Harness: Scripts/StoreStress, release build with -enable-testing, run from a disposable
+# cache copy. Each PASS mirrors one UsageStore.runCodexCostCatchUp iteration.
+# 'cpu' is process CPU time; counters come from CostUsageStoreReadWorkRecorder.
+
+## Before (upstream main at cca269a83): storestress catchup <copy> ~/.codex 2 30
+PASS 1
+  status wall=9.59s cpu=5.99s scannerSnapshots=0 fullSnapshots=0 fileRows=46481 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=1 readViewConversions=1 integrityChecks=1
+  advance wall=35.44s cpu=31.80s scannerSnapshots=1 fullSnapshots=0 fileRows=92962 usageRows=1075554 rowDecodes=1075554 tokenSnapshotRows=0 cacheConversions=2 readViewConversions=1 integrityChecks=1
+    activeDuration=35.40s after pending=true completed=1019/46487 bytes=0/0
+  publishRead wall=35.63s cpu=32.25s scannerSnapshots=0 fullSnapshots=0 fileRows=139443 usageRows=1075554 rowDecodes=1075554 tokenSnapshotRows=0 cacheConversions=3 readViewConversions=3 integrityChecks=1
+PASS 2
+  status wall=4.77s cpu=4.42s scannerSnapshots=0 fullSnapshots=0 fileRows=0 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=0 readViewConversions=1 integrityChecks=0
+  advance wall=34.86s cpu=31.99s scannerSnapshots=1 fullSnapshots=0 fileRows=92962 usageRows=1075554 rowDecodes=1075554 tokenSnapshotRows=0 cacheConversions=2 readViewConversions=1 integrityChecks=0
+    activeDuration=34.81s after pending=true completed=1019/46487 bytes=0/0
+  publishRead wall=35.03s cpu=31.60s scannerSnapshots=0 fullSnapshots=0 fileRows=139443 usageRows=1075554 rowDecodes=1075554 tokenSnapshotRows=0 cacheConversions=3 readViewConversions=3 integrityChecks=1
+
+## After (this branch): VERIFY=1 storestress catchup <copy> ~/.codex 3 30
+# First open adopts parser fingerprint 9972dad7f7aeff21 without rebuilding (46,481 files and
+# 1,075,554 rows before and after). PASS 1 is the cold load; later passes reuse the baseline.
+PASS 1
+  status wall=6.35s cpu=4.78s scannerSnapshots=0 fullSnapshots=0 fileRows=46481 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=1 readViewConversions=1 integrityChecks=2
+  advance wall=23.79s cpu=20.91s scannerSnapshots=1 fullSnapshots=0 fileRows=93002 usageRows=1094037 rowDecodes=1094037 tokenSnapshotRows=20641 cacheConversions=3 readViewConversions=1 integrityChecks=1
+    activeDuration=23.79s after pending=true completed=1055/46487 bytes=0/0
+    retainedScanMatchesFreshRead=true
+  publishRead wall=1.06s cpu=0.94s scannerSnapshots=0 fullSnapshots=0 fileRows=0 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=0 readViewConversions=1 integrityChecks=0
+PASS 2
+  status wall=0.57s cpu=0.54s scannerSnapshots=0 fullSnapshots=0 fileRows=0 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=0 readViewConversions=1 integrityChecks=0
+  advance wall=9.70s cpu=8.73s scannerSnapshots=0 fullSnapshots=0 fileRows=46519 usageRows=18483 rowDecodes=18483 tokenSnapshotRows=20319 cacheConversions=2 readViewConversions=1 integrityChecks=0
+    activeDuration=9.70s after pending=true completed=1089/46487 bytes=0/0
+    retainedScanMatchesFreshRead=true
+  publishRead wall=0.90s cpu=0.87s scannerSnapshots=0 fullSnapshots=0 fileRows=0 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=0 readViewConversions=1 integrityChecks=0
+PASS 3
+  status wall=0.54s cpu=0.53s scannerSnapshots=0 fullSnapshots=0 fileRows=0 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=0 readViewConversions=1 integrityChecks=0
+  advance wall=9.62s cpu=8.96s scannerSnapshots=0 fullSnapshots=0 fileRows=46583 usageRows=22960 rowDecodes=22960 tokenSnapshotRows=27459 cacheConversions=2 readViewConversions=1 integrityChecks=0
+    activeDuration=9.62s after pending=true completed=1186/46487 bytes=0/0
+    retainedScanMatchesFreshRead=true
+  publishRead wall=0.93s cpu=0.88s scannerSnapshots=0 fullSnapshots=0 fileRows=0 usageRows=0 rowDecodes=0 tokenSnapshotRows=0 cacheConversions=0 readViewConversions=1 integrityChecks=0
+
+## Regular token refresh (storestress refresh <copy> ~/.codex 3 30), warm passes
+# Before: each refresh escalated to a full .report read (~1.07M row decodes, ~30s CPU) plus a full scan load.
+  refresh 2 cpu=21.08s scannerSnapshots=0 usageRows=268541 rowDecodes=268541 readViewConversions=2 integrityChecks=0
+  refresh 3 cpu=22.18s scannerSnapshots=0 usageRows=269666 rowDecodes=269666 readViewConversions=2 integrityChecks=0
+# 30-day token and cost totals were identical across every refresh.
+
+## Windowed report reads equal full report reads (storestress reportcompare <copy> <days>)
+REPORTCOMPARE days=7   fullRead=10.44s windowedRead=2.24s dailyMatch=true projectsMatch=true sessionsMatch=true
+REPORTCOMPARE days=30  fullRead=10.22s windowedRead=3.96s dailyMatch=true projectsMatch=true sessionsMatch=true
+REPORTCOMPARE days=90  fullRead=16.24s windowedRead=8.20s dailyMatch=true projectsMatch=true sessionsMatch=true
+REPORTCOMPARE days=365 fullRead=10.43s windowedRead=9.25s dailyMatch=true projectsMatch=true sessionsMatch=true
+# Project costs are compared to 1/100 cent: Double sums built in dictionary order differ in the last bits
+# even between two reads of one unchanged view.
+
+## Installed app on the same machine (5-minute refresh, Codex cost tracking and storage usage enabled)
+# 0.65.0 release: 158:56 CPU over 4h44m (56% average), 90-100% sustained in samples, RSS 10.8 GB.
+#   During that run its retention evicted the cache from 46,481 to 1,555 files (603 -> 173 aggregate days).
+# This branch, packaged locally, first 20 minutes on that evicted cache (re-adding history each refresh):
+#   0% between refreshes, one 16-30s burst per 5-minute refresh, 82s CPU total (~7% average), RSS <= 1.1 GB.

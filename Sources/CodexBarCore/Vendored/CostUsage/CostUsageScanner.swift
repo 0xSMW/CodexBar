@@ -2141,7 +2141,8 @@ enum CostUsageScanner {
         roots: [URL],
         excludingPaths: Set<String>) -> [URL]
     {
-        cache.files.compactMap { path, usage in
+        let matcher = CodexRootMatcher(roots: roots)
+        return cache.files.compactMap { path, usage in
             guard !excludingPaths.contains(Self.codexPathKey(URL(fileURLWithPath: path))) else { return nil }
             let hasRelevantDay = usage.days.keys.contains {
                 CostUsageDayRange.isInRange(dayKey: $0, since: range.scanSinceKey, until: range.scanUntilKey)
@@ -2149,9 +2150,8 @@ enum CostUsageScanner {
             let hasPendingWork = usage.codexScanComplete == false || usage.hasBufferedCodexForkRetryLines
             guard hasRelevantDay || hasPendingWork else { return nil }
             guard FileManager.default.fileExists(atPath: path) else { return nil }
-            let fileURL = URL(fileURLWithPath: path)
-            guard Self.isWithinCodexRoots(fileURL: fileURL, roots: roots) else { return nil }
-            return fileURL
+            guard matcher.contains(path: path) else { return nil }
+            return URL(fileURLWithPath: path)
         }
     }
 
@@ -2161,6 +2161,7 @@ enum CostUsageScanner {
         knownExistingPaths: Set<String>) -> [String: URL]
     {
         var out: [String: URL] = [:]
+        let matcher = CodexRootMatcher(roots: roots)
         for (path, usage) in cache.files {
             guard let sessionId = usage.sessionId, !sessionId.isEmpty else { continue }
             if knownExistingPaths.contains(Self.codexPathKey(URL(fileURLWithPath: path))) {
@@ -2168,9 +2169,8 @@ enum CostUsageScanner {
                 continue
             }
             guard FileManager.default.fileExists(atPath: path) else { continue }
-            let fileURL = URL(fileURLWithPath: path)
-            guard Self.isWithinCodexRoots(fileURL: fileURL, roots: roots) else { continue }
-            out[sessionId] = fileURL
+            guard matcher.contains(path: path) else { continue }
+            out[sessionId] = URL(fileURLWithPath: path)
         }
         return out
     }
@@ -2533,7 +2533,65 @@ enum CostUsageScanner {
         return path
     }
 
+    /// Batch form of `isWithinCodexRoots` for loops over every cached file. It resolves each root
+    /// once and memoizes resolved parent directories, so a canonical file path costs one `lstat`
+    /// (to rule out a symlinked final component) instead of resolving every path component.
+    /// Symlinked, non-canonical, or `/private` results fall back to the exact Foundation path.
+    final class CodexRootMatcher {
+        private let rootPaths: [String]
+        private let resolver = CodexPathResolver()
+
+        init(roots: [URL]) {
+            self.rootPaths = roots.map { CostUsageScanner.codexResolvedPath($0) }
+        }
+
+        func contains(path: String) -> Bool {
+            let filePath = self.resolver.resolvedPath(path)
+            return self.rootPaths.contains { rootPath in
+                if filePath == rootPath {
+                    return true
+                }
+                let prefix = rootPath.hasSuffix("/") ? rootPath : rootPath + "/"
+                return filePath.hasPrefix(prefix)
+            }
+        }
+    }
+
+    /// `codexResolvedPath` for many files, memoizing resolved parent directories.
+    final class CodexPathResolver {
+        private var resolvedDirectories: [String: String] = [:]
+
+        func resolvedPath(_ path: String) -> String {
+            guard CostUsageStore.isCanonicalAbsolutePath(path),
+                  let slash = path.lastIndex(of: "/"), slash != path.startIndex
+            else { return CostUsageScanner.codexResolvedPath(URL(fileURLWithPath: path)) }
+            var info = stat()
+            if lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFLNK {
+                return CostUsageScanner.codexResolvedPath(URL(fileURLWithPath: path))
+            }
+            let directory = String(path[..<slash])
+            let resolvedDirectory: String
+            if let cached = self.resolvedDirectories[directory] {
+                resolvedDirectory = cached
+            } else {
+                resolvedDirectory = CostUsageScanner.codexResolvedPath(URL(
+                    fileURLWithPath: directory,
+                    isDirectory: true))
+                self.resolvedDirectories[directory] = resolvedDirectory
+            }
+            let candidate = resolvedDirectory + path[slash...]
+            guard !candidate.hasPrefix("/private/") else {
+                return CostUsageScanner.codexResolvedPath(URL(fileURLWithPath: path))
+            }
+            return candidate
+        }
+    }
+
     static func codexPathKey(_ url: URL) -> String {
+        // Standardizing a file URL checks reachability; canonical paths are already standardized.
+        if CostUsageStore.isCanonicalAbsolutePath(url.path) {
+            return url.path
+        }
         let path = url.standardizedFileURL.path
         if path.hasPrefix("/private/var/") {
             return String(path.dropFirst("/private".count))
@@ -3022,11 +3080,12 @@ enum CostUsageScanner {
     {
         let files = Array(files)
         guard !files.isEmpty else { return }
+        let resolver = CodexPathResolver()
         var queuedPaths: Set<String>
         if normalizeExisting {
             var normalizedPaths: Set<String> = []
             state.pendingFilePaths = state.pendingFilePaths.compactMap { path in
-                let resolvedPath = Self.codexResolvedPath(URL(fileURLWithPath: path))
+                let resolvedPath = resolver.resolvedPath(path)
                 return normalizedPaths.insert(resolvedPath).inserted ? resolvedPath : nil
             }
             queuedPaths = normalizedPaths
@@ -3034,7 +3093,7 @@ enum CostUsageScanner {
             queuedPaths = Set(state.pendingFilePaths)
         }
         for fileURL in files {
-            let resolvedPath = Self.codexResolvedPath(fileURL)
+            let resolvedPath = resolver.resolvedPath(fileURL.path)
             guard queuedPaths.insert(resolvedPath).inserted else { continue }
             state.pendingFilePaths.append(resolvedPath)
         }
@@ -3068,10 +3127,9 @@ enum CostUsageScanner {
             return
         }
         guard let previousDiscovery = context.previousDiscovery else { return }
-        let previousPaths = Set(previousDiscovery.fileStamps.keys.map {
-            Self.codexResolvedPath(URL(fileURLWithPath: $0))
-        })
-        let newFiles = context.discoveredFiles.filter { !previousPaths.contains(Self.codexResolvedPath($0)) }
+        let resolver = CodexPathResolver()
+        let previousPaths = Set(previousDiscovery.fileStamps.keys.map(resolver.resolvedPath))
+        let newFiles = context.discoveredFiles.filter { !previousPaths.contains(resolver.resolvedPath($0.path)) }
         Self.appendCodexActiveLookbackPaths(
             context.preferNewest ? self.sortedCodexSessionFilesNewestFirst(newFiles) : newFiles,
             state: &state)
@@ -3127,14 +3185,16 @@ enum CostUsageScanner {
         files: inout [URL]) -> Int
     {
         if context.validateRoots {
+            let matcher = CodexRootMatcher(roots: context.roots)
             state.pendingFilePaths = state.pendingFilePaths.filter { path in
-                Self.isWithinCodexRoots(fileURL: URL(fileURLWithPath: path), roots: context.roots)
+                matcher.contains(path: path)
             }
         }
         let pendingCount = min(context.maxCount ?? state.pendingFilePaths.count, state.pendingFilePaths.count)
         var normalizedPathSet: Set<String> = []
+        let resolver = CodexPathResolver()
         let normalizedPrefix = state.pendingFilePaths.prefix(pendingCount).compactMap { path in
-            let resolvedPath = Self.codexResolvedPath(URL(fileURLWithPath: path))
+            let resolvedPath = resolver.resolvedPath(path)
             return normalizedPathSet.insert(resolvedPath).inserted ? resolvedPath : nil
         }
         state.pendingFilePaths.replaceSubrange(0..<pendingCount, with: normalizedPrefix)

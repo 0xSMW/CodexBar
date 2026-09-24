@@ -12,6 +12,10 @@ import CSQLite3
 // swiftlint:disable file_length
 
 struct CostUsageStoreTests {
+    /// Two years past the fixtures' 2026 dates, so the 365-day retention horizon cannot protect them
+    /// and budget tests exercise their requested window alone.
+    static let pastHistoryHorizonNow = Date(timeIntervalSince1970: 1_830_297_600)
+
     /// The store actor runs on a custom DispatchQueue-backed `SerialExecutor`, and its
     /// `sync*` bridges hand work to the actor from inside `queue.sync`. Getting that handoff
     /// wrong takes the app down on launch with "Incorrect actor executor assumption", so the
@@ -1023,6 +1027,7 @@ extension CostUsageStoreTests {
 
 extension CostUsageStoreTests {
     @Test(arguments: [
+        "9972dad7f7aeff21", // Released in 0.65.0.
         "03e43d1217789d16",
         "4dd9e5769818370a", // Before Linux Priority trace support.
         "50813ce2a3edfdc7", // Released in 0.63.0.
@@ -1062,6 +1067,7 @@ extension CostUsageStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         #expect(CostUsageStore.compatiblePredecessorParserHashes == [
+            "9972dad7f7aeff21",
             "4dd9e5769818370a",
             "03e43d1217789d16",
             "50813ce2a3edfdc7",
@@ -1996,7 +2002,8 @@ extension CostUsageStoreTests {
             maxRows: 1,
             maxFileBytes: .max,
             requestedSinceDay: "2026-07-31",
-            requestedUntilDay: "2026-08-02")
+            requestedUntilDay: "2026-08-02",
+            now: Self.pastHistoryHorizonNow)
 
         #expect(result.rowCount == 1)
         #expect(await store.fetchFile(path: "/rollouts/stale.jsonl") == nil)
@@ -2094,7 +2101,8 @@ extension CostUsageStoreTests {
             maxRows: 1,
             maxFileBytes: .max,
             requestedSinceDay: "2026-08-01",
-            requestedUntilDay: "2026-08-02")
+            requestedUntilDay: "2026-08-02",
+            now: Self.pastHistoryHorizonNow)
 
         // The out-of-window file is pruned, but in-window files stay even though the row
         // count remains above the cap: the former entry budget never dropped in-window data.
@@ -2103,6 +2111,36 @@ extension CostUsageStoreTests {
         #expect(await store.fetchFile(path: "/rollouts/one.jsonl") != nil)
         #expect(await store.fetchFile(path: "/rollouts/two.jsonl") != nil)
         #expect(await store.fetchMetadata().catchUpPending == false)
+    }
+
+    @Test
+    func `budgets never evict history a longer window would rescan`() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = CostUsageStore(cacheRoot: fixture.root)
+        #expect(await store.upsertFile(Self.file(path: "/rollouts/older.jsonl", day: "2026-06-01", updatedAt: 0)))
+        #expect(await store.upsertFile(Self.file(path: "/rollouts/current.jsonl", day: "2026-08-01", updatedAt: 1)))
+        let calendar = CostUsageScanner.CostUsageDayRange.localGregorianCalendar()
+        let now = try #require(CostUsageScanner.parseDayKey("2026-08-02", calendar: calendar))
+
+        // A 30-day refresh is over budget, but the older file is inside the 365-day horizon that the
+        // Spend Dashboard scans; evicting it would only make that scan parse it again.
+        let result = await store.enforceBudgets(
+            maxRows: 1,
+            maxFileBytes: 1,
+            requestedSinceDay: "2026-08-01",
+            requestedUntilDay: "2026-08-02",
+            calendar: calendar,
+            now: now)
+
+        #expect(result.deletedRows == 0)
+        #expect(!result.catchUpRequired)
+        #expect(await store.fetchFile(path: "/rollouts/older.jsonl") != nil)
+        #expect(await store.fetchFile(path: "/rollouts/current.jsonl") != nil)
+        #expect(await store.fetchMetadata().catchUpPending == false)
+        let metadata = await store.fetchMetadata()
+        #expect(metadata.scanSinceDay == "2026-08-01")
+        #expect(metadata.scanUntilDay == "2026-08-02")
     }
 
     @Test
@@ -2124,7 +2162,8 @@ extension CostUsageStoreTests {
             maxRows: .max,
             maxFileBytes: 1,
             requestedSinceDay: "2026-08-01",
-            requestedUntilDay: "2026-08-02")
+            requestedUntilDay: "2026-08-02",
+            now: Self.pastHistoryHorizonNow)
 
         #expect(result.deletedRows == 1)
         #expect(result.rowCount == 1)
