@@ -44,16 +44,33 @@ public enum AiAndProviderDescriptor {
                     : .generic
                 return ProviderCostPresentation(menuCardStyle: style)
             }),
-            fetchPlan: .apiToken(
-                strategyID: "aiand.api",
-                resolveToken: AiAndSettingsReader.apiKey,
-                missingCredentialsError: { AiAndUsageError.notConfigured },
-                loadUsage: { credential, _ in
-                    try await AiAndUsageFetcher.fetchUsage(credential).toUsageSnapshot()
-                }),
+            fetchPlan: ProviderFetchPlan(
+                sourceModes: [.auto, .api],
+                pipeline: ProviderFetchPipeline(resolveStrategies: { _ in [Self.scriptStrategy()] })),
             cli: ProviderCLIConfig(
                 name: "aiand",
                 aliases: ["ai&", "ai-and"],
                 versionDetector: nil))
+    }
+
+    static func scriptStrategy(
+        transport: any ProviderHTTPTransport = ProviderHTTPClient.shared) -> ScriptFetchStrategy
+    {
+        ScriptFetchStrategy(
+            id: "aiand.js",
+            provider: .aiand,
+            bundledPlugin: "aiand",
+            secretKey: AiAndSettingsReader.apiKeyEnvironmentKey,
+            sourceLabel: "api",
+            transport: transport,
+            validateContext: { context in
+                guard AiAndSettingsReader.apiKey(environment: context.env) != nil else {
+                    throw ProviderFetchClassifiedError(
+                        kind: .missingCredential,
+                        message: "Missing ai& API key. Add one in Settings or set AIAND_API_KEY.")
+                }
+            },
+            resolveSecret: AiAndSettingsReader.apiKey,
+            isEnabled: { _ in true })
     }
 }

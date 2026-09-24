@@ -237,6 +237,10 @@ Chutes' bundled `chutes.ts` owns subscription usage and best-effort quota detail
 subscription context and explicitly permits empty usage responses. Swift supplies credentials and validated API origins.
 See [Chutes](chutes.md).
 
+ai&'s bundled `aiand.ts` follows paired log cursors and sums decimal costs with integer arithmetic before the final
+display conversion. Empty windows omit cost; capped or incomplete pagination retains estimated confidence.
+See [ai&](aiand.md).
+
 DevPass's bundled `devpass.ts` reads the documented LLM Gateway key-status API for billing-cycle and premium weekly
 credits. Swift only registers the provider and its API-key setting. See [DevPass](devpass.md).
 
