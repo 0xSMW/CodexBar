@@ -245,6 +245,8 @@ displayable usage or identity remains invalid unless `empty: true` is explicitly
 
 `fetchUsage` may return a bare snapshot or `{ usage, sourceLabel?, card?, persist? }`. The two forms cannot be mixed;
 unknown result and top-level snapshot keys fail validation. Both engines apply the same mapper before any settings write.
+Session iteration and candidate rejection work with either result form; the Swift `fetchUsage` and `fetchResult` entry
+points both preserve the caller's cookie-session resolver and invalidator.
 `sourceLabel` replaces the strategy's default label for that fetch and must contain 1–256 UTF-8 bytes without control
 characters. `persist` is an object with at most 16 string values of 1–256 bytes; the descriptor must explicitly allow
 every key. Null, arrays, wrong types, unknown keys, and cross-provider requests fail the entire result.

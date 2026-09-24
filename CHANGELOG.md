@@ -15,6 +15,7 @@
 - Claude: document browser-session recovery and the explicit cookie-import retry when Claude works in Chrome but CodexBar cannot read the session (#3919). Thanks @PakAbhishek!
 - Perplexity and Qoder: use bundled providers on both JavaScript engines, retry rejected browser sessions safely, and keep Qoder China manual cookies bound to the China endpoint.
 - OpenAI and Fireworks: use bundled provider plugins while preserving OpenAI usage charts and project labels, and save discovered Fireworks accounts through guarded app/CLI settings updates with visible save-failure diagnostics.
+- Provider plugins: preserve browser-session iteration and candidate rejection when returning typed usage results (#3933, #3934).
 
 - Menu bar: resolve provider balances in stored layouts and show Doubao Agent Plan icon usage when Coding Plan lanes are absent (#3904, #3897, #3901, #3907, #3898, #3911). Thanks @vincent-peng, @mousebomb, and @harjothkhara!
 - MiniMax: discover browser session storage across the shared Chromium catalog, including Comet and Yandex (#3883).
