@@ -79,7 +79,7 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 | elevenlabs | `cut-over` | Yes | Cut over on both engines: xi-api-key GET, validated endpoint overrides, subscription/voice windows, reset dates, and safe current/legacy auth diagnostics; the Swift fetch twin is deleted. |
 | windsurf | `needs-files/subprocess/oauth-broker` | No | Chromium localStorage, IDE databases, and binary protobuf decoding supply the current session. |
 | zed | `cut-over` | Yes | Editor and opt-in browser billing HTTP/parsing run in the plugin on both engines. Swift retains editor settings and named Keychain credentials; manual browser billing also works on Linux. |
-| perplexity | `converted` | Yes | Converted: declared-domain cookie import and generic recurring, bonus, and purchased credit windows. |
+| perplexity | `cut-over` | Yes | Both engines use the bundled script for candidate retries, bare-token cookie names, chunk assembly, environment fallback, and recurring/bonus/purchased credit windows. Native fetching and projection are deleted. |
 | mimo | `needs-files/subprocess/oauth-broker` | No | The canonical pipeline includes the file-based local usage fallback as well as browser sessions; cookies alone cannot preserve it. |
 | doubao | `needs-files/subprocess/oauth-broker` | No | Full parity needs a CLI subprocess or Volcengine HMAC signing and POST-based plan calls. |
 | sakana | `convertible-now` | No | Manual cookie credentials already enter through the core descriptor; two fixed-origin HTML GETs and generic quota/PAYG detail projection fit the host. |
@@ -90,7 +90,7 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 | codebuff | `needs-files/subprocess/oauth-broker` | No | Full credential parity reads a local Manicode credential file; environment-key mode is partial. |
 | venice | `cut-over` | Yes | Cut over on JavaScriptCore: fixed-origin bearer GET with DIEM/USD allocation projection; native fetch code is Linux-only. |
 | commandcode | `needs-host-extension` | No | Optional subscription enrichment races a two-second grace after required credits finish; per-request timeouts cannot preserve that join boundary. |
-| qoder | `converted` | Yes | Converted: declared global/China cookie domains, browser headers, and merged generic quota window. |
+| qoder | `cut-over` | Yes | Both engines use the bundled script for regional candidate retries and merged quota parsing. Manual captures bind to one origin; Swift retains capture validation, settings, and source/dashboard presentation only. Native fetching is deleted. |
 | stepfun | `needs-files/subprocess/oauth-broker` | No | Device registration, password login, refresh, quota, and plan operations are POST-based token-broker work. |
 | bedrock | `needs-files/subprocess/oauth-broker` | No | AWS profiles/CLI credentials, SigV4 signing, pagination, and two services need host-owned credential/signing APIs. |
 | grok | `needs-pty/webview/native` | No | Persistent stdio JSON-RPC, auth/session files, cookies, logs, and binary gRPC-web are strongly native. |
