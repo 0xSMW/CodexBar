@@ -4,6 +4,33 @@ import Testing
 @testable import CodexBarCore
 
 struct BrowserCookieImportSupportTests {
+    @Test(arguments: [
+        UsageProvider.copilot,
+        .grok,
+        .helmcode,
+        .notion,
+        .qoder,
+        .replicate,
+        .typesafe,
+        .venice,
+        .zoommate,
+    ])
+    func `Chrome-only providers retain their bounded browser policy`(provider: UsageProvider) throws {
+        let browsers = try #require(ProviderDefaults.metadata[provider]?.browserCookieOrder)
+        #expect(browsers == [.chrome])
+        var visited: [Browser] = []
+        let sessions = try BrowserCookieImportSupport.collectSessions(
+            from: browsers,
+            missingError: ImportError.missing,
+            logger: { _ in },
+            load: { browser in
+                visited.append(browser)
+                return ["fixture-session"]
+            })
+        #expect(visited == [.chrome])
+        #expect(sessions == ["fixture-session"])
+    }
+
     private enum ImportError: Error {
         case missing
         case failed

@@ -1,9 +1,20 @@
-#if os(macOS)
 import Foundation
+#if os(macOS)
 import SweetCookieKit
+#endif
 
-/// Common traversal only; providers retain browser selection, session validation, caching, and logging.
+/// Shared browser policies and traversal; providers retain session validation, caching, and logging.
 enum BrowserCookieImportSupport {
+    /// Keep deliberate Chrome-only policies explicit without duplicating platform guards in descriptors.
+    static func chromeOnly(reason _: StaticString) -> BrowserCookieImportOrder? {
+        #if os(macOS)
+        Browser.defaultImportOrder.filter { $0 == .chrome }
+        #else
+        nil
+        #endif
+    }
+
+    #if os(macOS)
     static func collectSessions<Session>(
         from browsers: [Browser],
         missingError: any Error,
@@ -43,5 +54,5 @@ enum BrowserCookieImportSupport {
             return cookies.isEmpty ? nil : (profile.label, cookies)
         }
     }
+    #endif
 }
-#endif

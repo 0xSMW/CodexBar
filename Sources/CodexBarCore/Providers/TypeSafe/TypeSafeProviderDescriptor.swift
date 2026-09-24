@@ -1,5 +1,4 @@
 import Foundation
-import SweetCookieKit
 
 public enum TypeSafeProviderDescriptor {
     public static let descriptor: ProviderDescriptor = Self.makeDescriptor()
@@ -10,16 +9,6 @@ public enum TypeSafeProviderDescriptor {
         injection: .cookieHeader,
         requiresManualCookieSource: true,
         cookieName: nil))
-
-    /// Chrome-only by default to avoid extra Firefox/Safari Keychain and Full Disk Access prompts.
-    /// Use Manual cookie source for other browsers.
-    private static var browserCookieOrder: BrowserCookieImportOrder? {
-        #if os(macOS)
-        [.chrome]
-        #else
-        nil
-        #endif
-    }
 
     static func makeDescriptor(
         transport: any ProviderHTTPTransport = TypeSafeWebFetchStrategy.isolatedTransport) -> ProviderDescriptor
@@ -46,7 +35,8 @@ public enum TypeSafeProviderDescriptor {
                 widgetSelectable: false,
                 isPrimaryProvider: false,
                 usesAccountFallback: false,
-                browserCookieOrder: self.browserCookieOrder,
+                browserCookieOrder: BrowserCookieImportSupport.chromeOnly(
+                    reason: "Other browsers use Manual to avoid extra permission prompts"),
                 dashboardURL: "https://console.typesafe.ai/usage",
                 statusPageURL: nil),
             branding: ProviderBranding(

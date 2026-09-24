@@ -1,16 +1,7 @@
 import Foundation
-import SweetCookieKit
 
 public enum HelmcodeProviderDescriptor {
     public static let descriptor: ProviderDescriptor = Self.makeDescriptor()
-
-    private static var browserCookieOrder: BrowserCookieImportOrder? {
-        #if os(macOS)
-        [.chrome]
-        #else
-        nil
-        #endif
-    }
 
     public static func dashboardURL(snapshot: UsageSnapshot?) -> URL {
         let domain = snapshot?.identity?.accountOrganization == "NaN Builders" ? "nan.builders" : "helmcode.com"
@@ -46,7 +37,8 @@ public enum HelmcodeProviderDescriptor {
                 widgetSelectable: false,
                 isPrimaryProvider: false,
                 usesAccountFallback: false,
-                browserCookieOrder: self.browserCookieOrder,
+                browserCookieOrder: BrowserCookieImportSupport.chromeOnly(
+                    reason: "Preserve Chrome dashboard sign-in without probing unrelated stores"),
                 dashboardURL: "https://cloud.helmcode.com/dashboard",
                 statusPageURL: nil),
             branding: ProviderBranding(
