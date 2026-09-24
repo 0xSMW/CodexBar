@@ -27,6 +27,8 @@
 - Cost history: back off forbidden Cursor cost requests for six hours, honor timeout cooldowns without cached data, and preserve quota refreshes and manual recovery (#3910, #3918). Thanks @harjothkhara and @Sogl!
 - Chutes: refresh subscription and pay-as-you-go quotas through the bundled plugin on both engines, preserving empty usage responses and best-effort quota details.
 - ai&: refresh 30-day spending through the bundled plugin on both engines, preserving decimal totals, partial pages, and empty windows without a guessed currency.
+- DeepInfra: use the bundled provider plugin on both engines while preserving prepaid balances, monthly spend, suspension details, and billing-cycle limits.
+- ZenMux: use the bundled provider plugin on both engines while preserving rolling quotas, plan expiry, optional PAYG balances, and authentication errors.
 
 ## 0.65.0 — 2026-09-22
 
