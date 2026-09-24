@@ -271,9 +271,11 @@ extension CostUsageStore {
     /// the independent 256 MiB database cap, so active append/fork state is not discarded
     /// merely because a single session contains many events.
     ///
-    /// One cache serves every history window (30-day menu refreshes, 365-day Spend Dashboard catch-up).
-    /// A file evicted inside the longest supported history is rediscovered and re-parsed by the next
-    /// wider scan, so budgets never evict inside that horizon, whichever window this save requested.
+    /// One cache can serve several history windows (30-day menu refreshes, 365-day Usage & Spend
+    /// catch-up). A file evicted inside a window that another caller still requests is rediscovered and
+    /// re-parsed by that caller's next scan, so budgets also protect the widest window requested in the
+    /// last `retentionFloorLifetimeDays` (capped at the 365-day history horizon). Caches that only ever
+    /// serve one window keep the previous behavior.
     func enforceBudgets(
         maxRows: Int,
         maxFileBytes: Int64,
@@ -292,7 +294,10 @@ extension CostUsageStore {
                 table: "scan_metadata")
             let windowSinceDay = requestedSinceDay ?? metadata?.scanSinceDay
             let untilDay = requestedUntilDay ?? metadata?.scanUntilDay
-            let sinceDay = windowSinceDay.map { min($0, Self.historyHorizonSinceDay(now: now, calendar: calendar)) }
+            let floor = try windowSinceDay.map {
+                try Self.retentionFloorSinceDay(database, windowSinceDay: $0, now: now, calendar: calendar)
+            }
+            let sinceDay = floor?.sinceDay
             let rowLimit = max(0, maxRows)
             let byteLimit = max(0, maxFileBytes)
             if initialRows > Int64(rowLimit) || initialBytes > byteLimit,
@@ -343,7 +348,8 @@ extension CostUsageStore {
                 deletedRows: Int(max(0, initialRows - finalRows)),
                 rowCount: Int(finalRows),
                 fileBytes: fileBytes,
-                catchUpRequired: catchUpRequired)
+                catchUpRequired: catchUpRequired,
+                retentionFloorWrites: floor?.writes ?? 0)
         }
     }
 
@@ -403,6 +409,62 @@ extension CostUsageStore {
         }
         guard result == SQLITE_DONE else { throw StoreError.sqlite(result) }
         return false
+    }
+
+    static let retentionFloorLifetimeDays = 7
+    private static let retentionFloorSinceKey = "retention_floor_since_day"
+    private static let retentionFloorRequestedKey = "retention_floor_requested_day"
+
+    /// Earliest day budget enforcement keeps for this save: the requested window, widened to the
+    /// widest window requested within `retentionFloorLifetimeDays`. A request at least as wide as that
+    /// floor records itself (at most one `meta` write per day), so a narrower refresh between wider
+    /// scans cannot evict history the wider scan would parse again. An expired floor stops protecting.
+    private static func retentionFloorSinceDay(
+        _ database: OpaquePointer,
+        windowSinceDay: String,
+        now: Date,
+        calendar: Calendar) throws -> (sinceDay: String, writes: Int)
+    {
+        let dayCalendar = CostUsageScanner.CostUsageDayRange.localGregorianCalendar(matching: calendar)
+        let today = CostUsageScanner.CostUsageDayRange.dayKey(from: now, calendar: dayCalendar)
+        let expiry = CostUsageScanner.CostUsageDayRange.dayKey(
+            from: dayCalendar.date(byAdding: .day, value: -self.retentionFloorLifetimeDays, to: now) ?? now,
+            calendar: dayCalendar)
+        let storedSince = try self.metaValue(database, key: self.retentionFloorSinceKey)
+        let storedRequested = try self.metaValue(database, key: self.retentionFloorRequestedKey)
+        let liveFloor: String? = if let storedSince, let storedRequested, storedRequested >= expiry {
+            max(storedSince, self.historyHorizonSinceDay(now: now, calendar: calendar))
+        } else {
+            nil
+        }
+        var writes = 0
+        if liveFloor.map({ windowSinceDay <= $0 }) ?? true,
+           storedSince != windowSinceDay || storedRequested != today
+        {
+            try self.setMetaValue(database, key: self.retentionFloorSinceKey, value: windowSinceDay)
+            try self.setMetaValue(database, key: self.retentionFloorRequestedKey, value: today)
+            writes = 2
+        }
+        return (min(windowSinceDay, liveFloor ?? windowSinceDay), writes)
+    }
+
+    private static func metaValue(_ database: OpaquePointer, key: String) throws -> String? {
+        let statement = try self.prepare(database, "SELECT value FROM meta WHERE key = ?")
+        defer { sqlite3_finalize(statement) }
+        self.bind(key, to: statement, at: 1)
+        guard sqlite3_step(statement) == SQLITE_ROW else { return nil }
+        return self.columnText(statement, at: 0)
+    }
+
+    private static func setMetaValue(_ database: OpaquePointer, key: String, value: String) throws {
+        let statement = try self.prepare(database, """
+        INSERT INTO meta(key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """)
+        defer { sqlite3_finalize(statement) }
+        self.bind(key, to: statement, at: 1)
+        self.bind(value, to: statement, at: 2)
+        try self.stepDone(statement, database: database)
     }
 
     /// Scan-window start of the longest history any caller requests (365 days, clamped in

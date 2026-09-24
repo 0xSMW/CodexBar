@@ -12,10 +12,6 @@ import CSQLite3
 // swiftlint:disable file_length
 
 struct CostUsageStoreTests {
-    /// Two years past the fixtures' 2026 dates, so the 365-day retention horizon cannot protect them
-    /// and budget tests exercise their requested window alone.
-    static let pastHistoryHorizonNow = Date(timeIntervalSince1970: 1_830_297_600)
-
     /// The store actor runs on a custom DispatchQueue-backed `SerialExecutor`, and its
     /// `sync*` bridges hand work to the actor from inside `queue.sync`. Getting that handoff
     /// wrong takes the app down on launch with "Incorrect actor executor assumption", so the
@@ -2002,8 +1998,7 @@ extension CostUsageStoreTests {
             maxRows: 1,
             maxFileBytes: .max,
             requestedSinceDay: "2026-07-31",
-            requestedUntilDay: "2026-08-02",
-            now: Self.pastHistoryHorizonNow)
+            requestedUntilDay: "2026-08-02")
 
         #expect(result.rowCount == 1)
         #expect(await store.fetchFile(path: "/rollouts/stale.jsonl") == nil)
@@ -2101,8 +2096,7 @@ extension CostUsageStoreTests {
             maxRows: 1,
             maxFileBytes: .max,
             requestedSinceDay: "2026-08-01",
-            requestedUntilDay: "2026-08-02",
-            now: Self.pastHistoryHorizonNow)
+            requestedUntilDay: "2026-08-02")
 
         // The out-of-window file is pruned, but in-window files stay even though the row
         // count remains above the cap: the former entry budget never dropped in-window data.
@@ -2114,7 +2108,7 @@ extension CostUsageStoreTests {
     }
 
     @Test
-    func `budgets never evict history a longer window would rescan`() async throws {
+    func `budgets keep history a recent wider window still requests`() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = CostUsageStore(cacheRoot: fixture.root)
@@ -2123,8 +2117,17 @@ extension CostUsageStoreTests {
         let calendar = CostUsageScanner.CostUsageDayRange.localGregorianCalendar()
         let now = try #require(CostUsageScanner.parseDayKey("2026-08-02", calendar: calendar))
 
-        // A 30-day refresh is over budget, but the older file is inside the 365-day horizon that the
-        // Spend Dashboard scans; evicting it would only make that scan parse it again.
+        // A 365-day Usage & Spend scan covers both files.
+        _ = await store.enforceBudgets(
+            maxRows: .max,
+            maxFileBytes: .max,
+            requestedSinceDay: "2025-08-01",
+            requestedUntilDay: "2026-08-02",
+            calendar: calendar,
+            now: now)
+        // A later 30-day refresh is over budget, but evicting the older file would only make the next
+        // 365-day scan parse it again.
+        let changesBefore = await store.connectionTotalChanges()
         let result = await store.enforceBudgets(
             maxRows: 1,
             maxFileBytes: 1,
@@ -2137,10 +2140,43 @@ extension CostUsageStoreTests {
         #expect(!result.catchUpRequired)
         #expect(await store.fetchFile(path: "/rollouts/older.jsonl") != nil)
         #expect(await store.fetchFile(path: "/rollouts/current.jsonl") != nil)
-        #expect(await store.fetchMetadata().catchUpPending == false)
         let metadata = await store.fetchMetadata()
+        #expect(metadata.catchUpPending == false)
         #expect(metadata.scanSinceDay == "2026-08-01")
         #expect(metadata.scanUntilDay == "2026-08-02")
+        // The narrower request neither widens nor rewrites the recorded floor.
+        #expect(await store.connectionTotalChanges() == changesBefore.map { $0 + 1 })
+    }
+
+    @Test
+    func `budgets resume window eviction after the wider request expires`() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = CostUsageStore(cacheRoot: fixture.root)
+        #expect(await store.upsertFile(Self.file(path: "/rollouts/older.jsonl", day: "2026-06-01", updatedAt: 0)))
+        #expect(await store.upsertFile(Self.file(path: "/rollouts/current.jsonl", day: "2026-08-01", updatedAt: 1)))
+        let calendar = CostUsageScanner.CostUsageDayRange.localGregorianCalendar()
+        let wideRequest = try #require(CostUsageScanner.parseDayKey("2026-07-20", calendar: calendar))
+        let now = try #require(CostUsageScanner.parseDayKey("2026-08-02", calendar: calendar))
+        _ = await store.enforceBudgets(
+            maxRows: .max,
+            maxFileBytes: .max,
+            requestedSinceDay: "2025-07-20",
+            requestedUntilDay: "2026-07-20",
+            calendar: calendar,
+            now: wideRequest)
+
+        let result = await store.enforceBudgets(
+            maxRows: 1,
+            maxFileBytes: .max,
+            requestedSinceDay: "2026-08-01",
+            requestedUntilDay: "2026-08-02",
+            calendar: calendar,
+            now: now)
+
+        #expect(result.rowCount == 1)
+        #expect(await store.fetchFile(path: "/rollouts/older.jsonl") == nil)
+        #expect(await store.fetchFile(path: "/rollouts/current.jsonl") != nil)
     }
 
     @Test
@@ -2162,8 +2198,7 @@ extension CostUsageStoreTests {
             maxRows: .max,
             maxFileBytes: 1,
             requestedSinceDay: "2026-08-01",
-            requestedUntilDay: "2026-08-02",
-            now: Self.pastHistoryHorizonNow)
+            requestedUntilDay: "2026-08-02")
 
         #expect(result.deletedRows == 1)
         #expect(result.rowCount == 1)

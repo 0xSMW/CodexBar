@@ -59,3 +59,11 @@ REPORTCOMPARE days=365 fullRead=10.43s windowedRead=9.25s dailyMatch=true projec
 #   During that run its retention evicted the cache from 46,481 to 1,555 files (603 -> 173 aggregate days).
 # This branch, packaged locally, first 20 minutes on that evicted cache (re-adding history each refresh):
 #   0% between refreshes, one 16-30s burst per 5-minute refresh, 82s CPU total (~7% average), RSS <= 1.1 GB.
+
+## Retention floor revision: VERIFY=1 storestress catchup <copy> ~/.codex 3 30
+# The first budget pass records the cache's own 365-day window as the floor; its meta writes do not
+# invalidate the retained baseline. All 46,481 files are kept.
+PASS 1 advance cpu=19.58s scannerSnapshots=1 rowDecodes=1094037 completed=1117/46487 retainedScanMatchesFreshRead=true
+PASS 2 advance cpu=8.57s  scannerSnapshots=0 rowDecodes=22813   completed=1140/46487 retainedScanMatchesFreshRead=true
+PASS 3 advance cpu=8.52s  scannerSnapshots=0 rowDecodes=22960   completed=1190/46487 retainedScanMatchesFreshRead=true
+# meta after run: retention_floor_since_day=2025-09-23 retention_floor_requested_day=2026-09-24; files=46481

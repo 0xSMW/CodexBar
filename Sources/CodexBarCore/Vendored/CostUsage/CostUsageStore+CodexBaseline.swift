@@ -295,11 +295,22 @@ extension CostUsageStore {
 
     /// Retention may rewrite identical metadata when a protected window exceeds the budget.
     /// Only those own writes permit a fresh locked semantic comparison; external changes retry.
-    func codexBaselineAfterRetention(_ baseline: CodexDecodedBaseline) -> CodexDecodedBaseline? {
+    func codexBaselineAfterRetention(
+        _ baseline: CodexDecodedBaseline,
+        retentionFloorWrites: Int = 0) -> CodexDecodedBaseline?
+    {
         self.withDatabase(default: nil) { database in
             guard let current = self.currentDatabaseStamp() else { return nil }
             if current == baseline.stamp {
                 return baseline
+            }
+            // Retention-floor rows in `meta` are the only change: decoded content is untouched.
+            var floorOnly = baseline.stamp
+            floorOnly.totalChanges += Int64(retentionFloorWrites)
+            if retentionFloorWrites > 0, floorOnly == current {
+                var restamped = baseline
+                restamped.stamp = current
+                return restamped
             }
             var original = baseline.stamp
             original.totalChanges = current.totalChanges

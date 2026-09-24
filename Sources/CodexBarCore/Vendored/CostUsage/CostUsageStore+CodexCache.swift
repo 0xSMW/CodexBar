@@ -246,9 +246,11 @@ extension CostUsageStore {
 
             // Revalidate after retention and under the writer lock. External changes must never
             // authorize a comparison or rewrite against this scanner's stale decoded baseline.
-            guard let locked = self.codexBaselineAfterRetention(baseline),
-                  Self.persistedContentMatches(baseline: locked, cache: cache, calendar: calendar),
-                  self.codexBaselineIsCurrent(locked)
+            guard let locked = self.codexBaselineAfterRetention(
+                baseline,
+                retentionFloorWrites: result.retentionFloorWrites),
+                Self.persistedContentMatches(baseline: locked, cache: cache, calendar: calendar),
+                self.codexBaselineIsCurrent(locked)
             else {
                 _ = self.rollbackSaveTransaction()
                 return Self.rescanRequired(result)
@@ -310,16 +312,6 @@ extension CostUsageStore {
         }
         guard self.endSaveTransaction() else { return retry }
         let totalChangesAfterSave = self.connectionTotalChanges()
-        defer {
-            // Runs after retention and any previous-report write below; either one changes rows and
-            // makes this rebaseline decline, leaving the next load to read the database in full.
-            self.retainCodexScanAfterChangedSave(
-                baseline,
-                changedPaths: changedPaths,
-                rereadDiscovery: discoveryChanged,
-                rereadLookback: lookbackChanged,
-                expectedTotalChanges: totalChangesAfterSave)
-        }
         // Checkpointing and vacuuming must remain outside the save transaction.
         let result = self.enforceBudgets(
             maxRows: rowBudget,
@@ -334,6 +326,15 @@ extension CostUsageStore {
             metadata.previousReportPayload = try? JSONEncoder().encode(previous)
             _ = self.setMetadata(metadata)
         }
+        // Retention-floor rows live in `meta`, outside decoded content. Any other retention or
+        // previous-report write changes rows and makes this rebaseline decline, leaving the next
+        // load to read the database in full.
+        self.retainCodexScanAfterChangedSave(
+            baseline,
+            changedPaths: changedPaths,
+            rereadDiscovery: discoveryChanged,
+            rereadLookback: lookbackChanged,
+            expectedTotalChanges: totalChangesAfterSave.map { $0 + Int64(result.retentionFloorWrites) })
         return result
     }
 

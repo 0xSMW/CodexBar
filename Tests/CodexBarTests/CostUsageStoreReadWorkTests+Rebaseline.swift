@@ -62,6 +62,13 @@ extension CostUsageStoreReadWorkTests {
         let fixture = try ReadWorkFixture(fileCount: 4, rowsPerFile: 4)
         defer { fixture.remove() }
         let metadata = await fixture.store.fetchMetadata()
+        // The first pass records this window as the retention floor; later passes over it write nothing.
+        _ = await fixture.store.enforceBudgets(
+            maxRows: 1,
+            maxFileBytes: 1,
+            requestedSinceDay: metadata.scanSinceDay,
+            requestedUntilDay: metadata.scanUntilDay,
+            calendar: fixture.calendar)
         let changesBefore = await fixture.store.connectionTotalChanges()
         // Budgets far below the fixture force the retention pass while every file stays protected.
         let result = await fixture.store.enforceBudgets(

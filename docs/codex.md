@@ -314,10 +314,11 @@ the local result and returns a nonzero exit code. See [CLI host reporting](cli.m
     result equals a full read; retention changes or another connection's commit fall back to one. Saves that only
     advance scan freshness or the priority-turn cursor keep the baseline too, and unchanged discovery or lookback state
     is not rewritten.
-  - Budget retention never evicts sessions inside the 365-day history horizon, whichever window a save requested. One
-    cache serves 30-day refreshes and 365-day Usage & Spend catch-up, so evicting inside that horizon only made the
-    next wider scan reparse the same files. An unchanged window no longer rewrites scan metadata. Large histories can
-    stay above the best-effort 256 MiB file cap.
+  - Budget retention also protects the widest window requested in the last 7 days, capped at the 365-day history
+    horizon. One cache can serve 30-day refreshes and 365-day Usage & Spend catch-up; evicting what the wider scan
+    still requests only made it reparse the same files. The floor lives in the `meta` table and is written at most
+    once a day. Caches that only serve one window keep the previous eviction behavior, and an unchanged window no
+    longer rewrites scan metadata.
   - Report reads load usage rows only for files whose recorded day coverage overlaps the scan window; daily, project,
     and session output is unchanged. Complete-history publication skips detailed reads when status metadata already
     shows unfinished work, and a pending scan without a stored previous report reads details directly instead of

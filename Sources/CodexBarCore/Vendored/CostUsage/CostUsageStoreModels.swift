@@ -242,6 +242,8 @@ struct CostUsageStoreBudgetResult: Equatable, Sendable {
     var rowCount: Int
     var fileBytes: Int64
     var catchUpRequired: Bool = false
+    /// `meta` rows written to record the retention floor. They never change decoded cache content.
+    var retentionFloorWrites: Int = 0
 }
 
 struct CostUsageStoreConfiguration: Equatable, Sendable {
