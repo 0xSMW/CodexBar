@@ -72,7 +72,7 @@ defineProvider({
 - `capabilities` (optional): `"browser-cookies"` and `"http-status"`. With `"http-status"`, the plugin observes
   non-2xx responses itself instead of the host failing the request.
 - `cookieDomains`: required with `browser-cookies`; a non-empty list of normalized DNS host names.
-- `fetchUsage(ctx)`: function returning a snapshot object or a promise for one.
+- `fetchUsage(ctx)`: function returning a snapshot or fetch result envelope, or a promise for one.
 
 Authentication forms:
 
@@ -240,6 +240,24 @@ organization, plan/login-method, and account-ID fields in the menu and CLI. A ve
 may return `{empty: true}` with optional identity. This creates no artificial rate window; every supplied field is still
 validated. An empty object, an empty `identity` object, or metadata such as confidence and subscription dates without
 displayable usage or identity remains invalid unless `empty: true` is explicitly declared.
+
+## Fetch result envelope
+
+`fetchUsage` may return a bare snapshot or `{ usage, sourceLabel?, card?, persist? }`. The two forms cannot be mixed;
+unknown result and top-level snapshot keys fail validation. Both engines apply the same mapper before any settings write.
+`sourceLabel` replaces the strategy's default label for that fetch and must contain 1–256 UTF-8 bytes without control
+characters. `persist` is an object with at most 16 string values of 1–256 bytes; the descriptor must explicitly allow
+every key. Null, arrays, wrong types, unknown keys, and cross-provider requests fail the entire result.
+
+Card payloads are descriptor-owned, never arbitrary Swift decoding. OpenAI's `card.openAIAPIUsage` adapter accepts daily
+cost, token, request, model, and line-item history for the existing native chart. It rejects unknown fields, bounds the
+history to 366 buckets and 10,000 breakdown entries, and validates finite numbers, safe integer counts, names, and dates.
+No other provider or user-installed plugin receives that adapter by declaring a card field.
+
+Fireworks alone allows `persist: { ACCOUNT_SLUG: "discovered-slug" }`. The app/CLI writer rechecks ownership, applies the
+provider's allowlist, and returns saved, unchanged, stale, or failed. Successful usage survives a stale or failed save
+with a diagnostic. The runtime itself never writes config; a missing writer also reports a failed save. There is no
+secret-write capability or arbitrary config-field access.
 
 ## TypeScript
 

@@ -30,13 +30,13 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 
 | Status | Count |
 |---|---:|
-| `cut-over` | 24 |
-| `converted` | 3 |
+| `cut-over` | 26 |
+| `converted` | 2 |
 | `convertible-now` | 1 |
 | `needs-cookie-import` | 7 |
 | `needs-files/subprocess/oauth-broker` | 20 |
 | `needs-pty/webview/native` | 8 |
-| `needs-host-extension` | 6 |
+| `needs-host-extension` | 5 |
 | **Total** | **69** |
 
 ## Matrix
@@ -44,10 +44,10 @@ iteration, or same-refresh fresh import after rejection. Availability reports po
 | Provider | Status | Converted | Reason |
 |---|---|:---:|---|
 | codex | `needs-pty/webview/native` | No | PTY CLI, OAuth files/refresh, browser cookies, WKWebView scraping, local logs, and reset-credit details exceed this host. |
-| openai | `converted` | Yes | Converted: fixed-origin bearer GET pagination with daily spend, model, line-item, and token details. |
+| openai | `cut-over` | Yes | Both engines use the bundled script for Admin API history, project scoping, and legacy billing fallback; the allowlisted typed card preserves the native dashboard and source labels. Native fetchers are deleted. |
 | azureopenai | `needs-pty/webview/native` | No | The current quota probe is a POST chat completion against a user-configured deployment origin. |
 | claude | `needs-files/subprocess/oauth-broker` | No | Full parity needs credential files/Keychain, OAuth refresh, CLI/PTY, cookies, local logs, and admin details. |
-| fireworks | `needs-host-extension` | No | Account discovery persists the slug and returns a dynamic source label/diagnostic; the script strategy has no result-metadata or config-persistence bridge, although explicit empty snapshots now cover identity-free billing results. |
+| fireworks | `cut-over` | Yes | Both engines use the bundled script for account discovery and billing spend, including empty results, dynamic source labels, and allowlisted app/CLI slug persistence with save diagnostics. Native fetcher is deleted. |
 | clinepass | `cut-over` | Yes | Cut over on both engines: fixed-origin bearer GET, typed quota lanes, credential aliases, and classified failures match native behavior; the Swift fetcher and Linux fixtures are deleted. |
 | cursor | `needs-files/subprocess/oauth-broker` | No | Native app-auth SQLite discovery and local CSV usage remain required; domain cookies do not replace those sources. |
 | opencode | `needs-cookie-import` | No | GET/JSON POST and SolidStart text decoding fit JavaScript, but cached-session rejection requires a same-refresh fresh cookie import. |

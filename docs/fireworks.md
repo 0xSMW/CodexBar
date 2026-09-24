@@ -41,24 +41,21 @@ it in Settings. A configured slug remains useful for selecting among multiple ac
 - There is no balance display; the Fireworks web console (app.fireworks.ai → Settings/Billing) is the
   authoritative balance source.
 
-## Plugin conversion status
+## Plugin implementation
 
-The native fetcher remains authoritative. A valid response with no rated line items for a listed account
-intentionally produces a successful snapshot with no rate window, cost, detail, or identity; plugins can now declare
-that state with `empty: true`. Account discovery also persists the selected slug to config and
-returns a dynamic source label plus a save-failure diagnostic. The script strategy has no result-metadata or
-config-persistence bridge for those behaviors, so explicit empty-snapshot support alone does not complete this conversion.
+The bundled `fireworks.js` plugin is authoritative on QuickJS and JavaScriptCore. A listed account with no rated
+line items returns `empty: true`, without inventing a quota or identity. Discovery returns the account-specific source
+label and requests an `ACCOUNT_SLUG` update. The descriptor allows that plain setting only; secrets and other providers'
+settings cannot be written through this result contract.
 
-The remaining bridge needs a typed fetch-result envelope (`usage`, `sourceLabel`, and requested plain-setting updates),
-validated identically by both engines. A provider-owned allowlist must map updates to an injected app/CLI settings writer,
-with stale-refresh checks and an observable save result. The current settings registration is read-only; app saves are
-debounced and log failures instead of returning them. Direct config writes in the generic script strategy would bypass
-that ownership, so this persistence change remains a separate host task before Fireworks can cut over.
+The app and CLI own saving the discovered slug. They check that the provider settings still match the fetch inputs,
+preserve unrelated settings, and report the actual save outcome. If saving fails or the fetch is stale, successful
+usage remains available with a diagnostic and the discovered slug is not installed in app state.
 
 ## Key files
 
 - `Sources/CodexBarCore/Providers/Fireworks/FireworksProviderDescriptor.swift` (descriptor + fetch strategy)
-- `Sources/CodexBarCore/Providers/Fireworks/FireworksUsageFetcher.swift` (HTTP client + JSON parser)
+- `Sources/CodexBarCore/Resources/Plugins/fireworks.js` (HTTP requests, discovery, and billing parser)
 - `Sources/CodexBarCore/Providers/Fireworks/FireworksSettingsReader.swift` (env var resolution)
 - `Sources/CodexBar/Providers/Fireworks/FireworksProviderImplementation.swift` (settings fields)
 - `Sources/CodexBar/Providers/Fireworks/FireworksSettingsStore.swift` (SettingsStore extension)

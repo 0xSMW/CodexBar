@@ -970,6 +970,14 @@ extension UsageStore {
                         generation: publicationGeneration)
                 }
             },
+            settingsWriter: { [weak self] provider, values in
+                guard let self, provider == contextProvider else { return .stale }
+                return await self.persistPluginSettings(
+                    provider: provider,
+                    values: values,
+                    generation: publicationGeneration,
+                    originalConfigRevision: contextConfigRevision)
+            },
             costUsageHistoryDays: self.settings.costUsageHistoryDays,
             claudeOwnerCLIRecoveryOnly: claudeOwnerCLIRecoveryOnly,
             persistsCLISessions: true,
@@ -978,7 +986,7 @@ extension UsageStore {
             resolvedCLIVersion: self.version(for: provider))
     }
 
-    private func providerConfigMutationIsCurrent(
+    func providerConfigMutationIsCurrent(
         provider: UsageProvider,
         generation: UInt64?,
         originalConfigRevision: UInt64) -> Bool
@@ -996,7 +1004,7 @@ extension UsageStore {
         return originalConfigRevision == currentConfigRevision
     }
 
-    private func advanceProviderRefreshConfigRevision(provider: UsageProvider, generation: UInt64?) {
+    func advanceProviderRefreshConfigRevision(provider: UsageProvider, generation: UInt64?) {
         guard let generation,
               var publication = self.providerRefreshPublicationContexts[provider.instanceID],
               publication.generation == generation

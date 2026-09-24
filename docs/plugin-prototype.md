@@ -68,13 +68,13 @@ case therefore remain out of scope for this prototype.
 
 ## Enable and test
 
-Set `CODEXBAR_JS_PROVIDERS=1` in CodexBar's environment. OpenAI, Manus,
+Set `CODEXBAR_JS_PROVIDERS=1` in CodexBar's environment. Manus,
 Perplexity, T3 Chat, and Qoder then prepend a script strategy to their existing pipeline.
 A missing required secret or disabled cookie source leaves the script
 strategy unavailable and permits the Swift strategy to run; a loaded script that fails does not fall back, so parity
 defects stay visible. Without the variable, the resolver returns the original Swift strategy only and does not load
 an engine or plugin resource for those providers. Venice, OpenRouter, ClawRouter, Deepgram, sub2api, Synthetic,
-Poe, xAI, and z.ai always resolve only their script strategy on every platform; `CODEXBAR_JS_PROVIDERS` does not affect
+OpenAI, Fireworks, Poe, xAI, and z.ai always resolve only their script strategy on every platform; `CODEXBAR_JS_PROVIDERS` does not affect
 them.
 
 Run the focused proof with:
@@ -230,10 +230,28 @@ to its executor. The exported `JSContextGroupSetExecutionTimeLimit` symbol has n
 so the rollback path does not bind that private SPI: its watchdog returns to the caller and discards the poisoned
 context, but it cannot interrupt the abandoned JavaScriptCore thread, which may remain alive until process exit.
 
+## Fetch result envelope
+
+`fetchUsage` may return a bare snapshot or `{ usage, sourceLabel?, card?, persist? }`. The two forms cannot be mixed;
+unknown result and top-level snapshot keys fail validation. Both engines apply the same mapper before any settings write.
+`sourceLabel` replaces the strategy's default label for that fetch and must contain 1–256 UTF-8 bytes without control
+characters. `persist` is an object with at most 16 string values of 1–256 bytes; the descriptor must explicitly allow
+every key. Null, arrays, wrong types, unknown keys, and cross-provider requests fail the entire result.
+
+Card payloads are descriptor-owned, never arbitrary Swift decoding. OpenAI's `card.openAIAPIUsage` adapter accepts daily
+cost, token, request, model, and line-item history for the existing native chart. It rejects unknown fields, bounds the
+history to 366 buckets and 10,000 breakdown entries, and validates finite numbers, safe integer counts, names, and dates.
+No other provider or user-installed plugin receives that adapter by declaring a card field.
+
+Fireworks alone allows `persist: { ACCOUNT_SLUG: "discovered-slug" }`. The app/CLI writer rechecks ownership, applies the
+provider's allowlist, and returns saved, unchanged, stale, or failed. Successful usage survives a stale or failed save
+with a diagnostic. The runtime itself never writes config; a missing writer also reports a failed save. There is no
+secret-write capability or arbitrary config-field access.
+
 ## Current limitations
 
 The remaining bundled-conversion flag is macOS-only and compiled out when JavaScriptCore is unavailable. It supports bundled
-first-party IDs and the generic snapshot and declarative details only: no provider-specific Swift payloads,
+first-party IDs, generic snapshots and declarative details, and descriptor-allowlisted result adapters. It has no
 OAuth/refresh broker, local files or databases, subprocesses,
 arbitrary/form POST bodies, PTY, WebView, binary/protobuf responses, private-network HTTP, or unvalidated dynamic
 origins. The separate user-plugin path adds local `.js`/`.ts` discovery, approval, and settings without changing these
@@ -244,5 +262,6 @@ first-party flag semantics. Browser cookies remain restricted to declared domain
 
 Display-only provider payloads now use `details` on both the Swift and JavaScript paths. The remaining bespoke
 `UsageSnapshot` fields drive behavior rather than presentation: Codex reset-credit actions, Command Code refresh
-stabilization, DeepSeek profile selection/transition state, and provider-derived token-cost pipelines for OpenAI API,
-Mistral, and OpenCode Go. They are not plugin compatibility shims.
+stabilization, DeepSeek profile selection/transition state, and provider-derived token-cost pipelines for Mistral and
+OpenCode Go. They are not plugin compatibility shims. OpenAI API history now comes from its bundled plugin through the
+typed card adapter.

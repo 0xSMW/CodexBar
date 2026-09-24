@@ -916,7 +916,7 @@ struct ProviderPluginRuntimeTests {
                 instanceCookieResolver: nil)
             { continuation.resume(returning: $0) }
         }
-        return try result.get()
+        return try result.get().usage
     }
 
     private static func transport(

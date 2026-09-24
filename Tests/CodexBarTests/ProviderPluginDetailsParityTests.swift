@@ -64,26 +64,6 @@ struct ProviderPluginDetailsParityTests {
     }
 
     @Test
-    func `OpenAI prepends JS only when the prototype flag is enabled`() async {
-        let fixtures: [(UsageProvider, [String], [String])] = [
-            (.openai, ["openai.api.balance"], ["openai.js", "openai.api.balance"]),
-        ]
-
-        for (provider, defaultIDs, enabledIDs) in fixtures {
-            let descriptor = ProviderDescriptorRegistry.descriptor(for: provider)
-            let defaultStrategies = await descriptor.fetchPlan.pipeline.resolveStrategies(
-                Self.context(environment: Self.environment(for: provider)))
-            var enabledEnvironment = Self.environment(for: provider)
-            enabledEnvironment[ProviderPluginPrototype.environmentKey] = "1"
-            let enabledStrategies = await descriptor.fetchPlan.pipeline.resolveStrategies(
-                Self.context(environment: enabledEnvironment))
-
-            #expect(defaultStrategies.map(\.id) == defaultIDs)
-            #expect(enabledStrategies.map(\.id) == enabledIDs)
-        }
-    }
-
-    @Test
     func `zai plugin resolves China region credential aliases only for China`() async {
         let descriptor = ProviderDescriptorRegistry.descriptor(for: .zai)
         let environment = [
@@ -607,8 +587,8 @@ struct ProviderPluginDetailsParityTests {
         }
     }
 
-    @Test
-    func `OpenAI fixture has Swift core parity and stable details`() async throws {
+    @Test(arguments: Self.parityEngines)
+    func `OpenAI fixture preserves the typed card golden`(engine: ProviderPluginEngineKind) async throws {
         let transport = Self.transport { request in
             if request.url?.path.hasSuffix("/organization/costs") == true {
                 return Self.openAICosts
@@ -619,12 +599,11 @@ struct ProviderPluginDetailsParityTests {
             throw FixtureError.unexpectedURL(request.url)
         }
         let now = Date(timeIntervalSince1970: 1_700_179_200)
-        let swift = try await OpenAIAPIUsageFetcher.fetchUsage(
-            apiKey: "fixture-key",
-            session: transport,
-            now: now,
-            historyDays: 30).toUsageSnapshot()
-        let script = try await ProviderPluginRuntime(bundledPlugin: "openai", transport: transport)
+        let sourceURL = try #require(CodexBarCoreResources.bundle?.url(forResource: "openai", withExtension: "js"))
+        let script = try await ProviderPluginRuntime(
+            source: String(contentsOf: sourceURL, encoding: .utf8),
+            transport: transport,
+            engine: engine)
             .fetchUsage(
                 settings: [
                     "OPENAI_HISTORY_DAYS": "30",
@@ -633,26 +612,15 @@ struct ProviderPluginDetailsParityTests {
                 secrets: ["OPENAI_API_KEY": "fixture-key"],
                 now: now)
 
-        Self.expectCoreParity(swift, script)
-        #expect(try script.details == [
-            Self.section(
-                "Usage summary",
-                rows: [
-                    Self.row("Spend", "$14.75", "Last 30 days"),
-                    Self.row("Requests", "10"),
-                    Self.row("Tokens", "2,000", "1,300 input · 700 output"),
-                    Self.row("Cached input", "250"),
-                ],
-                chart: Self.chart("Daily spend", unit: "USD", points: [("2023-11-14", 14.75)])),
-            Self.section("Models", rows: [
-                Self.row("gpt-5.2", "1,500 tokens", "7 requests"),
-                Self.row("gpt-5.2-codex", "500 tokens", "3 requests"),
-            ]),
-            Self.section("Line items", rows: [
-                Self.row("Text tokens", "$12.50"),
-                Self.row("Web search tool calls", "$2.25"),
-            ]),
-        ])
+        #expect(script.providerCost?.used == 14.75)
+        let card = try #require(script.openAIAPIUsage)
+        #expect(card.last30Days.requests == 10)
+        #expect(card.last30Days.totalTokens == 2000)
+        #expect(card.last30Days.cachedInputTokens == 250)
+        #expect(card.topModels.map(\.name) == ["gpt-5.2", "gpt-5.2-codex"])
+        #expect(card.topLineItems.map(\.costUSD) == [12.5, 2.25])
+        #expect(card.toCostUsageTokenSnapshot().daily.first?.costUSD == 14.75)
+        #expect(script.details.isEmpty)
     }
 
     private static func transport(
